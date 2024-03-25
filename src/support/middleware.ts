@@ -5,6 +5,8 @@ import { NextFunction, Request, Response } from "express";
 import { S3Client,S3ClientConfig, PutObjectCommand } from "@aws-sdk/client-s3"
 import { failedResponse, successResponse } from "./http";
 import crypto from "crypto"
+import { verifyJwtToken } from "./generateTokens";
+import { Organization } from "../models/organization.models";
 
 dotenv.config()
  
@@ -117,3 +119,51 @@ export async function handlefileUpload(req: Request, res: Response, next: NextFu
       return res.status(500).json({ error: "Internal server error" });
   }
 }
+
+export const IsAuthenticatedOrganization =async (req:Request, res:Response, next:NextFunction) =>{
+  // Check if the Authorization header exists in the request
+  if (!req.headers.authorization) {
+      return failedResponse(res, 401, 'Access denied. Authorization header missing.');
+  }
+  const token =req.headers.authorization?.split(" ")[1] || req.cookies.token;
+  if (!token){
+      return failedResponse (res, 401, 'Access denied. No token provided.' )
+  }
+  try {
+      const decodedToken = verifyJwtToken(token)
+      req.body.userId = decodedToken.id; 
+      req.params.userId= decodedToken.id; 
+      // check if the user has verifed their account
+      const org = await Organization.findById(decodedToken.id)
+      if (!org?.isVerified){
+          return failedResponse (res, 401, 'Account is not verified please verify account first.' )
+      }
+      next();
+  } catch (error) {
+      return failedResponse (res, 401, 'Invalid token.' )
+  }
+}
+
+// export const IsAuthenticatedUser =async (req:Request, res:Response, next:NextFunction) =>{
+//   // Check if the Authorization header exists in the request
+//   if (!req.headers.authorization) {
+//       return failedResponse(res, 401, 'Access denied. Authorization header missing.');
+//   }
+//   const token =req.headers.authorization?.split(" ")[1] || req.cookies.token;
+//   if (!token){
+//       return failedResponse (res, 401, 'Access denied. No token provided.' )
+//   }
+//   try {
+//       const decodedToken = verifyJwtToken(token)
+//       req.body.userId = decodedToken.id; 
+//       req.params.userId= decodedToken.id; 
+//       // check if the user has verifed their account
+//       const user = await User.findById(decodedToken.id)
+//       if (!user?.isactive){
+//           return failedResponse (res, 401, 'Accouint is inactive please verify account first.' )
+//       }
+//       next();
+//   } catch (error) {
+//       return failedResponse (res, 401, 'Invalid token.' )
+//   }
+// }

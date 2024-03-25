@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="1" failures="1" errors="0" time="13.499">
+  <testsuite name="Your Test Suite Description" errors="0" failures="1" skipped="0" timestamp="2024-03-25T04:41:43" time="13.396" tests="1">
+    <testcase classname="Your Test Suite Description should describe your test case" name="Your Test Suite Description should describe your test case" time="5.005">
+      <failure>Error: thrown: &quot;Exceeded timeout of 5000 ms for a test.
+Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout.&quot;
+    at /home/nwafor/programming/webprojects/node_projects/gotruBE/__tests__/test.ogin.ts:5:3
+    at _dispatchDescribe (/home/nwafor/programming/webprojects/node_projects/gotruBE/node_modules/jest-circus/build/index.js:91:26)
+    at describe (/home/nwafor/programming/webprojects/node_projects/gotruBE/node_modules/jest-circus/build/index.js:55:5)
+    at Object.&lt;anonymous&gt; (/home/nwafor/programming/webprojects/node_projects/gotruBE/__tests__/test.ogin.ts:4:1)
+    at Runtime._execModule (/home/nwafor/programming/webprojects/node_projects/gotruBE/node_modules/jest-runtime/build/index.js:1439:24)
+    at Runtime._loadModule (/home/nwafor/programming/webprojects/node_projects/gotruBE/node_modules/jest-runtime/build/index.js:1022:12)
+    at Runtime.requireModule (/home/nwafor/programming/webprojects/node_projects/gotruBE/node_modules/jest-runtime/build/index.js:882:12)
+    at jestAdapter (/home/nwafor/programming/webprojects/node_projects/gotruBE/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:77:13)
+    at runTestInternal (/home/nwafor/programming/webprojects/node_projects/gotruBE/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/nwafor/programming/webprojects/node_projects/gotruBE/node_modules/jest-runner/build/runTest.js:444:34)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
