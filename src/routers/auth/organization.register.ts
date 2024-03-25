@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { OrganizationSignup, resendToken, verifyOrgAccount } from "../../controllers/auth/organization.register";
+import { OrganizationSignup, login, resendToken, verifyOrgAccount } from "../../controllers/auth/organization.register";
 import { upload } from "../../support/middleware";
 import { UploadFile, allMedia } from "../../controllers/media.controllers";
 import { handlefileUpload } from "../../support/middleware";
@@ -15,4 +15,5 @@ authRouter
 .post("/verify-account", verifyOrgAccount)
 .post("/upload-media", uploadMedia,handlefileUpload, UploadFile)
 .get("/all-media", allMedia)
+.post("/login",login)
 
