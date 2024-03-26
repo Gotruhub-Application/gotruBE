@@ -8,7 +8,7 @@ dotenv.config()
 
 
 export const generateRandomToken = async function(): Promise<string> {
-    let token: number = 0;
+    let token: any = 0;
     let codeExists = true;
   
     // Generate a new code until a unique one is found
