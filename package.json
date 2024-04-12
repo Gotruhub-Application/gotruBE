@@ -25,6 +25,7 @@
     "joi": "^17.12.2",
     "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^9.0.2",
+    "mongodb-memory-server": "^9.1.8",
     "mongoose": "^8.2.0",
     "morgan": "^1.10.0",
     "morgan-json": "^1.1.0",
