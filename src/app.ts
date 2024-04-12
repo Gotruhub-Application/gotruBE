@@ -4,6 +4,7 @@ import { failedResponse } from "./support/http";
 import { httpLogger } from "./httpLogger";
 import { authRouter } from "./routers/auth/organization.register";
 import bodyParser from "body-parser"
+import Database from './db'
 
 const app:Application = express();
 
@@ -20,9 +21,16 @@ app.use(httpLogger)
 app.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 app.use(express.static('./uploads'))
 app.use(express.json())
+
+
+// CONNECT TO DB 
+if (process.env.PROJ_ENV === 'DEV' || process.env.PROJ_ENV === 'PRODUCTION') {
+    console.log("heyyyyyy")
+    Database.getInstance()
+ }
 app.use("/", authRouter)
 app.get("/", (req: Request, res: Response) => {
-    res.send("welcome to express and typescript");
+    res.send({message:"welcome to express and typescript"});
 });
 app.use((req:Request, res:Response, next:NextFunction)=>{
     failedResponse(res, 404, `Invalid endpoint, inspect url again.`)
