@@ -15,7 +15,7 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
     select: false,
   },
   role: {

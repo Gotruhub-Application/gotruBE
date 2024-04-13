@@ -27,7 +27,7 @@ export const OrgRegistrationValidation = Joi.object({
   personalAddress: Joi.string(),
   opLicenceImage: objectIdValidator.objectId(),
   cacImage: objectIdValidator.objectId(),
-  password: Joi.string().min(6).required(),
+  // password: Joi.string().min(6).required(),
   state: Joi.string(),
   lga: Joi.string(),
   govtlevel: Joi.string().valid("federal", "state", "local_government"),

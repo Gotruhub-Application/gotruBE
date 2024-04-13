@@ -22,8 +22,8 @@ export const OrganizationSignup= async (req:Request, res:Response, next:NextFunc
     if (isOrganization) {
       return failedResponse (res, 400, "Email already exist.")
     }
-    const salt = await bcrypt.genSalt(10)
-    value.password = await bcrypt.hash(value.password, salt);
+    // const salt = await bcrypt.genSalt(10)
+    // value.password = await bcrypt.hash(value.password, salt);
     const organization = await Organization.create({ ...value, role: "admin"});
     await OtpToken(value.email,"Account activation code", "templates/activateemail.html" )
     // const {password, ...responseOrganization} = organization.toObject();
@@ -74,6 +74,38 @@ export const resendToken= async (req:Request, res:Response, next:NextFunction) =
     
 }
 
+export const setPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+      const { error, value } = LoginValidator.validate(req.body);
+      if (error) {
+          return failedResponse(res, 400, `${error.details[0].message}`);
+      }
+
+      const isOrganization = await Organization.findOne({ email: value.email }).select("+password").lean();
+      if (!isOrganization) {
+          return failedResponse(res, 404, "Email does not exist.");
+      }
+      if (!isOrganization.isVerified) {
+        return failedResponse(res, 400, "Account not verified, please verify account.");
+    }
+
+    const salt = await bcrypt.genSalt(10)
+    value.password = await bcrypt.hash(value.password, salt);
+
+    isOrganization.password = value.password
+
+    await isOrganization.save()
+
+    return successResponse(res, 200, "Success");
+  } catch (error:any) {
+      // Log the error using your logger
+      logger.error(`Error in login at line ${error.name}: ${error.message}\n${error.stack}`);
+      return failedResponse(res, 500, "Internal server error");
+  }
+};
+
+
+
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
       const { error, value } = LoginValidator.validate(req.body);
@@ -103,3 +135,4 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return failedResponse(res, 500, "Internal server error");
   }
 };
+
