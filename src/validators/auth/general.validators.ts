@@ -6,3 +6,8 @@ export const LoginValidator=Joi.object({
     password: Joi.string().min(6).required(),
 
   })
+
+  export const setPasswordValidator=Joi.object({
+    password: Joi.string().min(6).required(),
+
+  })
