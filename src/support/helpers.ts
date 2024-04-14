@@ -68,6 +68,19 @@ export async function verifyToken(email:string, token:string): Promise<boolean> 
     
 }
 
+export async function ValidateToken(email:string, token:string): Promise<boolean> {
+    const isEmailToken = await Token.findOne({email:email, token:token})
+    const currentTime : Date= new Date()
+    if (!isEmailToken){
+        return false
+    }
+    if (isEmailToken.expires_at < currentTime){
+        return false
+    }else{
+        return true
+    }
+}
+
 
 const transporter = nodemailer.createTransport({
     service: 'gmail', // Update with your email service provider

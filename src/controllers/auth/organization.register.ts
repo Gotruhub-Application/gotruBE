@@ -4,8 +4,8 @@ import bcrypt from "bcrypt"
 import { OrgRegistrationValidation,orgEmailVerificationValidator, resentTokenValidator } from "../../validators/auth/organizations";
 import { logger } from "../../logger"; 
 import { failedResponse, successResponse } from "../../support/http";
-import { OtpToken, verifyToken } from "../../support/helpers"; 
-import { LoginValidator } from "../../validators/auth/general.validators";
+import { OtpToken, ValidateToken, verifyToken } from "../../support/helpers"; 
+import { LoginValidator, NewPasswordValidator } from "../../validators/auth/general.validators";
 import { generateJwtToken } from "../../support/generateTokens";
 
 
@@ -136,3 +136,88 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
+
+export class ResetPasswordController {
+
+  // get reset token
+  static async getResetToken(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { error, value } = resentTokenValidator.validate(req.body);
+      if (error) {
+        return failedResponse(res, 400, `${error.details[0].message}`);
+      }
+
+      const isOrganization = await Organization.findOne({ email: value.email });
+      if (!isOrganization) {
+        return failedResponse(res, 404, "Email does not exists.");
+      }
+
+      await OtpToken(value.email, "Reset token.", "templates/reset_password.html");
+
+      return successResponse(res, 201, "Reset token sent.");
+    } catch (error: any) {
+      logger.error(`Error in login at line ${error.name}: ${error.message}\n${error.stack}`);
+      return failedResponse(res, 500, error.message);
+    }
+  };
+
+  // get reset token
+  static async verifyToken(req: Request, res: Response, next: NextFunction) {
+      try {
+          const { error, value } = orgEmailVerificationValidator.validate(req.body);
+          if (error) {
+          return failedResponse(res, 400, `${error.details[0].message}`);
+          }
+
+          const isOrganization = await Organization.findOne({ email: value.email });
+          if (!isOrganization) {
+              return failedResponse(res, 404, "Email does not exists.");
+          }
+
+          const isValidToken = await ValidateToken(value.email, value.token);
+          if (!isValidToken){
+              return failedResponse(res, 400, "Token not valid");
+          }
+
+          return successResponse(res, 200, "Valid token");
+      } catch (error: any) {
+          logger.error(`Error in login at line ${error.name}: ${error.message}\n${error.stack}`);
+          return failedResponse(res, 500, error.message);
+      }
+  };
+
+  // get reset token
+  static async changePassword(req: Request, res: Response, next: NextFunction) {
+      try {
+          const { error, value } = NewPasswordValidator.validate(req.body);
+          if (error) {
+          return failedResponse(res, 400, `${error.details[0].message}`);
+          }
+
+          const isOrganization = await Organization.findOne({ email: value.email });
+          if (!isOrganization) {
+              return failedResponse(res, 404, "Email does not exists.");
+          }
+
+          const isValidToken = await verifyToken(value.email, value.token);
+          if (!isValidToken){
+              return failedResponse(res, 400, "Token not valid");
+          }
+
+          const salt = await bcrypt.genSalt(10)
+          value.password = await bcrypt.hash(value.password, salt);
+
+          isOrganization.password = value.password
+
+          await isOrganization.save()
+
+          const access_token: string = generateJwtToken({ id: isOrganization._id, role: isOrganization.role });
+          return successResponse(res, 200, "Password updated successfully.", { access_token });
+          
+      } catch (error: any) {
+          logger.error(`Error in login at line ${error.name}: ${error.message}\n${error.stack}`);
+          return failedResponse(res, 500, error.message);
+      }
+  };
+
+}

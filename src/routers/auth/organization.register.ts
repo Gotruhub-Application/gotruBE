@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { OrganizationSignup, login, resendToken, setPassword, verifyOrgAccount } from "../../controllers/auth/organization.register";
+import { OrganizationSignup, ResetPasswordController, login, resendToken, setPassword, verifyOrgAccount } from "../../controllers/auth/organization.register";
 import { upload } from "../../support/middleware";
 import { UploadFile, allMedia } from "../../controllers/media.controllers";
 import { handlefileUpload } from "../../support/middleware";
@@ -17,4 +17,7 @@ authRouter
 .get("/all-media", allMedia)
 .post("/login",login)
 .post("/set-password", setPassword)
+.post("/reset-password/get-reset-token", ResetPasswordController.getResetToken)
+.post("/reset-password/validate-token", ResetPasswordController.verifyToken)
+.post("/reset-password/change-password", ResetPasswordController.changePassword)
 
