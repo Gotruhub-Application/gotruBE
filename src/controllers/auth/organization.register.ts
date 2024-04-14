@@ -1,7 +1,7 @@
 import { Organization,Token} from "../../models/organization.models";
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt"
-import { OrgRegistrationValidation,orgEmailVerificationValidator, resentTokenValidator } from "../../validators/auth/organizations";
+import { OrgProfileUpdateValidator, OrgRegistrationValidation,orgEmailVerificationValidator, resentTokenValidator } from "../../validators/auth/organizations";
 import { logger } from "../../logger"; 
 import { failedResponse, successResponse } from "../../support/http";
 import { OtpToken, ValidateToken, verifyToken } from "../../support/helpers"; 
@@ -220,4 +220,40 @@ export class ResetPasswordController {
       }
   };
 
+}
+
+export class OrganizationProfile {
+
+  static  async getProfile (req: Request, res: Response, next: NextFunction) {
+    try {
+
+      const Orgz = await Organization.findById(req.params.userId);
+      if (!Orgz) {
+        return failedResponse(res, 404, "Organization not found.");
+      }
+  
+      return successResponse(res, 200, "success",Orgz );
+    } catch (error: any) {
+      logger.error(`Error in OrganizationUpdateProfile at line ${error.lineNumber}: ${error.message}\n${error.stack}`);
+      return failedResponse(res, 500, error.message);
+    }
+  };
+  static  async UpdateProfile (req: Request, res: Response, next: NextFunction) {
+    try {
+      const { error, value } = OrgProfileUpdateValidator.validate(req.body);
+      if (error) {
+        return failedResponse(res, 400, `${error.details[0].message}`);
+      }
+  
+      const updatedOrganization = await Organization.findByIdAndUpdate(req.params.userId, value, { new: true });
+      if (!updatedOrganization) {
+        return failedResponse(res, 404, "Organization not found.");
+      }
+  
+      return successResponse(res, 200, "VProfile updated successfully");
+    } catch (error: any) {
+      logger.error(`Error in OrganizationUpdateProfile at line ${error.lineNumber}: ${error.message}\n${error.stack}`);
+      return failedResponse(res, 500, error.message);
+    }
+  };
 }

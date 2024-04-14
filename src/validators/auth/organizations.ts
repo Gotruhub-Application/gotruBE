@@ -35,6 +35,23 @@ export const OrgRegistrationValidation = Joi.object({
   bizType: Joi.string().valid("registered_organization", "personal_business", "government_licensed_institution"),
   });
 
+  export const OrgProfileUpdateValidator= Joi.object({
+    website: Joi.string(),
+    phone: Joi.string(),
+    yearOfEstablishment: Joi.string(),
+    nameOfEstablishment: Joi.string(),
+    nameOfProprietor: Joi.string(),
+    businessAddress: Joi.string(),
+    personalAddress: Joi.string(),
+    opLicenceImage: objectIdValidator.objectId(),
+    cacImage: objectIdValidator.objectId(),
+    state: Joi.string(),
+    lga: Joi.string(),
+    govtlevel: Joi.string().valid("federal", "state", "local_government"),
+    agency: Joi.string(),
+    bizType: Joi.string().valid("registered_organization", "personal_business", "government_licensed_institution"),
+    });
+
   export const orgEmailVerificationValidator=Joi.object({
     email: Joi.string().email().required(),
     token: Joi.string().min(6).max(6).required(),

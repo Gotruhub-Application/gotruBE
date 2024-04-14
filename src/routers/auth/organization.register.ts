@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { OrganizationSignup, ResetPasswordController, login, resendToken, setPassword, verifyOrgAccount } from "../../controllers/auth/organization.register";
-import { upload } from "../../support/middleware";
+import { OrganizationProfile, OrganizationSignup, ResetPasswordController, login, resendToken, setPassword, verifyOrgAccount } from "../../controllers/auth/organization.register";
+import { IsAuthenticatedOrganization, upload } from "../../support/middleware";
 import { UploadFile, allMedia } from "../../controllers/media.controllers";
 import { handlefileUpload } from "../../support/middleware";
 
@@ -15,9 +15,10 @@ authRouter
 .post("/verify-account", verifyOrgAccount)
 .post("/upload-media", uploadMedia,handlefileUpload, UploadFile)
 .get("/all-media", allMedia)
-.post("/login",login)
+.post("/login/organization",login)
 .post("/set-password", setPassword)
 .post("/reset-password/get-reset-token", ResetPasswordController.getResetToken)
 .post("/reset-password/validate-token", ResetPasswordController.verifyToken)
 .post("/reset-password/change-password", ResetPasswordController.changePassword)
-
+.get("/profile/get-profile", IsAuthenticatedOrganization,OrganizationProfile.getProfile)
+.put("/profile/update-profile", IsAuthenticatedOrganization,OrganizationProfile.UpdateProfile)
