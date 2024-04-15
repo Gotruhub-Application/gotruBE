@@ -32,7 +32,7 @@ export const OrgRegistrationValidation = Joi.object({
   lga: Joi.string(),
   govtlevel: Joi.string().valid("federal", "state", "local_government"),
   agency: Joi.string(),
-  bizType: Joi.string().valid("registered_organization", "personal_business", "government_licensed_institution"),
+  bizType: Joi.string(),
   });
 
   export const OrgProfileUpdateValidator= Joi.object({
@@ -49,7 +49,7 @@ export const OrgRegistrationValidation = Joi.object({
     lga: Joi.string(),
     govtlevel: Joi.string().valid("federal", "state", "local_government"),
     agency: Joi.string(),
-    bizType: Joi.string().valid("registered_organization", "personal_business", "government_licensed_institution"),
+    bizType: Joi.string(),
     });
 
   export const orgEmailVerificationValidator=Joi.object({
