@@ -8,7 +8,10 @@
     "start": "npm run build && nodemon dist/index.js",
     "dev": "nodemon src/index.ts",
     "test": "export PROJ_ENV=TEST && jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "start_dev": "forever start dist/index.js --env development",
+    "forever_list": "forever list",
+    "forever_kill":"forever stop dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +24,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.3",
+    "forever": "^4.0.3",
     "handlebars": "^4.7.8",
     "joi": "^17.12.2",
     "joi-objectid": "^4.0.2",
@@ -31,6 +35,7 @@
     "morgan-json": "^1.1.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.11",
+    "pm2": "^5.3.1",
     "sharp": "^0.33.2",
     "winston": "^3.12.0"
   },
