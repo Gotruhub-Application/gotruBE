@@ -9,7 +9,7 @@
     "dev": "nodemon src/index.ts",
     "test": "export PROJ_ENV=TEST && jest",
     "test:coverage": "jest --coverage",
-    "start_dev": "forever start dist/index.js --env development",
+    "start_dev": "npm run build && forever start dist/index.js --env development",
     "forever_list": "forever list",
     "forever_kill":"forever stop dist/index.js"
   },
