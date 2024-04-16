@@ -25,10 +25,10 @@ export const OrganizationSignup= async (req:Request, res:Response, next:NextFunc
     // const salt = await bcrypt.genSalt(10)
     // value.password = await bcrypt.hash(value.password, salt);
     const organization = await Organization.create({ ...value, role: "admin"});
-    await OtpToken(value.email,"Account activation code", "templates/activateemail.html" )
+    await OtpToken(value.email,"Account activation code", "templates/activateemail.html")
     // const {password, ...responseOrganization} = organization.toObject();
 
-    return successResponse(res,201,"Verification token has been sent to your email.")
+    return successResponse(res,201,"Verification token has been sent to your email.",{organization} )
   } catch (error:any) {
     logger.error(`Error in login at line ${error.name}: ${error.message}\n${error.stack}`);
     return failedResponse(res,500, error.message)
