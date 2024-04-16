@@ -13,7 +13,7 @@ export const generateRandomToken = async function(): Promise<string> {
   
     // Generate a new code until a unique one is found
     while (codeExists) {
-      token = Math.floor(Math.random() * 900000) + 100000; // Generate a 6-digit random number
+      token = Math.floor(Math.random() * 400000) + 100000; // Generate a 6-digit random number
       // Check if the generated code already exists in the database
       const existingToken = await Token.findOne({ token: token });
       if (!existingToken) {
