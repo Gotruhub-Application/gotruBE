@@ -81,20 +81,16 @@ export const setPassword = async (req: Request, res: Response, next: NextFunctio
           return failedResponse(res, 400, `${error.details[0].message}`);
       }
 
-      const isOrganization = await Organization.findOne({ email: value.email }).select("+password").lean();
+      const salt = await bcrypt.genSalt(10)
+      value.password = await bcrypt.hash(value.password, salt);
+
+      const isOrganization = await Organization.findOneAndUpdate({ email: value.email }, {$set:{password:value.password}}, {new:true});
       if (!isOrganization) {
           return failedResponse(res, 404, "Email does not exist.");
       }
       if (!isOrganization.isVerified) {
         return failedResponse(res, 400, "Account not verified, please verify account.");
     }
-
-    const salt = await bcrypt.genSalt(10)
-    value.password = await bcrypt.hash(value.password, salt);
-
-    isOrganization.password = value.password
-
-    await isOrganization.save()
 
     return successResponse(res, 200, "Success");
   } catch (error:any) {
