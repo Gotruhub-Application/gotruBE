@@ -57,6 +57,8 @@ jobs:
         script: |
           cd gotruBE
           git pull 
+          export NVM_DIR=~/.nvm
+          source ~/.nvm/nvm.sh
           npm install
           npm run build
           forever restart 1
