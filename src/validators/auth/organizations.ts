@@ -54,7 +54,7 @@ export const OrgRegistrationValidation = Joi.object({
 
   export const orgEmailVerificationValidator=Joi.object({
     email: Joi.string().email().required(),
-    token: Joi.string().min(6).max(6).required(),
+    token: Joi.string().min(4).max(4).required(),
 
   })
   export const resentTokenValidator=Joi.object({
