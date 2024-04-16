@@ -38,9 +38,25 @@ jobs:
         echo "REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}" >> .env
         echo "PROJ_ENV=${{ secrets.PROJ_ENV }}" >> .env
         echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
+        echo "EC2_HOST=${{ secrets.EC2_HOST }}" >> .env
+        echo "EC2_USERNAME=${{ secrets.EC2_USERNAME }}" >> .env
+        echo "SSH_PRIVATE_KEY=${{ secrets.SSH_PRIVATE_KEY }}" >> .env
         
     - name: install dependencies
       run: npm install
      
     - name: Build
       run: npm run build 
+
+    - name: SSH into EC2 and deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd gotruBE
+          git pull 
+          npm install
+          npm run build
+          forever restart 1
