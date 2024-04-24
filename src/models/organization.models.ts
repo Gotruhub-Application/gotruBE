@@ -1,7 +1,6 @@
 import {Schema, Model, model } from 'mongoose';
 import { IOrganization,Itoken } from '../interfaces/organization';
 
-
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
     type: String,
@@ -158,7 +157,6 @@ const TokenSchema:Schema<Itoken> = new Schema<Itoken>({
   },
 })
 
+
 export const Organization: Model<IOrganization> = model<IOrganization>('Organization', OrganizationSchema);
 export const Token: Model<Itoken> = model<Itoken>('Token', TokenSchema);
-
-
