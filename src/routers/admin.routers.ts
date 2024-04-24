@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { FeaturesController } from "../controllers/gotru.admin.controllers"
+import { FeaturesController, SubscriptionPlanController } from "../controllers/gotru.admin.controllers"
 
 export const adminRouter = Router()
 
@@ -9,3 +9,10 @@ adminRouter
 .get("/features/:id", FeaturesController.getSingleFeature)
 .delete("/features/:id", FeaturesController.DeleteSingleFeature)
 .put("/features/:id", FeaturesController.UpdateSingleFeature)
+
+//  Subscription plans
+.get("/subscriptions", SubscriptionPlanController.getSubPlans)
+.post("/subscriptions", SubscriptionPlanController.addSubPlans)
+.get("/subscriptions/:id", SubscriptionPlanController.getSinglePlan)
+.delete("/subscriptions/:id", SubscriptionPlanController.DeleteSinglePlan)
+.put("/subscriptions/:id", SubscriptionPlanController.UpdateSinglePlan)
