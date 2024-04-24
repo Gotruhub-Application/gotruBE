@@ -3,6 +3,7 @@ import cors from "cors"
 import { failedResponse } from "./support/http"; 
 import { httpLogger } from "./httpLogger";
 import { authRouter } from "./routers/auth/organization.register";
+import { adminRouter } from "./routers/admin.routers";
 import bodyParser from "body-parser"
 import Database from './db'
 
@@ -25,10 +26,11 @@ app.use(express.json())
 
 // CONNECT TO DB 
 if (process.env.PROJ_ENV === 'DEV' || process.env.PROJ_ENV === 'PRODUCTION') {
-    console.log("heyyyyyy")
     Database.getInstance()
  }
 app.use("/", authRouter)
+app.use("/", adminRouter);
+
 app.get("/", (req: Request, res: Response) => {
     res.send({message:"welcome to express and typescript"});
 });
