@@ -7,7 +7,7 @@ const FeatureSchema: Schema<Ifeature> = new Schema<Ifeature>({
 }, { timestamps: true });
 
 const SubscriptionSchema: Schema<Isubscription> = new Schema<Isubscription>({
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
     duration: { type: String, required: true },
     description: { type: String, required: true },
     planValidity: { type: Number, required: true },
