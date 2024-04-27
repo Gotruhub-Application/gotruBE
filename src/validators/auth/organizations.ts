@@ -2,7 +2,7 @@ import Joi from "joi";
 import mongoose  from 'mongoose';
 
 
-const objectIdValidator =Joi.extend((Joi)=>({
+export const objectIdValidator =Joi.extend((Joi)=>({
   type: 'objectId',
   base: Joi.string(),
   messages: {
