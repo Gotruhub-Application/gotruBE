@@ -36,3 +36,13 @@ export interface Itoken extends Document{
   created_at?: Date;
   expires_at: Date;
 };
+
+export interface IUnit extends Document {
+  name:string
+  organization: Schema.Types.ObjectId;
+}
+export interface ISubUnit extends Document {
+  name:string
+  unit: Schema.Types.ObjectId;
+  organization: Schema.Types.ObjectId;
+}

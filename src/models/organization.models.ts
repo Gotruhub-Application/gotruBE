@@ -1,5 +1,5 @@
 import {Schema, Model, model } from 'mongoose';
-import { IOrganization,Itoken } from '../interfaces/organization';
+import { IOrganization,Itoken,IUnit,ISubUnit } from '../interfaces/organization';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -157,6 +157,44 @@ const TokenSchema:Schema<Itoken> = new Schema<Itoken>({
   },
 })
 
+const UnitSchema:Schema<IUnit> = new Schema<IUnit>({
+  name: {
+    type: String,
+    required:true,
+    unique:true
+  },
+  organization: {
+    type: Schema.Types.ObjectId,
+    ref:"Organization",
+    required:true
+  },
+}, {
+  timestamps: true,
+})
+
+const SubUnitSchema:Schema<ISubUnit> = new Schema<ISubUnit>({
+  name: {
+    type: String,
+    required:true,
+    unique:true
+  },
+  organization: {
+    type: Schema.Types.ObjectId,
+    ref:"Organization",
+    required:true
+  },
+  unit: {
+    type: Schema.Types.ObjectId,
+    ref:"Unit",
+    required:true
+  },
+}, {
+  timestamps: true,
+})
+
+
 
 export const Organization: Model<IOrganization> = model<IOrganization>('Organization', OrganizationSchema);
 export const Token: Model<Itoken> = model<Itoken>('Token', TokenSchema);
+export const Unit: Model<IUnit> = model<IUnit>('Unit', UnitSchema);
+export const SubUnit: Model<ISubUnit> = model<ISubUnit>('SubUnit', SubUnitSchema);
