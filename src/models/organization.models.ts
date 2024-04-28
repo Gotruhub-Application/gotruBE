@@ -1,5 +1,5 @@
 import {Schema, Model, model } from 'mongoose';
-import { IOrganization,Itoken,IUnit,ISubUnit } from '../interfaces/organization';
+import { IOrganization,Itoken,IUnit,ISubUnit, Iuser} from '../interfaces/organization';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -192,9 +192,36 @@ const SubUnitSchema:Schema<ISubUnit> = new Schema<ISubUnit>({
   timestamps: true,
 })
 
+const UserSchema: Schema<Iuser> = new Schema<Iuser>({
+  fullName: { type: String, required: true },
+  regNum: { type: String, required: false, unique: false },
+  phone: { type: String, required: false },
+  password: {
+    type: String,
+    required: false,
+    select: false,
+  },
+  email: {
+    type: String,
+    required: false,
+    unique: false,
+    default:""
+  },
+  guardians: [{ type: Schema.Types.ObjectId, ref: "User", required:false }],
+  piviotUnit:{ type: Schema.Types.ObjectId, ref: "Unit", required:false },
+  subUnit:{ type: Schema.Types.ObjectId, ref: "SubUnit", required:false },
+  profileImage:{ type: Schema.Types.ObjectId, ref: "Media", required:false },
+  signature:{ type: Schema.Types.ObjectId, ref: "Media", required:false },
+  organization:{ type: Schema.Types.ObjectId, ref: "Organization", required:true },
+  role: { type: String, required: true },
+  children: [{ type: Schema.Types.ObjectId, ref: "User", required:false }],
+}, { timestamps: true });
+
+
 
 
 export const Organization: Model<IOrganization> = model<IOrganization>('Organization', OrganizationSchema);
 export const Token: Model<Itoken> = model<Itoken>('Token', TokenSchema);
 export const Unit: Model<IUnit> = model<IUnit>('Unit', UnitSchema);
 export const SubUnit: Model<ISubUnit> = model<ISubUnit>('SubUnit', SubUnitSchema);
+export const User: Model<Iuser> = model<Iuser>('User', UserSchema);

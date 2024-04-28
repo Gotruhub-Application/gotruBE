@@ -46,3 +46,19 @@ export interface ISubUnit extends Document {
   unit: Schema.Types.ObjectId;
   organization: Schema.Types.ObjectId;
 }
+
+export interface Iuser extends Document {
+  fullName:string,
+  email?:string,
+  password?:string,
+  phone?:string,
+  regNum?:string,
+  guardians?: [{type:Schema.Types.ObjectId}],
+  piviotUnit?: {type:Schema.Types.ObjectId},
+  subUnit?: {type:Schema.Types.ObjectId},
+  profileImage?: {type:Schema.Types.ObjectId},
+  signature?: {type:Schema.Types.ObjectId},
+  organization: {type:Schema.Types.ObjectId},
+  children:[{type:Schema.Types.ObjectId}],
+  role:string
+}
