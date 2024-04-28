@@ -138,8 +138,12 @@ export const IsAuthenticatedOrganization =async (req:Request, res:Response, next
       if (!org?.isVerified){
           return failedResponse (res, 401, 'Account is not verified please verify account first.' )
       }
+
+      req.params.domain =  org.domain as string;
+
       next();
-  } catch (error) {
+  } catch (error:any) {
+    logger.error(error.message);
       return failedResponse (res, 401, 'Invalid token.' )
   }
 }

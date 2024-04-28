@@ -4,7 +4,7 @@ import bcrypt from "bcrypt"
 import { OrgProfileUpdateValidator, OrgRegistrationValidation,orgEmailVerificationValidator, resentTokenValidator } from "../../validators/auth/organizations";
 import { logger } from "../../logger"; 
 import { failedResponse, successResponse } from "../../support/http";
-import { OtpToken, ValidateToken, verifyToken } from "../../support/helpers"; 
+import { OtpToken, ValidateToken, generateOrganizationDOmainCode, verifyToken } from "../../support/helpers"; 
 import { LoginValidator, NewPasswordValidator } from "../../validators/auth/general.validators";
 import { generateJwtToken } from "../../support/generateTokens";
 
@@ -24,6 +24,7 @@ export const OrganizationSignup= async (req:Request, res:Response, next:NextFunc
     }
     // const salt = await bcrypt.genSalt(10)
     // value.password = await bcrypt.hash(value.password, salt);
+    value["domain"] = await generateOrganizationDOmainCode()
     const organization = await Organization.create({ ...value, role: "admin"});
     await OtpToken(value.email,"Account activation code", "templates/activateemail.html")
     // const {password, ...responseOrganization} = organization.toObject();
