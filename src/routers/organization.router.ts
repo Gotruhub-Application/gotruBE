@@ -1,6 +1,6 @@
 import {Router} from "express"
 import { Organization } from "../models/organization.models"
-import { OrganizatioinSubUnits, OrganizatioinUnits } from "../controllers/organization.controller"
+import { OrgUsers, OrganizatioinSubUnits, OrganizatioinUnits } from "../controllers/organization.controller"
 import { IsAuthenticatedOrganization } from "../support/middleware"
 
 export const organizationRouter = Router()
@@ -16,3 +16,9 @@ organizationRouter
 .get("/subunits/:id",IsAuthenticatedOrganization,OrganizatioinSubUnits.getSingleSubUnit)
 .put("/subunits/:id",IsAuthenticatedOrganization,OrganizatioinSubUnits.updateSubUnit)
 .delete("/subunits/:id",IsAuthenticatedOrganization,OrganizatioinSubUnits.deleteSubUnit)
+
+.post("/users/add-user",IsAuthenticatedOrganization, OrgUsers.createUser)
+.get("/users/get-users/:role",IsAuthenticatedOrganization, OrgUsers.getUsers)
+.get("/users/get-user/:id",IsAuthenticatedOrganization, OrgUsers.getSingleUser)
+.put("/users/get-user/:id",IsAuthenticatedOrganization, OrgUsers.updateSingleUser)
+.delete("/users/get-user/:id",IsAuthenticatedOrganization, OrgUsers.deleteSingleUser)

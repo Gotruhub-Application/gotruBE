@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
 import { failedResponse, successResponse } from "../support/http";
-import { SubUnit, Unit } from "../models/organization.models";
-import { SubUnitValidator, unitValidator } from "../validators/organization.validator";
+import { SubUnit, Unit, User } from "../models/organization.models";
+import { SubUnitValidator, orgStudentValidator, orgUpdateUserValidator, orgUserValidator, unitValidator } from "../validators/organization.validator";
 import { Logger } from "winston";
+import { Media } from "../models/media.models";
+import { generateRandomPassword, sendOnboardingMail } from "../support/helpers";
+import bcrypt from "bcrypt"
 
 
 export class OrganizatioinUnits {
@@ -177,3 +180,209 @@ export class OrganizatioinSubUnits {
 
 }
 
+export class OrgUsers {
+  static async createUser (req:Request, res:Response, next:NextFunction){
+    try {
+        let password:string = "";
+        const { error, value } = orgUserValidator.validate(req.body);
+        if (error) {
+            return failedResponse (res, 400, `${error.details[0].message}`)
+        }
+        if (value.role == "student"){
+              const userExist = await User.findOne({
+              regNum:{ $regex: new RegExp(value.regNum, 'i') }, 
+              organization: req.params.organizationId
+            });
+    
+              if(userExist) return failedResponse(res,400, "Student with the registration number already exist.") 
+
+            // validate parents
+              // Find the documents for the provided feature IDs
+              const parents = await User.find({ _id: { $in: value.guardians } });
+            
+              const { guardians, ...data } = value;
+              // Check if all guardian IDs are valid
+              if (parents.length !== guardians.length) {
+                  return failedResponse(res, 404, "One or more guardians IDs are invalid.");
+              }
+            // validate unit
+            const unit = await Unit.findOne({
+              _id:value.piviotUnit, 
+              organization: req.params.organizationId
+            });
+            if(!unit) return failedResponse(res,404, "Pivot unit is not a valid unit.") 
+
+            // validate subunit
+            if (value.subUnit){
+              const subUnit = await SubUnit.findOne({
+                _id:value.subUnit, 
+                organization: req.params.organizationId
+              });
+
+              if(!subUnit) return failedResponse(res,404, "Sub unit is not valid.") 
+            }
+          
+        }
+  
+        // validate profileImage
+        const image = await Media.findOne({
+          _id:value.profileImage, 
+        });
+        if(!image) return failedResponse(res,404, "Profile image is not valid.") 
+
+        if (value.role == "guardian"){
+          // validate profileImage
+          const signature = await Media.findById(
+            value.signature);
+          if(!signature) return failedResponse(res,404, "SIgnature image is not valid.") 
+
+          // validate children
+          // Find the documents for the provided children IDs
+         
+          const children = await User.find({ _id: { $in: value.children } });
+          logger.info(children);
+
+          // const { kids, ...data } = value;
+
+          // Check if kids array is defined before accessing its length
+          if (children.length !== value.children.length) {
+            return failedResponse(res, 404, "One or more children IDs are invalid.");
+          }
+        }
+
+        if (value.role != "student"){
+          // validate profileImage
+          const userExist = await User.findOne({
+            email:value.email, 
+            organization: req.params.organizationId
+          });
+  
+          if(userExist) return failedResponse(res,400, "User with this email already exist.") 
+          password = generateRandomPassword(6)
+          const salt = await bcrypt.genSalt(10)
+          value["password"] = await bcrypt.hash(password, salt);
+        }
+
+        value["organization"] = req.params.organizationId
+        const newUser  = await User.create(value)
+        // send onbard mail to the new user
+        await sendOnboardingMail(value.role,value.email,
+          "Complete Registeration","templates/user_onboarding.html",
+          {email:value.email, fullName:value.fullName, password:password, domain:req.params.domain}
+        )
+        return successResponse(res,201,"Unit created successfully",{newUser} )
+
+    } catch (error:any) {
+      logger.error(`Error at line ${error.name}: ${error.message}\n${error.stack}`);
+      return failedResponse(res,500, error.message)
+    }
+  };
+
+  static async getUsers (req:Request, res:Response, next:NextFunction){
+    try {
+        const users = await User.find({
+          role:{ $regex: new RegExp(req.params.role, 'i') }, 
+          organization: req.params.organizationId
+        });
+        return successResponse(res,200,"Success",{users} )
+
+    } catch (error:any) {
+      logger.error(`Error at line ${error.name}: ${error.message}\n${error.stack}`);
+      return failedResponse(res,500, error.message)
+    }
+  };
+
+  static async getSingleUser (req:Request, res:Response, next:NextFunction){
+    try {
+        const user = await User.findOne({
+          _id:req.params.id,
+          organization: req.params.organizationId
+        });
+        return successResponse(res,200,"Success",{user} )
+
+    } catch (error:any) {
+      logger.error(`Error at line ${error.name}: ${error.message}\n${error.stack}`);
+      return failedResponse(res,500, error.message)
+    }
+  };
+
+  static async updateSingleUser (req:Request, res:Response, next:NextFunction){
+    try {
+      const { error, value } = orgUpdateUserValidator.validate(req.body);
+      if (error) {
+          return failedResponse (res, 400, `${error.details[0].message}`)
+      }
+      if (value.role == "student"){
+
+            // Find the documents for the provided feature IDs
+            const parents = await User.find({ _id: { $in: value.guardians } });
+          
+            const { guardians, ...data } = value;
+            // Check if all guardian IDs are valid
+            if (parents.length !== guardians.length) {
+                return failedResponse(res, 404, "One or more guardians IDs are invalid.");
+            }
+          // validate unit
+          const unit = await Unit.findOne({
+            _id:value.piviotUnit, 
+            organization: req.params.organizationId
+          });
+          if(!unit) return failedResponse(res,404, "Pivot unit is not a valid unit.") 
+
+          // validate subunit
+          if (value.subUnit){
+            const subUnit = await SubUnit.findOne({
+              _id:value.subUnit, 
+              organization: req.params.organizationId
+            });
+
+            if(!subUnit) return failedResponse(res,404, "Sub unit is not valid.") 
+          }
+        
+      }
+
+      // validate profileImage
+      const image = await Media.findOne({
+        _id:value.profileImage, 
+      });
+      if(!image) return failedResponse(res,404, "Profile image is not valid.") 
+
+      if (value.role == "guardian"){
+        // validate profileImage
+        const signature = await Media.findById(
+          value.signature);
+        if(!signature) return failedResponse(res,404, "SIgnature image is not valid.") 
+
+        // validate children
+        // Find the documents for the provided children IDs
+       
+        const children = await User.find({ _id: { $in: value.children } });
+        logger.info(children);
+
+        // Check if kids array is defined before accessing its length
+        if (children.length !== value.children.length) {
+          return failedResponse(res, 404, "One or more children IDs are invalid.");
+        }
+      }
+      const updatedUser  = await User.findOneAndUpdate({_id:req.params.id, organization:req.params.organizationId}, value, {new:true})
+      return successResponse(res, 200, "Success", {updatedUser})
+    } catch (error:any) {
+      logger.error(`Error at line ${error.name}: ${error.message}\n${error.stack}`);
+      return failedResponse(res,500, error.message)
+    }
+  };
+
+  static async deleteSingleUser (req:Request, res:Response, next:NextFunction){
+    try {
+        const user = await User.findOneAndDelete({
+          _id:req.params.id,
+          organization: req.params.organizationId
+        });
+        return successResponse(res,204)
+
+    } catch (error:any) {
+      logger.error(`Error at line ${error.name}: ${error.message}\n${error.stack}`);
+      return failedResponse(res,500, error.message)
+    }
+  };
+}

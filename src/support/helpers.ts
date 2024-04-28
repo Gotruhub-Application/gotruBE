@@ -1,4 +1,4 @@
-import { Token } from "../models/organization.models";
+import { Token, User, Organization } from "../models/organization.models";
 import nodemailer from "nodemailer"
 import dotenv from "dotenv"
 import fs from "fs"
@@ -16,6 +16,23 @@ export const generateRandomToken = async function(): Promise<string> {
       token = Math.floor(Math.random() * 9000) + 1000; // Generate a 6-digit random number
       // Check if the generated code already exists in the database
       const existingToken = await Token.findOne({ token: token });
+      if (!existingToken) {
+        codeExists = false; // Exit the loop if code doesn't exist in the database
+      }
+    }
+  
+    return token.toString(); // Convert number to string before returning
+  };
+
+export const generateOrganizationDOmainCode = async function(): Promise<string> {
+    let token: any = 0;
+    let codeExists = true;
+  
+    // Generate a new code until a unique one is found
+    while (codeExists) {
+      token = Math.floor(Math.random() * 9000) + 1000; // Generate a 6-digit random number
+      // Check if the generated code already exists in the database
+      const existingToken = await Organization.findOne({ domain: token });
       if (!existingToken) {
         codeExists = false; // Exit the loop if code doesn't exist in the database
       }
@@ -46,6 +63,14 @@ export async function OtpToken(email:string,subject:string="Otp Token", template
     }
     // send mail
     await sendTemplateMail(email,subject,template, {email:email,token:token})
+}
+
+export async function sendOnboardingMail(role:string, email:string, subject:string,template:string, context:object): Promise<boolean>{
+    if(role === "student"){
+        return false
+    }
+    await sendTemplateMail(email,subject,template, context)
+    return true;
 }
 
 export async function verifyToken(email:string, token:string): Promise<boolean> {
@@ -112,3 +137,21 @@ export const sendTemplateMail = async (email: string, subject: string, templateP
     // Send the email
     await sentMail(email, subject , compiledHtml);
 };
+
+
+export function generateRandomPassword(length: number): string {
+    const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numericChars = '0123456789';
+    const specialChars = '!@#$%^&*';
+  
+    const allChars = lowercaseChars + uppercaseChars + numericChars + specialChars;
+  
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * allChars.length);
+      password += allChars[randomIndex];
+    }
+  
+    return password;
+  }

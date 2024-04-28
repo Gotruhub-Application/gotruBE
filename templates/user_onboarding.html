@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Our App!</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
+    table {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    td {
+      padding: 40px;
+    }
+    h2 {
+      color: #333333;
+    }
+    p, ul {
+      color: #666666;
+    }
+  </style>
+</head>
+<body>
+
+  <table cellpadding="0" cellspacing="0" border="0" align="center">
+    <tr>
+      <td>
+        <h2>Welcome to Our App!</h2>
+        <p>Hello {{ fullName }},</p>
+        <p>An account has been created for you with the following details:</p>
+        <ul>
+          <li>Email: {{ email }}</li>
+          <li>Password: {{ password }}</li>
+          <li>DomainCode: {{ domain }}</li>
+        </ul>
+        <p>You can now use these details to log in to our app and complete the onboarding process.</p>
+        <p>If you have any questions or need assistance, feel free to contact our support team.</p>
+        <p>Thank you!</p>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
