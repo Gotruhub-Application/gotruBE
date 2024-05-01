@@ -72,24 +72,23 @@ export class CompleteOnboarding {
                 return failedResponse(res, 400, "Incorrect password");
             }
             // Exclude sensitive fields and unnecessary document details
-
+            const details = {
+                _id: userExist._id,
+                fullName: userExist.fullName,
+                role: userExist.role,
+                organization: userExist.organization,
+                createdAt: userExist.createdAt,
+                updatedAt: userExist.updatedAt,
+                email:userExist.email,
+                profileImage: userExist.profileImage,
+                signature: userExist.signature,
+                children: userExist.children,
+                onboardingCompleted: userExist.onboardingCompleted,
+                defaultEmail: userExist.defaultEmail,
+                
+            }
             const responseData = {
-                access_token: generateJwtToken({ id: userExist._id, role: userExist.role, organization: userExist.organization, email: userExist.email, onboardingCompleted:userExist.onboardingCompleted }),
-                details: {
-                    _id: userExist._id,
-                    fullName: userExist.fullName,
-                    role: userExist.role,
-                    organization: userExist.organization,
-                    createdAt: userExist.createdAt,
-                    updatedAt: userExist.updatedAt,
-                    email:userExist.email,
-                    profileImage: userExist.profileImage,
-                    signature: userExist.signature,
-                    children: userExist.children,
-                    onboardingCompleted: userExist.onboardingCompleted,
-                    defaultEmail: userExist.defaultEmail,
-                    
-                }
+                access_token: generateJwtToken(details),details,
             };
             return successResponse(res, 200, "Success", { responseData });
 
@@ -99,23 +98,24 @@ export class CompleteOnboarding {
         }
     }
 
-    static async createPassword (req:Request, res:Response) {
+    static async updatePassword (req:Request, res:Response) {
+        const reqUser = (req as any).user;
 
         try {
             const { error, value } = passwordValidator.validate(req.body);
             if (error) {
                 return failedResponse(res, 400, `${error.details[0].message}`);
-            }
+            };
 
-            const userExist = await CompleteOnboarding.getUserByEmail(req.params.email)
+            const userExist = await CompleteOnboarding.getUserByEmail(reqUser.email);
             if (!userExist) return failedResponse(res, 404, "User does not exist.");
 
-            const updatedUser = await CompleteOnboarding.changePassword(req.params.email, value.password)
+            const updatedUser = await CompleteOnboarding.changePassword(reqUser.email, value.password);
             
             return successResponse(res, 200, "Success", {updatedUser});
 
         } catch (error:any) {
-            writeErrosToLogs(error)
+            writeErrosToLogs(error);
             return failedResponse(res, 500, "Internal server error");
         }
     }
