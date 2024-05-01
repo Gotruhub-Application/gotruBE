@@ -163,6 +163,7 @@ export const IsAuthenticatedUser =async (req:Request, res:Response, next:NextFun
       req.params.role= decodedToken.role; 
       req.params.userId= decodedToken.id;
       req.params.organizationId =  decodedToken.organization; 
+      (req as any).user = decodedToken
       // check if the user has verifed their account
       const user = await User.findById(decodedToken.id)
       if (!user?.onboardingCompleted){
@@ -191,7 +192,7 @@ export const IsAuthenticatedNewUser =async (req:Request, res:Response, next:Next
       req.params.role= decodedToken.role; 
       req.params.userId= decodedToken.id;
       req.params.organizationId =  decodedToken.organization; 
-
+      (req as any).user = decodedToken
       next();
   } catch (error:any) {
     logger.error(error.message);

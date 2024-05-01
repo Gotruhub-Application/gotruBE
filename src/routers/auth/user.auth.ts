@@ -6,7 +6,7 @@ export const userAuthRouter = Router()
 
 userAuthRouter
 .post("/login", CompleteOnboarding.onbaord)
-.post("/change-password", IsAuthenticatedNewUser,CompleteOnboarding.createPassword)
+.post("/change-password", IsAuthenticatedNewUser,CompleteOnboarding.updatePassword)
 
 .post("/user/reset-password/get-reset-token", UserResetPasswordController.getResetToken)
 .post("/user/reset-password/validate-token", UserResetPasswordController.verifyToken)

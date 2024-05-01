@@ -116,7 +116,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const sentMail = async (to:string, subject:string, html:string)=>{
+export const sentMail = async (to:string, subject:string, html:string)=>{
     await transporter.sendMail({
         from: process.env.username, // Update with your email address
         to: to,
