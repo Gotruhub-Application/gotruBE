@@ -253,7 +253,7 @@ export class OrgUsers {
         if (value.role != "student"){
           // validate profileImage
           const userExist = await User.findOne({
-            email:value.email, 
+            defaultEmail:value.email, 
             organization: req.params.organizationId
           });
   
@@ -261,14 +261,17 @@ export class OrgUsers {
           password = generateRandomPassword(6)
           const salt = await bcrypt.genSalt(10)
           value["password"] = await bcrypt.hash(password, salt);
+          value["defaultEmail"] = value.email
+          value.email = `${req.params.domain}_${value.email}`
+          
         }
 
         value["organization"] = req.params.organizationId
         const newUser  = await User.create(value)
         // send onbard mail to the new user
-        await sendOnboardingMail(value.role,value.email,
+        await sendOnboardingMail(value.role,value.defaultEmail,
           "Complete Registeration","templates/user_onboarding.html",
-          {email:value.email, fullName:value.fullName, password:password, domain:req.params.domain}
+          {email:value.email, fullName:value.fullName, password:password}
         )
         return successResponse(res,201,"Unit created successfully",{newUser} )
 
@@ -386,3 +389,5 @@ export class OrgUsers {
     }
   };
 }
+
+

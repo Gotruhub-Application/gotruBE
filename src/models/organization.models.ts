@@ -199,9 +199,15 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
   password: {
     type: String,
     required: false,
-    select: false,
+    // select: false,
   },
   email: {
+    type: String,
+    required: false,
+    unique: true,
+    default:""
+  },
+  defaultEmail: {
     type: String,
     required: false,
     unique: false,
@@ -215,6 +221,11 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
   organization:{ type: Schema.Types.ObjectId, ref: "Organization", required:true },
   role: { type: String, required: true },
   children: [{ type: Schema.Types.ObjectId, ref: "User", required:false }],
+  onboardingCompleted:{
+    type:Boolean,
+    required:false,
+    default:false
+  },
 }, { timestamps: true });
 
 
