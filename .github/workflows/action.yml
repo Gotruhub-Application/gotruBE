@@ -48,9 +48,11 @@ jobs:
     - name: install dependencies
       run: npm install
      
-    - name: Build
-      run: npm run build 
-
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
     - name: SSH into EC2 and deploy
       uses: appleboy/ssh-action@master
       with:
@@ -62,6 +64,5 @@ jobs:
           git pull 
           export NVM_DIR=~/.nvm
           source ~/.nvm/nvm.sh
-          npm install
           npm run build
-          forever restart 1
+          npm run start_dev

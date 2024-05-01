@@ -18,3 +18,7 @@ export const LoginValidator=Joi.object({
   export const BlackListedTokenValidator=Joi.object({
     token: Joi.string().required()
   })
+
+  export const passwordValidator=Joi.object({
+    password: Joi.string().min(6).required(),
+  })

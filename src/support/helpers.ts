@@ -3,6 +3,7 @@ import nodemailer from "nodemailer"
 import dotenv from "dotenv"
 import fs from "fs"
 import handlebars from "handlebars"
+import { logger } from "../logger"; 
 
 dotenv.config()
 
@@ -155,3 +156,7 @@ export function generateRandomPassword(length: number): string {
   
     return password;
   }
+
+export function writeErrosToLogs(error:any) {
+    logger.error(`Error in login at line ${error.name}: ${error.message}\n${error.stack}`);
+}

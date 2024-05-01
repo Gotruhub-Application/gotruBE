@@ -7,6 +7,7 @@ import { adminRouter } from "./routers/admin.routers";
 import bodyParser from "body-parser"
 import Database from './db'
 import { organizationRouter } from "./routers/organization.router";
+import { userAuthRouter } from "./routers/auth/user.auth";
 
 const app:Application = express();
 
@@ -32,6 +33,7 @@ if (process.env.PROJ_ENV === 'DEV' || process.env.PROJ_ENV === 'PRODUCTION') {
 app.use("/", authRouter)
 app.use("/", adminRouter);
 app.use("/", organizationRouter);
+app.use("/", userAuthRouter);
 
 app.get("/", (req: Request, res: Response) => {
     res.send({message:"welcome to express and typescript"});

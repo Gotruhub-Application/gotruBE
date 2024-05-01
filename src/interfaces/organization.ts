@@ -50,6 +50,7 @@ export interface ISubUnit extends Document {
 export interface Iuser extends Document {
   fullName:string,
   email?:string,
+  defaultEmail?:string,
   password?:string,
   phone?:string,
   regNum?:string,
@@ -60,5 +61,8 @@ export interface Iuser extends Document {
   signature?: {type:Schema.Types.ObjectId},
   organization: {type:Schema.Types.ObjectId},
   children:[{type:Schema.Types.ObjectId}],
-  role:string
+  role:string,
+  onboardingCompleted:boolean,
+  createdAt:Date,
+  updatedAt:Date
 }
