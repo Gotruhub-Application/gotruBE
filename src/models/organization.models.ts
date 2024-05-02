@@ -233,6 +233,11 @@ const PlanSchema:Schema<IPlan> = new Schema<IPlan>({
     type: Number,
     required:true,
   },
+  quantityLeft: {
+    type: Number,
+    default:0,
+    required:true,
+  },
   planValidity:{
     type: Number,
     required:false,
@@ -278,6 +283,11 @@ const appTokenSchema:Schema<IappToken> = new Schema<IappToken>({
   plan: {
     type: Schema.Types.ObjectId,
     ref:"Plan",
+    required:true
+  },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref:"User",
     required:true
   },
 }, {

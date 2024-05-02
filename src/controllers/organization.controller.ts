@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
 import { failedResponse, initiatePaystack, successResponse } from "../support/http";
-import { Plan, SubUnit, Unit, User } from "../models/organization.models";
-import { SubUnitValidator, orgStudentValidator, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, unitValidator } from "../validators/organization.validator";
+import { AppToken, Plan, SubUnit, Unit, User } from "../models/organization.models";
+import { SubUnitValidator, orgStudentValidator, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, unitValidator } from "../validators/organization.validator";
 import { Logger } from "winston";
 import { Media } from "../models/media.models";
-import { generateRandomPassword, sendOnboardingMail, writeErrosToLogs } from "../support/helpers";
+import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
 import bcrypt from "bcrypt"
 import { Subscription } from "../models/admin.models";
+import { String } from "aws-sdk/clients/apigateway";
 
 
 export class OrganizatioinUnits {
@@ -283,11 +284,16 @@ export class OrgUsers {
   };
 
   static async getUsers (req:Request, res:Response, next:NextFunction){
+    const ITEMS_PER_PAGE = 1;
     try {
+        const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
+        const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
         const users = await User.find({
           role:{ $regex: new RegExp(req.params.role, 'i') }, 
           organization: req.params.organizationId
-        });
+        })
+        .skip(skip)
+        .limit(ITEMS_PER_PAGE);;
         return successResponse(res,200,"Success",{users} )
 
     } catch (error:any) {
@@ -403,6 +409,7 @@ export class BuySubcriptionPlan {
       value.Organization = req.params.organizationId
       value.amount = (value.quantity * parseFloat(subscriptionTypeExist.amount.toString()));
       value.planValidity= subscriptionTypeExist.planValidity
+      value.quantityLeft= value.quantity
       
       const plan = await Plan.create(value)
       return successResponse(res, 200, "Success", {plan})
@@ -499,5 +506,44 @@ export class BuySubcriptionPlan {
 
   };
 
+}
+
+export class AppAccessTokens {
+  static async sendtokens(req: Request, res: Response) {
+    try {
+      const { error, value } = sendUsersTokenValidator.validate(req.body);
+      if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+    
+      const users = await User.find({ _id: { $in: value.users } });
+      logger.info(users);
+
+      if (users.length !== value.users.length) {
+        return failedResponse(res, 404, "One or more users IDs are invalid.");
+      };
+      
+      let plan = await Plan.findOne({_id:value.plan, Organization:req.params.organizationId});
+      if (!plan) return failedResponse(res, 404, "This plan does not exist.");
+
+      // ensure token left is sufficient for users to send to
+      const index = users.length;
+      if (plan.quantityLeft < users.length) return failedResponse(res, 400, `Cannot send plan quantity ${plan?.quantityLeft} to ${index} users`);
+      
+      const generatedTokens = [];
+    
+      for (const user of users) {
+        if (!user.defaultEmail) continue;
+
+        const token = await AppToken.create({ token: Date.now().toString(), plan: plan, user:user });
+        generatedTokens.push(token);
+        await sendTemplateMail(user.defaultEmail, "Application Access Token", "templates/appAccessToken.html", { token: token.token, fullname: user.fullName });
+      }
+      // Decrement the quantityLeft field by the number of tokens generated
+      await Plan.findByIdAndUpdate(value.plan, { $inc: { quantityLeft: -index } });
+      return successResponse(res, 200, "Tokens sent successfully.", { generatedTokens });
+    } catch (error: any) {
+      writeErrosToLogs(error)
+      return failedResponse(res, 500, error.message)
+    }
+  }
 }
 

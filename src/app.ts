@@ -8,6 +8,7 @@ import bodyParser from "body-parser"
 import Database from './db'
 import { organizationRouter } from "./routers/organization.router";
 import { userAuthRouter } from "./routers/auth/user.auth";
+import { logger } from "handlebars";
 
 const app:Application = express();
 

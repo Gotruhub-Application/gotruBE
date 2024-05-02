@@ -41,6 +41,7 @@ export interface IPlan extends Document{
   subscriptionType: Schema.Types.ObjectId;
   Organization: Schema.Types.ObjectId;
   quantity: number;
+  quantityLeft: number;
   amount: number;
   planValidity: number,
   paidStatus:boolean;
@@ -50,6 +51,7 @@ export interface IPlan extends Document{
 
 export interface IappToken extends Document{
   plan: Schema.Types.ObjectId;
+  user: Schema.Types.ObjectId;
   token: string;
   used:boolean;
   expired:boolean;

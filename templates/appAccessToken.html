@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Access Token</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your App Access Token</h1>
+        <p>Dear {{fullName}},</p>
+        <p>Congratulations! You now an access token for our app. Please keep this token safe and do not share it with anyone.</p>
+        <p>Access Token Details:</p>
+        <ul>
+            <li><strong>Token:</strong> {{token}}</li>
+            <!-- <li><strong>Expiry Date:</strong> {{expiryDate}}</li> -->
+            <!-- Add more access token details as needed -->
+        </ul>
+        <p>If you have any questions or concerns, please feel free to contact us.</p>
+        <p>Best Regards,</p>
+        <p>Gotruhub</p>
+        <!-- <p><a href="[Your Company Website]" class="btn">Visit Our Website</a></p> -->
+    </div>
+</body>
+</html>

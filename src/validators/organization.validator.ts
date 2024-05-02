@@ -99,3 +99,8 @@ export const purchasePlanValidator = Joi.object({
   quantity: Joi.number().required(),
   subscriptionType: objectIdValidator.objectId().required(),
 }).options({ abortEarly: false });
+
+export const sendUsersTokenValidator = Joi.object({
+  users: Joi.array().unique().items(objectIdValidator.objectId()).min(1).max(10),
+  plan: objectIdValidator.objectId().required(),
+})
