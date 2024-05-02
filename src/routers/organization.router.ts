@@ -1,6 +1,6 @@
 import {Router} from "express"
 import { Organization } from "../models/organization.models"
-import { OrgUsers, OrganizatioinSubUnits, OrganizatioinUnits } from "../controllers/organization.controller"
+import { BuySubcriptionPlan, OrgUsers, OrganizatioinSubUnits, OrganizatioinUnits } from "../controllers/organization.controller"
 import { IsAuthenticatedOrganization } from "../support/middleware"
 
 export const organizationRouter = Router()
@@ -22,3 +22,10 @@ organizationRouter
 .get("/users/get-user/:id",IsAuthenticatedOrganization, OrgUsers.getSingleUser)
 .put("/users/get-user/:id",IsAuthenticatedOrganization, OrgUsers.updateSingleUser)
 .delete("/users/get-user/:id",IsAuthenticatedOrganization, OrgUsers.deleteSingleUser)
+
+
+.post("/plan/add-to-cart",IsAuthenticatedOrganization, BuySubcriptionPlan.orderPlan)
+.get("/plan/my-plans",IsAuthenticatedOrganization, BuySubcriptionPlan.getAllMyPlans)
+.get("/plan/pending",IsAuthenticatedOrganization, BuySubcriptionPlan.myPendingPlans)
+.get("/plan/pay",IsAuthenticatedOrganization, BuySubcriptionPlan.buyPlan)
+.delete("/plan/:id",IsAuthenticatedOrganization, BuySubcriptionPlan.removePlan)

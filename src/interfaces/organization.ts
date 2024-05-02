@@ -1,4 +1,4 @@
-import { Document, Schema} from 'mongoose';
+import { Decimal128, Document, Schema} from 'mongoose';
 
 export interface IOrganization extends Document {
   phone: string;
@@ -37,6 +37,27 @@ export interface Itoken extends Document{
   expires_at: Date;
 };
 
+export interface IPlan extends Document{
+  subscriptionType: Schema.Types.ObjectId;
+  Organization: Schema.Types.ObjectId;
+  quantity: number;
+  amount: number;
+  planValidity: number,
+  paidStatus:boolean;
+  created_at?: Date;
+  expires_at: Date;
+};
+
+export interface IappToken extends Document{
+  plan: Schema.Types.ObjectId;
+  token: string;
+  used:boolean;
+  expired:boolean;
+  created_at?: Date;
+  expires_at: Date;
+};
+
+
 export interface IUnit extends Document {
   name:string
   organization: Schema.Types.ObjectId;
@@ -66,3 +87,4 @@ export interface Iuser extends Document {
   createdAt:Date,
   updatedAt:Date
 }
+

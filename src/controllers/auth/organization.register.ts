@@ -123,8 +123,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
           return failedResponse(res, 400, "Incorrect password");
       }
 
-      const access_token: string = generateJwtToken({ id: isOrganization._id, role: isOrganization.role });
       const {password, ...isOrganizationWithNoPassword} = isOrganization
+      const access_token: string = generateJwtToken({ id: isOrganization._id, role: isOrganization.role, email: isOrganization.email });
       return successResponse(res, 200, "Success", { access_token, details: isOrganizationWithNoPassword });
   } catch (error:any) {
       // Log the error using your logger

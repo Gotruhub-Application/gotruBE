@@ -5,6 +5,8 @@ import { BlackListedTokenValidator } from "../../validators/auth/general.validat
 import { BlackListedToken } from "../../models/general.models";
 import crypto from "crypto"
 import { sendTemplateMail, sentMail } from "../../support/helpers";
+import { Plan } from "../../models/organization.models";
+import { pl } from "@faker-js/faker";
 
 
 const secret:any = process.env.PAYSTACK_SECRET_KEY;
@@ -36,10 +38,20 @@ export const paystackWebhook = async(req:Request, res:Response)=>{
     if (hash == req.headers['x-paystack-signature']) {
         // Retrieve the request's body
         const event = req.body;
-        await sendTemplateMail("nwaforglory6@gmail.com","paystack webhook","templates/paystack.html",event)
+        const plans = event.data.metadata
+        for (const plan of plans){
+            await Plan.findByIdAndUpdate(plan.custom_fields._id,{$set:{paidStatus:true}})
+        }
+
+        const context ={
+            date:new Date(event.data.paid_at).toLocaleDateString(),
+            email:event.data.customer.email,
+            amount: event.data.amount,
+        }
+
+        await sendTemplateMail(event.data.customer.email,"Subscription payment successful","templates/paystack.html",context)
         // Do something with event  
-        res.send(200);
+        return successResponse(res, 200, "Success")
     }
-    const event = req.body;
     return failedResponse (res, 400, ".")
   }

@@ -8,6 +8,7 @@ const FeatureSchema: Schema<Ifeature> = new Schema<Ifeature>({
 
 const SubscriptionSchema: Schema<Isubscription> = new Schema<Isubscription>({
     name: { type: String, required: true },
+    amount: { type:Schema.Types.Decimal128, required: true },
     duration: { type: String, required: true },
     description: { type: String, required: true },
     planValidity: { type: Number, required: true },
