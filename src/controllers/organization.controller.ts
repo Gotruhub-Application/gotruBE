@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
 import { failedResponse, initiatePaystack, successResponse } from "../support/http";
-<<<<<<< HEAD
 import { AppToken, Plan, SubUnit, Unit, User } from "../models/organization.models";
 import { SubUnitValidator, orgStudentValidator, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, unitValidator } from "../validators/organization.validator";
 import { Logger } from "winston";
@@ -10,15 +9,6 @@ import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErro
 import bcrypt from "bcrypt"
 import { Subscription } from "../models/admin.models";
 import { String } from "aws-sdk/clients/apigateway";
-=======
-import { Plan, SubUnit, Unit, User } from "../models/organization.models";
-import { SubUnitValidator, orgStudentValidator, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, unitValidator } from "../validators/organization.validator";
-import { Logger } from "winston";
-import { Media } from "../models/media.models";
-import { generateRandomPassword, sendOnboardingMail, writeErrosToLogs } from "../support/helpers";
-import bcrypt from "bcrypt"
-import { Subscription } from "../models/admin.models";
->>>>>>> main
 
 
 export class OrganizatioinUnits {
@@ -419,10 +409,7 @@ export class BuySubcriptionPlan {
       value.Organization = req.params.organizationId
       value.amount = (value.quantity * parseFloat(subscriptionTypeExist.amount.toString()));
       value.planValidity= subscriptionTypeExist.planValidity
-<<<<<<< HEAD
       value.quantityLeft= value.quantity
-=======
->>>>>>> main
       
       const plan = await Plan.create(value)
       return successResponse(res, 200, "Success", {plan})
