@@ -133,6 +133,7 @@ export const IsAuthenticatedOrganization =async (req:Request, res:Response, next
       const decodedToken = verifyJwtToken(token)
       req.params.userId= decodedToken.id; 
       req.params.organizationId =  decodedToken.id; 
+      (req as any).org = decodedToken
       // check if the user has verifed their account
       const org = await Organization.findById(decodedToken.id)
       if (!org?.isVerified){

@@ -1,5 +1,5 @@
 import {Schema, Model, model } from 'mongoose';
-import { IOrganization,Itoken,IUnit,ISubUnit, Iuser} from '../interfaces/organization';
+import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken} from '../interfaces/organization';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -228,6 +228,61 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
   },
 }, { timestamps: true });
 
+const PlanSchema:Schema<IPlan> = new Schema<IPlan>({
+  quantity: {
+    type: Number,
+    required:true,
+  },
+  planValidity:{
+    type: Number,
+    required:false,
+  },
+  amount: {
+    type: Number,
+    required:false,
+  },
+  paidStatus: {
+    type: Boolean,
+    default:false,
+  },
+  subscriptionType: {
+    type: Schema.Types.ObjectId,
+    ref:"Subscription",
+    required:true
+  },
+  Organization: {
+    type: Schema.Types.ObjectId,
+    ref:"Organization",
+    required:true
+  },
+}, {
+  timestamps: true,
+})
+
+const appTokenSchema:Schema<IappToken> = new Schema<IappToken>({
+  token: {
+    type: String,
+    required:true
+  },
+  used:{
+    type: Boolean,
+    default:false,
+  },
+  expired:{
+    type: Boolean,
+    default:false,
+  },
+  expires_at:{
+    type:Date
+  },
+  plan: {
+    type: Schema.Types.ObjectId,
+    ref:"Plan",
+    required:true
+  },
+}, {
+  timestamps: true,
+})
 
 
 
@@ -236,3 +291,5 @@ export const Token: Model<Itoken> = model<Itoken>('Token', TokenSchema);
 export const Unit: Model<IUnit> = model<IUnit>('Unit', UnitSchema);
 export const SubUnit: Model<ISubUnit> = model<ISubUnit>('SubUnit', SubUnitSchema);
 export const User: Model<Iuser> = model<Iuser>('User', UserSchema);
+export const AppToken: Model<IappToken> = model<IappToken>('AppToken', appTokenSchema);
+export const Plan: Model<IPlan> = model<IPlan>('Plan', PlanSchema);

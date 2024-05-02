@@ -94,3 +94,8 @@ export const orgUpdateUserValidator = Joi.object({
   }),
   role: Joi.string().valid('student', 'guardian', 'staff', 'admin').required()
 }).options({ abortEarly: false });
+
+export const purchasePlanValidator = Joi.object({
+  quantity: Joi.number().required(),
+  subscriptionType: objectIdValidator.objectId().required(),
+}).options({ abortEarly: false });
