@@ -1,14 +1,13 @@
+import { Media } from "../models/media.models";
+import { AppToken, Plan, SubUnit, Unit, User } from "../models/organization.models";
+import { Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
 import { failedResponse, initiatePaystack, successResponse } from "../support/http";
-import { AppToken, Plan, SubUnit, Unit, User } from "../models/organization.models";
-import { SubUnitValidator, orgStudentValidator, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, unitValidator } from "../validators/organization.validator";
-import { Logger } from "winston";
-import { Media } from "../models/media.models";
+import { SubUnitValidator, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, unitValidator } from "../validators/organization.validator";
 import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
 import bcrypt from "bcrypt"
-import { Subscription } from "../models/admin.models";
-import { String } from "aws-sdk/clients/apigateway";
+import { emitUserCreationSignal } from "../support/signals";
 
 
 export class OrganizatioinUnits {
@@ -200,13 +199,9 @@ export class OrgUsers {
 
             // validate parents
               // Find the documents for the provided feature IDs
-              const parents = await User.find({ _id: { $in: value.guardians } });
+              const parent = await User.findById(value.guardians);
             
-              const { guardians, ...data } = value;
-              // Check if all guardian IDs are valid
-              if (parents.length !== guardians.length) {
-                  return failedResponse(res, 404, "One or more guardians IDs are invalid.");
-              }
+              if (!parent) return failedResponse(res,404, "guardians not found.")
             // validate unit
             const unit = await Unit.findOne({
               _id:value.piviotUnit, 
@@ -275,6 +270,7 @@ export class OrgUsers {
           "Complete Registeration","templates/user_onboarding.html",
           {email:value.email, fullName:value.fullName, password:password}
         )
+        emitUserCreationSignal(newUser)
         return successResponse(res,201,"Unit created successfully",{newUser} )
 
     } catch (error:any) {
@@ -307,7 +303,7 @@ export class OrgUsers {
         const user = await User.findOne({
           _id:req.params.id,
           organization: req.params.organizationId
-        });
+        }).populate("signature guardians relationImage children");
         return successResponse(res,200,"Success",{user} )
 
     } catch (error:any) {
@@ -325,13 +321,9 @@ export class OrgUsers {
       if (value.role == "student"){
 
             // Find the documents for the provided feature IDs
-            const parents = await User.find({ _id: { $in: value.guardians } });
-          
-            const { guardians, ...data } = value;
-            // Check if all guardian IDs are valid
-            if (parents.length !== guardians.length) {
-                return failedResponse(res, 404, "One or more guardians IDs are invalid.");
-            }
+            const parent = await User.findById(value.guardians);
+            
+            if (!parent) return failedResponse(res,404, "guardians not found.")
           // validate unit
           const unit = await Unit.findOne({
             _id:value.piviotUnit, 

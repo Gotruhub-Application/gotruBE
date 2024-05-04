@@ -20,7 +20,7 @@ export const OrgRegistrationValidation = Joi.object({
   email: Joi.string().email().required(),
   phone: Joi.string(),
   yearOfEstablishment: Joi.string(),
-  referalCode: Joi.string(),
+  // referalCode: Joi.string().default("null"),
   nameOfEstablishment: Joi.string(),
   nameOfProprietor: Joi.string(),
   businessAddress: Joi.string(),

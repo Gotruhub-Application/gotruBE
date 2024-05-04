@@ -83,7 +83,7 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   },
   referalCode: {
     type: String,
-    default: "",
+    default: "null",
     required: false
   },
   bankName: {
@@ -201,6 +201,11 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
     required: false,
     // select: false,
   },
+  passQrcode: {
+    type: String,
+    required: false,
+    default:""
+  },
   email: {
     type: String,
     required: false,
@@ -213,11 +218,12 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
     unique: false,
     default:""
   },
-  guardians: [{ type: Schema.Types.ObjectId, ref: "User", required:false }],
+  guardians: { type: Schema.Types.ObjectId, ref: "User", required:false },
   piviotUnit:{ type: Schema.Types.ObjectId, ref: "Unit", required:false },
   subUnit:{ type: Schema.Types.ObjectId, ref: "SubUnit", required:false },
   profileImage:{ type: Schema.Types.ObjectId, ref: "Media", required:false },
-  signature:{ type: Schema.Types.ObjectId, ref: "Media", required:false },
+  relationImage:{ type: Schema.Types.ObjectId, ref: "Media", required:false },
+  signature:{ type: Schema.Types.ObjectId, ref: "Media", required:false},
   organization:{ type: Schema.Types.ObjectId, ref: "Organization", required:true },
   role: { type: String, required: true },
   children: [{ type: Schema.Types.ObjectId, ref: "User", required:false }],

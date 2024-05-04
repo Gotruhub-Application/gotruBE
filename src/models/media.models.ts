@@ -1,5 +1,5 @@
-import { Imedia } from "../interfaces/media.interface";
 import { Schema, Model, model } from "mongoose";
+import { Imedia } from "../interfaces/media.interface";
 
 const MediaSchema :Schema<Imedia> = new Schema<Imedia>({
     file:{
