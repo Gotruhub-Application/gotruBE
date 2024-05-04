@@ -1,5 +1,6 @@
-import { BlackListedTokenDocument } from "../interfaces/general.interface";
 import {Schema, Model, model } from 'mongoose';
+import { BlackListedTokenDocument } from "../interfaces/general.interface";
+
 
 const BlackListTokenSchema :Schema<BlackListedTokenDocument> = new Schema<BlackListedTokenDocument>({
     token:{

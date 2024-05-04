@@ -52,10 +52,17 @@ export const orgUserValidator = Joi.object({
     then: Joi.string().email().required(), // Email is required
     otherwise: Joi.string().email() // Email is optional
   }),
-  guardians: Joi.array().unique().items(objectIdValidator.objectId()).min(1),
+  guardians: Joi.when('role', {
+    is: Joi.valid('student'), // If role is not 'student'
+    then:objectIdValidator.objectId().required()
+  }),
   children:  Joi.when('role', {
     is: Joi.valid('guardian'), // If role is not 'student'
     then:Joi.array().unique().items(objectIdValidator.objectId()).min(1).required()
+  }),
+  relationImage:  Joi.when('role', {
+    is: Joi.valid('student'), // If role is not 'student'
+    then:objectIdValidator.objectId().required().min(1).required()
   }),
   piviotUnit: objectIdValidator.objectId().when('role', { // Apply validation when role is 'student'
     is: 'student',
@@ -75,10 +82,14 @@ export const orgUserValidator = Joi.object({
 export const orgUpdateUserValidator = Joi.object({
   fullName: Joi.string().required().max(30),
   phone: Joi.string(),
-  guardians: Joi.array().unique().items(objectIdValidator.objectId()).min(1),
+  guardians: objectIdValidator.objectId(),
   children:  Joi.when('role', {
     is: Joi.valid('guardian'), // If role is not 'student'
     then:Joi.array().unique().items(objectIdValidator.objectId()).min(1).required()
+  }),
+  relationImage:  Joi.when('role', {
+    is: Joi.valid('guardian'), // If role is not 'student'
+    then:objectIdValidator.objectId().required()
   }),
   piviotUnit: objectIdValidator.objectId().when('role', { // Apply validation when role is 'student'
     is: 'student',

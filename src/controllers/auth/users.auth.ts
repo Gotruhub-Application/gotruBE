@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt"
 import { orgEmailVerificationValidator, resentTokenValidator } from "../../validators/auth/organizations";
 import { failedResponse, successResponse } from "../../support/http";
-import { OtpToken, ValidateToken, generateOrganizationDOmainCode, verifyToken, writeErrosToLogs } from "../../support/helpers"; 
+import { OtpToken, ValidateToken, generateOrganizationDOmainCode, generateQrcode, verifyToken, writeErrosToLogs } from "../../support/helpers"; 
 import { LoginValidator, NewPasswordValidator, passwordValidator } from "../../validators/auth/general.validators";
 import { generateJwtToken } from "../../support/generateTokens";
 import { logger } from "../../logger"; 
