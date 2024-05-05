@@ -4,7 +4,7 @@ import { Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
 import { failedResponse, initiatePaystack, successResponse } from "../support/http";
-import { SubUnitValidator, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, unitValidator } from "../validators/organization.validator";
+import { SubUnitValidator, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, unitValidator, useAppTokenValidator } from "../validators/organization.validator";
 import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
 import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
@@ -507,7 +507,6 @@ export class AppAccessTokens {
       if (error) return failedResponse(res, 400, `${error.details[0].message}`);
     
       const users = await User.find({ _id: { $in: value.users } });
-      logger.info(users);
 
       if (users.length !== value.users.length) {
         return failedResponse(res, 404, "One or more users IDs are invalid.");
@@ -533,6 +532,45 @@ export class AppAccessTokens {
       await Plan.findByIdAndUpdate(value.plan, { $inc: { quantityLeft: -index } });
       return successResponse(res, 200, "Tokens sent successfully.", { generatedTokens });
     } catch (error: any) {
+      writeErrosToLogs(error)
+      return failedResponse(res, 500, error.message)
+    }
+  }
+
+  static async useAppTokenForChild(req: Request, res: Response) {
+    try {
+      const { error, value } = useAppTokenValidator.validate(req.body);
+      if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+
+      // validate data
+      const child = await User.findById(value.child);      
+      if (!child) return failedResponse(res,404, "Child not found.")
+      
+      const subPlanType = await Subscription.findById(value.subscriptionType)
+      if (!subPlanType) return failedResponse (res, 404, "subscriptionType not found.")
+
+      const token = await AppToken.findOneAndUpdate({token: value.token, user:(req as any).user._id}).populate('plan');
+      if (!token) return failedResponse (res, 404, "App token not found.")
+      
+      if (token) {
+        if ('planValidity' in token.plan) {
+          const currentDate = new Date();
+          token.used = true;
+          token.expires_at =  new Date(currentDate.setDate(currentDate.getDate() + (token.plan.planValidity-1)));
+          child.passToken = token._id
+          await child.save()
+          await token.save()
+
+          return successResponse(res,200, "Feature unlocked.")
+        } else {
+          console.log('Plan validity not available');
+        }
+      } else {
+        console.log('Token not found');
+      }
+      if (token.used) return failedResponse (res, 400, "THis token has been used.")
+
+    } catch (error:any) {
       writeErrosToLogs(error)
       return failedResponse(res, 500, error.message)
     }

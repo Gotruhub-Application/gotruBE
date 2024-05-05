@@ -22,23 +22,6 @@ export const orgStudentValidator = Joi.object({
 }).options({ abortEarly: false });
 
 
-// export const orgUserValidator = Joi.object({
-//   fullName: Joi.string().required().max(30),
-//   regNum: Joi.string().max(20),
-//   phone: Joi.string(),
-//   email: Joi.string().email(),
-//   password: Joi.string()
-//   .min(8) // Minimum length of 8 characters
-//   .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])'))
-//   .message('Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character'),
-//   guardians: Joi.array().unique().items(objectIdValidator.objectId()).min(1),
-//   piviotUnit: objectIdValidator.objectId(),
-//   subUnit:objectIdValidator.objectId(),
-//   profileImage: objectIdValidator.objectId(),
-//   signature: objectIdValidator.objectId(),
-//   role: Joi.string().valid('student', 'guardian', 'staff', 'admin').required()
-// }).options({ abortEarly: false });
-
 export const orgUserValidator = Joi.object({
   fullName: Joi.string().required().max(30),
   regNum: Joi.string().when('role', { // Apply validation when role is 'student'
@@ -114,4 +97,27 @@ export const purchasePlanValidator = Joi.object({
 export const sendUsersTokenValidator = Joi.object({
   users: Joi.array().unique().items(objectIdValidator.objectId()).min(1).max(10),
   plan: objectIdValidator.objectId().required(),
+})
+
+export const signInOutRecordValidator = Joi.object({
+  user:  objectIdValidator.objectId(),
+  authorizedFor: Joi.array().items(objectIdValidator.objectId()).min(1),
+  guardians: objectIdValidator.objectId().required(),
+  coordinate: Joi.array().items(Joi.string()).required().max(2).min(2), 
+  approvalBy: objectIdValidator.objectId().required(),
+  other: Joi.when('authorizationType',{
+    is:"other",
+    then: objectIdValidator.objectId().required(),
+    otherwise: Joi.optional()
+  }),
+  authorizationType: Joi.string().valid('guardian', 'other', 'admin').required(),
+  scannedBy: objectIdValidator.objectId().required(),
+  scannedUser: objectIdValidator.objectId().required(),
+  actionType:Joi.string().valid("sign_in","sign_out").required()
+}).options({ abortEarly: false });
+
+export const useAppTokenValidator = Joi.object({
+  child: objectIdValidator.objectId().required(),
+  token: Joi.string().required(),
+  subscriptionType: objectIdValidator.objectId().required()
 })

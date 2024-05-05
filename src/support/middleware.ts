@@ -160,6 +160,7 @@ export const IsAuthenticatedUser =async (req:Request, res:Response, next:NextFun
   }
   try {
       const decodedToken = verifyJwtToken(token)
+      logger.info(decodedToken)
       req.params.email= decodedToken.email; 
       req.params.role= decodedToken.role; 
       req.params.userId= decodedToken.id;
@@ -167,15 +168,49 @@ export const IsAuthenticatedUser =async (req:Request, res:Response, next:NextFun
       (req as any).user = decodedToken
       // check if the user has verifed their account
       const user = await User.findById(decodedToken.id)
-      if (!user?.onboardingCompleted){
-          return failedResponse (res, 401, 'Account onbaording is not complated yet, please change password.' )
+      if (!(req as any).user.onboardingCompleted){
+          return failedResponse (res, 401, 'Account onbaording is not complated yet, please change password.22' )
       }
       next();
   } catch (error:any) {
     logger.error(error.message);
-      return failedResponse (res, 401, 'Invalid token.' )
+      return failedResponse (res, 401, 'Invalid access token.' )
   }
 }
+
+
+export const IsAuthenticatedStaff = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+      // Check if the Authorization header exists in the request
+      if (!req.headers.authorization) {
+          return failedResponse(res, 401, 'Access denied. Authorization header missing.');
+      }
+
+      const token = req.headers.authorization.split(' ')[1] || req.cookies.token;
+      if (!token) {
+          return failedResponse(res, 401, 'Access denied. No token provided.');
+      }
+
+      const decodedToken = verifyJwtToken(token);
+      req.params.email = decodedToken.email;
+      (req as any).user = decodedToken;
+
+      // Check if the user has verified their account
+      if (!(req as any).user.onboardingCompleted) {
+          return failedResponse(res, 401, 'Account onboarding is not completed yet. Please change password.');
+      }
+
+      // Check if the user role is 'staff' or 'admin'
+      if (!((req as any).user.role === 'staff' || (req as any).user.role === 'admin')) {
+          return failedResponse(res, 403, 'Permission denied.');
+      }
+
+      next();
+  } catch (error: any) {
+      logger.error(error.message);
+      return failedResponse(res, 401, 'Invalid access token.');
+  }
+};
 
 
 export const IsAuthenticatedNewUser =async (req:Request, res:Response, next:NextFunction) =>{
@@ -197,6 +232,6 @@ export const IsAuthenticatedNewUser =async (req:Request, res:Response, next:Next
       next();
   } catch (error:any) {
     logger.error(error.message);
-      return failedResponse (res, 401, 'Invalid token.' )
+      return failedResponse (res, 401, 'Invalid access token.' )
   }
 }

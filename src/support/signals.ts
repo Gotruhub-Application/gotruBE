@@ -10,8 +10,8 @@ export function emitUserCreationSignal(user:Iuser){
 }
 
 async function onUserCreated(user:Iuser){
-    if(user.guardians == undefined) return
-    await User.findByIdAndUpdate(user._id, {$set:{passQrcode: await generateQrcode(user.guardians.toString())}})
+    if(user.role != "student") return
+    await User.findByIdAndUpdate(user._id, {$set:{passQrcode: await generateQrcode(user._id.toString())}})
 }
 
 // Subscribe to the user_created event

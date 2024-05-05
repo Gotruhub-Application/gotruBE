@@ -63,6 +63,6 @@ jobs:
           cd gotruBE
           git pull 
           export NVM_DIR=~/.nvm
-          source ~/.nvm/nvm.sh
+          # source ~/.nvm/nvm.sh
           npm run build
           npm run start_dev
