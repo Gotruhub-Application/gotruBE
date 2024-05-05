@@ -1,52 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebSocket / Socket.IO Viewer</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Data Every 3 Minutes</title>
 </head>
 <body>
-  <h1>WebSocket / Socket.IO Viewer</h1>
-  <div id="messages"></div>
-  <input type="text" id="messageInput" placeholder="Enter message...">
-  <button onclick="sendMessage()">Send Message</button>
-
-  <script src="https://cdn.socket.io/4.1.2/socket.io.min.js"></script>
-  <script>
-    const messagesContainer = document.getElementById('messages');
-    const messageInput = document.getElementById('messageInput');
-
-    const socket = io('http://localhost:8000',{
-      auth: {
-        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjJmNGI0NWVhNGFjMWMyMTBkYzc0ODciLCJmdWxsTmFtZSI6IkpvaG4gRG9lIiwicm9sZSI6Imd1YXJkaWFuIiwib3JnYW5pemF0aW9uIjoiNjVmNWE0MDQ2NzlmZjEyMGM0ZjIwZTg5IiwiY3JlYXRlZEF0IjoiMjAyNC0wNC0yOVQwNzoyNDo1My40NDBaIiwidXBkYXRlZEF0IjoiMjAyNC0wNS0wMVQwODoyMDozMi42NDJaIiwiZW1haWwiOiIyMzY0X253YWZvcmdsb3J5NkBnbWFpbC5jb20iLCJwcm9maWxlSW1hZ2UiOiI2NjE5YWIwNGIxZWE5NjQxNjI1ZTNlM2UiLCJzaWduYXR1cmUiOiI2NjE5YWIwNGIxZWE5NjQxNjI1ZTNlM2UiLCJjaGlsZHJlbiI6WyI2NjJlMzQxOGNiMDllMDZlOGRlNmU0ZjQiXSwib25ib2FyZGluZ0NvbXBsZXRlZCI6dHJ1ZSwiZGVmYXVsdEVtYWlsIjoibndhZm9yZ2xvcnk2QGdtYWlsLmNvbSIsImlhdCI6MTcxNDc2NDA2NywiZXhwIjoxNzE0ODUwNDY3fQ.FBwfUWR2C-OhwHSkKycP7ZiWqf2vZAMHYCnAx5x47VI"
-      },
-      reconnection: false // Turn off automatic reconnection
-    });
-
-    socket.on('connect', () => {
-      logMessage('Connected to Socket.IO server');
-      // console.log(message)
-    });
-
-    socket.on('hello', (message) => {
-      console.log(message);
-    });
-
-    socket.on('disconnect', () => {
-      logMessage('Disconnected from Socket.IO server');
-    });
-
-    function sendMessage() {
-      const message = messageInput.value;
-      socket.emit('message', message);
-      messageInput.value = '';
-    }
-
-    function logMessage(message) {
-      const messageElement = document.createElement('div');
-      messageElement.textContent = message;
-      messagesContainer.appendChild(messageElement);
-    }
-  </script>
+    <script>
+        setInterval(() => {
+            fetch('https://api-gotruhub.onrender.com/')
+                .then(response => response.json())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error:', error));
+        }, 180000); // 180000 milliseconds = 3 minutes
+    </script>
 </body>
 </html>
