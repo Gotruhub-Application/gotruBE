@@ -1,5 +1,5 @@
 import {Schema, Model, model } from 'mongoose';
-import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken} from '../interfaces/organization';
+import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord} from '../interfaces/organization';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -83,8 +83,8 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   },
   referalCode: {
     type: String,
-    default: "null",
-    required: false
+    default: "",
+
   },
   bankName: {
     type: String,
@@ -232,6 +232,10 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
     required:false,
     default:false
   },
+  passToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
+  tradeToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
+  monitorToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
+
 }, { timestamps: true });
 
 const PlanSchema:Schema<IPlan> = new Schema<IPlan>({
@@ -296,11 +300,37 @@ const appTokenSchema:Schema<IappToken> = new Schema<IappToken>({
     ref:"User",
     required:true
   },
+  // usedFor: {
+  //   type: Schema.Types.ObjectId,
+  //   ref:"User",
+  //   required:false
+  // },
 }, {
   timestamps: true,
 })
 
-
+const SignInOutRecordSchema: Schema = new Schema({
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  authorizedFor: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  guardians: { type: Schema.Types.ObjectId, ref: 'User' },
+  coordinate: [{ type: String }],
+  actionType: String,
+  approvalBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  authorizationType: { type: String, required: true },
+  scannedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  scannedUser: { type: Schema.Types.ObjectId, ref: 'User' },
+  scanned: { type: Boolean, default: true },
+  organization: {
+    type: Schema.Types.ObjectId,
+    ref:"Organization",
+    required:true
+  },
+  other: {
+    type: Schema.Types.ObjectId,
+    ref:"Media",
+    required:false
+  },
+}, { timestamps: true });
 
 export const Organization: Model<IOrganization> = model<IOrganization>('Organization', OrganizationSchema);
 export const Token: Model<Itoken> = model<Itoken>('Token', TokenSchema);
@@ -309,3 +339,5 @@ export const SubUnit: Model<ISubUnit> = model<ISubUnit>('SubUnit', SubUnitSchema
 export const User: Model<Iuser> = model<Iuser>('User', UserSchema);
 export const AppToken: Model<IappToken> = model<IappToken>('AppToken', appTokenSchema);
 export const Plan: Model<IPlan> = model<IPlan>('Plan', PlanSchema);
+export const SignInOutRecordModel: Model<ISignInOutRecord> = model<ISignInOutRecord>('SignInOutRecord', SignInOutRecordSchema);
+

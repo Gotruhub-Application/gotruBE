@@ -1,64 +1,65 @@
-import { Server, Socket } from "socket.io";
-import { logger } from "./logger";
+// socket.ts
+import { Server } from "socket.io";
 import { io } from ".";
-import { verifyJwtToken } from "./support/generateTokens";
+import { authenticate } from "./socket/authentication"; 
+// import { handleConnection } from "./socket/eventHandlers"; 
+import { handleAdminSendParentMessage, handleParentSendAdminApproveDecline,  } from "./socket/sendMessageHandler"; 
+import { handleReceiveMessage } from "./socket/receiveMessageHandler";
+import { logger } from "./logger";
 
-const EVENTS = {
-    connection: "connection",
-    CLIENT: {
-      SIGN_IN_OR_OUT: "SIGN_IN_OR_OUT",
-      SIGN_OUT: "SIGN_OUT",
-      SEND_ROOM_MESSAGE: "SEND_ROOM_MESSAGE",
-      JOIN_ROOM: "JOIN_ROOM",
-    },
-    SERVER: {
-      ROOMS: "ROOMS",
-      ERROR: "ERROR",
-      JOINED_ROOM: "JOINED_ROOM",
-      ROOM_MESSAGE: "ROOM_MESSAGE",
-    },
-  };
+export const EVENTS = {
+  connection: "connection",
+  CLIENT: {
+    SIGN_IN_OR_OUT: "SIGN_IN_OR_OUT",
+    SIGN_OUT: "SIGN_OUT",
+    SEND_ROOM_MESSAGE: "SEND_ROOM_MESSAGE",
+    JOIN_ROOM: "JOIN_ROOM",
+    RECEIVE_MESSAGE:"RECEIVE_MESSAGE",
+    SEND_PARENT_SIGN_IN_OUT_MESSAGE:"SEND_PARENT_SIGN_IN_OUT_MESSAGE",
+    RECIEVE_SIGN_IN_OUT_MESSAGE_FROM_ADMIN:"RECIEVE_SIGN_IN_OUT_MESSAGE_FROM_ADMIN",
+    RECIEVE_SIGN_IN_OUT_MESSAGE_FROM_PARENT:"RECIEVE_SIGN_IN_OUT_MESSAGE_FROM_PARENT",
+    SEND_SIGN_IN_OUT_APPROVAL_TO_ADMIN:"SEND_SIGN_IN_OUT_APPROVAL_TO_ADMIN"
+  },
+  SERVER: {
+    ROOMS: "ROOMS",
+    ERROR: "ERROR",
+    SUCCESS: "SUCCESS",
+    JOINED_ROOM: "JOINED_ROOM",
+    ROOM_MESSAGE: "ROOM_MESSAGE",
+    WELCOME:"WELCOME"
+  },
+};
 
-  function authenticate(socket:any, next:any) {
-    const token = socket.handshake.headers.token;
-    if (!token) {
-        logger.info("heheheheheh")
-      return next(new Error("Authentication error"));
-    }
-    try {
-      const decoded = verifyJwtToken(token); // Change "secret" to your JWT secret
-      socket.user = decoded; // Attach user information to the socket object
-      next();
-    } catch (error) {
-      next(new Error("Authentication error"));
-    }
-  }
-  
 export function socket() {
-    
-    // Socket.IO events
     io.use(authenticate);
-    io.on(EVENTS.connection, (socket) => {
+    // io.on(EVENTS.connection, handleConnection)
+    
+    io.on(EVENTS.connection, (socket)=>{
+      socket.join(socket.user._id); //Add user to personal group
+      logger.info(socket.user);
 
-        socket.join(socket.id=socket.user._id);
-        logger.info(socket.user)
+      io.to(socket.user._id).emit(EVENTS.SERVER.WELCOME, `welcome ${socket.user._id}`);
 
-        io.to(socket.id).emit("hello",`welcome ${socket.id}`);
+      // disconnect user
+      socket.on("disconnect", () => {
+          logger.info(`Client disconnected: ${socket.id}`);
+      });
 
-        socket.on(EVENTS.CLIENT.SIGN_IN_OR_OUT, (parentId:any, message:any, actionType:any) => {
-            if (actionType !== "signin" || "signout") {
-              io.to(socket.id).emit(EVENTS.SERVER.ERROR, {statusCode:400, message:"actionType must be either signin or  signout."})
-            }
-            // console.log(message);
-            console.log(socket.id)
-            io.to(parentId).emit(EVENTS.CLIENT.SIGN_IN_OR_OUT,{parentId, message, actionType});
+      //listen to admin send pass notifcation
+      socket.on(EVENTS.CLIENT.SEND_PARENT_SIGN_IN_OUT_MESSAGE, (message:any) => {
+        // admin send parent signin-out message
+        handleAdminSendParentMessage(socket, message);
+      });
 
-          });
-        // Handle disconnection
-        socket.on("disconnect", () => {
-            logger.info(`Client disconnected: ${socket.id}`);
-        });
+      //listen to parent's send pass notifcation
+      socket.on(EVENTS.CLIENT.SEND_SIGN_IN_OUT_APPROVAL_TO_ADMIN, (message:any) => {
+        // PARENT send ADMIN signin-out approve-decline
+        handleParentSendAdminApproveDecline(socket, message);
+      });
+      
+      socket.on(EVENTS.CLIENT.RECEIVE_MESSAGE, (message:any) => {
+          handleReceiveMessage(socket, message);
+      });
+
     });
-
 }
-

@@ -1,7 +1,8 @@
 import {Router} from "express"
 import { Organization } from "../models/organization.models"
 import { AppAccessTokens, BuySubcriptionPlan, OrgUsers, OrganizatioinSubUnits, OrganizatioinUnits } from "../controllers/organization.controller"
-import { IsAuthenticatedOrganization } from "../support/middleware"
+import { IsAuthenticatedNewUser, IsAuthenticatedOrganization, IsAuthenticatedStaff } from "../support/middleware"
+import { ScanChildQrCode, SignInOutRecordHistory } from "../controllers/organization/passFeatures/pass.controllers"
 
 export const organizationRouter = Router()
 organizationRouter
@@ -31,3 +32,8 @@ organizationRouter
 .delete("/plan/:id",IsAuthenticatedOrganization, BuySubcriptionPlan.removePlan)
 
 .post("/tokens/send-token", IsAuthenticatedOrganization,AppAccessTokens.sendtokens)
+.post("/activate-feature",IsAuthenticatedNewUser,AppAccessTokens.useAppTokenForChild)
+
+// pass features
+.get("/scan-qrcode/:id", IsAuthenticatedStaff, ScanChildQrCode.getDetails)
+.post("/sign-in-out",IsAuthenticatedOrganization, SignInOutRecordHistory.createHistory)

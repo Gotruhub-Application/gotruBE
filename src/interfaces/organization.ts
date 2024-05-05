@@ -50,8 +50,9 @@ export interface IPlan extends Document{
 };
 
 export interface IappToken extends Document{
-  plan: Schema.Types.ObjectId;
+  plan: IPlan | Schema.Types.ObjectId;
   user: Schema.Types.ObjectId;
+  usedFor: Schema.Types.ObjectId;
   token: string;
   used:boolean;
   expired:boolean;
@@ -89,6 +90,25 @@ export interface Iuser extends Document {
   role:string,
   onboardingCompleted:boolean,
   createdAt:Date,
-  updatedAt:Date
+  updatedAt:Date,
+  passToken?: {type:Schema.Types.ObjectId},
+  tradeToken?: {type:Schema.Types.ObjectId},
+  monitorToken?: {type:Schema.Types.ObjectId},
 }
 
+export interface ISignInOutRecord extends Document {
+  user: Schema.Types.ObjectId,
+  authorizedFor:[Schema.Types.ObjectId],
+  guardians: {type:Schema.Types.ObjectId},
+  organization: {type:Schema.Types.ObjectId},
+  other: {type:Schema.Types.ObjectId},
+  coordinate:[string],
+  actionType:string,
+  approvalBy: Schema.Types.ObjectId,
+  authorizationType: string,
+  scannedBy:Schema.Types.ObjectId,
+  scannedUser:Schema.Types.ObjectId,
+  scanned:boolean,
+  createdAt:Date,
+  updatedAt:Date
+}
