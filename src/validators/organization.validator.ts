@@ -28,37 +28,37 @@ export const orgUserValidator = Joi.object({
     is: 'student',
     then: Joi.string().required().max(20),
     otherwise: Joi.string().max(20) // Not required if role is not 'student'
-  }),
-  phone: Joi.string(),
+  }).allow(""),
+  phone: Joi.string().allow(""),
   email: Joi.when('role', {
     is: Joi.valid('guardian', 'staff', 'admin'), // If role is not 'student'
     then: Joi.string().email().required(), // Email is required
     otherwise: Joi.string().email() // Email is optional
-  }),
+  }).allow(""),
   guardians: Joi.when('role', {
     is: Joi.valid('student'), // If role is not 'student'
     then:objectIdValidator.objectId().required()
-  }),
+  }).allow(""),
   children:  Joi.when('role', {
     is: Joi.valid('guardian'), // If role is not 'student'
     then:Joi.array().unique().items(objectIdValidator.objectId()).min(1).required()
-  }),
+  }).allow(""),
   relationImage:  Joi.when('role', {
     is: Joi.valid('student'), // If role is not 'student'
     then:objectIdValidator.objectId().required().min(1).required()
-  }),
+  }).allow(""),
   piviotUnit: objectIdValidator.objectId().when('role', { // Apply validation when role is 'student'
     is: 'student',
     then: Joi.required(),
     otherwise: Joi.optional() // Not required if role is not 'student'
-  }),
-  subUnit: objectIdValidator.objectId(),
+  }).allow(""),
+  subUnit: objectIdValidator.objectId().allow(""),
   profileImage: objectIdValidator.objectId().required(),
   signature: Joi.when('role', { // Apply validation when role is 'guardian'
     is: 'guardian',
     then: Joi.required(),
     otherwise: Joi.optional() // Not required if role is not 'guardian'
-  }),
+  }).allow(""),
   role: Joi.string().valid('student', 'guardian', 'staff', 'admin').required()
 }).options({ abortEarly: false });
 
