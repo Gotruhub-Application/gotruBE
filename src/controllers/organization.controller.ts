@@ -8,6 +8,7 @@ import { SubUnitValidator, orgUpdateUserValidator, orgUserValidator, purchasePla
 import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
 import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
+import { array } from "joi";
 
 
 export class OrganizatioinUnits {
@@ -393,17 +394,23 @@ export class OrgUsers {
 export class BuySubcriptionPlan {
   static async orderPlan (req:Request, res:Response){
     try {
-      const { error, value } = purchasePlanValidator.validate(req.body);
-      if (error) return failedResponse (res, 400, `${error.details[0].message}`)
-      const subscriptionTypeExist = await Subscription.findById(value.subscriptionType)
-      if (!subscriptionTypeExist) return failedResponse (res, 404, "subscription type not found")
+      const planArray: Array<object> =[];
+     
+      for (const plan of req.body){
+        const { error, value } = purchasePlanValidator.validate(plan);
+        if (error) return failedResponse (res, 400, `${error.details[0].message}`)
+        const subscriptionTypeExist = await Subscription.findById(value.subscriptionType)
+        if (!subscriptionTypeExist) return failedResponse (res, 404, "One of the subscription type not found")
 
-      value.Organization = req.params.organizationId
-      value.amount = (value.quantity * parseFloat(subscriptionTypeExist.amount.toString()));
-      value.planValidity= subscriptionTypeExist.planValidity
-      value.quantityLeft= value.quantity
+        value.Organization = req.params.organizationId
+        value.amount = (value.quantity * parseFloat(subscriptionTypeExist.amount.toString()));
+        value.planValidity= subscriptionTypeExist.planValidity
+        value.quantityLeft= value.quantity
+
+        planArray.push(value)
+      }
       
-      const plan = await Plan.create(value)
+      const plan = await Plan.insertMany(planArray)
       return successResponse(res, 200, "Success", {plan})
 
     } catch (error:any) {
