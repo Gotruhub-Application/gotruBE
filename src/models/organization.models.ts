@@ -1,4 +1,4 @@
-import {Schema, Model, model } from 'mongoose';
+import {Schema, Model, model, Query} from 'mongoose';
 import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord} from '../interfaces/organization';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
@@ -237,6 +237,29 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
   monitorToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
 
 }, { timestamps: true });
+
+UserSchema.pre('findOne', function () {
+  this
+  .populate('profileImage')
+  .populate('piviotUnit')
+  .populate('subUnit')
+  .populate('signature')
+  .populate('relationImage')
+  .populate('children')
+  .populate('guardians')
+  .populate('passToken')
+  .populate('tradeToken')
+  .populate('monitorToken')
+});
+
+UserSchema.pre('find', function () {
+  this
+  .populate('profileImage')
+  .populate('piviotUnit')
+  .populate('subUnit')
+  .populate('signature')
+  .populate('relationImage');
+});
 
 const PlanSchema:Schema<IPlan> = new Schema<IPlan>({
   quantity: {

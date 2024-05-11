@@ -13,9 +13,10 @@ export class ParentManageRelatedAccounts {
             const relatedAccounts = await User.find({
                 organization,
                 guardians: guardianId
-            }).populate("profileImage")
-            .populate("subUnit")
-            .populate("piviotUnit");
+            });
+            // .populate("profileImage")
+            // .populate("subUnit")
+            // .populate("piviotUnit");
 
 
             return successResponse(res, 200, "Success", { relatedAccounts });
