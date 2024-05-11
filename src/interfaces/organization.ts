@@ -79,7 +79,7 @@ export interface Iuser extends Document {
   phone?:string,
   regNum?:string,
   passQrcode?:string,
-  guardians?: {type:Schema.Types.ObjectId},
+  guardians: {type:Schema.Types.ObjectId},
   piviotUnit?: {type:Schema.Types.ObjectId},
   subUnit?: {type:Schema.Types.ObjectId},
   profileImage?: {type:Schema.Types.ObjectId},

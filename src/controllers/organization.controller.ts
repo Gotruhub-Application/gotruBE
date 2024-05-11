@@ -238,8 +238,6 @@ export class OrgUsers {
           // Find the documents for the provided children IDs
          
           const children = await User.find({ _id: { $in: value.children } });
-          logger.info(children);
-
           // const { kids, ...data } = value;
 
           // Check if kids array is defined before accessing its length
