@@ -9,6 +9,7 @@ import Database from './db'
 import { organizationRouter } from "./routers/organization.router";
 import { userAuthRouter } from "./routers/auth/user.auth";
 import { passFeatureUserRouter } from "./routers/passFeature/pass.users.route";
+import { tradeOrganizationRouter } from "./routers/tradeFeature/trade.organization.route";
 
 
 const app:Application = express();
@@ -36,7 +37,8 @@ app.use("/", authRouter)
 app.use("/", adminRouter);
 app.use("/", organizationRouter);
 app.use("/", userAuthRouter);
-app.use("/",passFeatureUserRouter)
+app.use("/",passFeatureUserRouter);
+app.use("/trade",tradeOrganizationRouter)
 
 app.get("/", (req: Request, res: Response) => {
     res.send({message:"welcome to express and typescript"});

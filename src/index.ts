@@ -9,6 +9,7 @@ import { authRouter } from "./routers/auth/organization.register";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { socket } from "./socket";
+import { scheduleTokenExpirationCheck } from "./support/helpers";
 
 const httpServer = createServer(app);
 
@@ -28,5 +29,7 @@ const port = PORT || 8000;
 
 httpServer.listen(PORT, () => {
     logger.info(`server connected on ${port}`);
-    socket()
+    socket();
+    // cron jobs
+    scheduleTokenExpirationCheck()
   });
