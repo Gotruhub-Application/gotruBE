@@ -71,6 +71,10 @@ export class CompleteOnboarding {
             if (!correctPassword) {
                 return failedResponse(res, 400, "Incorrect password");
             }
+            if (value.fcmToken){
+                userExist.fcmToken = value.fcmToken
+                await userExist.save()
+            }
             // Exclude sensitive fields and unnecessary document details
             const details = {
                 _id: userExist._id,

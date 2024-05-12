@@ -4,6 +4,7 @@ import { signInOutRecordValidator } from "../../../validators/organization.valid
 import { failedResponse, successResponse } from "../../../support/http"; 
 import { writeErrosToLogs } from "../../../support/helpers";
 import { Media } from "../../../models/media.models";
+import { sendNotif } from "../../../support/firebaseNotification";
 
 export class SignInOutRecordHistory {
     static async createHistory(req: Request, res: Response) {
@@ -97,7 +98,7 @@ export class ScanChildQrCode {
                     match: { expired: false } // Only populate children whose token has not expired
                 }
             });
-
+            await sendNotif("dxacpPtkwFpUUESfMlFdfB:APA91bHvDxRwXetjz6P2mtIQNR23SoEBJ9iI5l5zTjiCNcA-QSVZiHCCObQKEtMDUf_tytkJcsn1WKb80adF_jKBlJjhDJhskWS3Z933fdOAq4QhTcyRfS2vGWzrdSA3Ru7uaJVBSx--")
             return successResponse(res, 200, "Success",{student, guardians});
         } catch (error: any) {
             writeErrosToLogs(error);

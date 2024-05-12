@@ -4,7 +4,12 @@ import dotenv from "dotenv"
 import fs from "fs"
 import handlebars from "handlebars"
 import { logger } from "../logger"; 
-import qrcode from "qrcode"
+import qrcode from "qrcode";
+
+// cronr jobs
+import cron from "node-cron";
+import { AppToken } from "../models/organization.models";
+
 
 dotenv.config()
 
@@ -167,3 +172,31 @@ export async function generateQrcode(data:string): Promise<any>{
     return qrCodeImageUrl
     
 }
+
+
+
+// Define a function to update expired tokens
+async function updateExpiredTokens(): Promise<void> {
+    try {
+      const expiredTokens = await AppToken.find({ expires_at: { $lt: new Date() }, used:true});
+      for (const token of expiredTokens) {
+        token.expired = true;
+        await token.save();
+      }
+      logger.info(`Updated ${expiredTokens.length} expired tokens.`);
+    } catch (error) {
+      logger.error('Error updating expired tokens:', error);
+    }
+  }
+  
+  // Schedule the cron job to run at midnight every day
+  export function scheduleTokenExpirationCheck(): void {
+    try {
+      cron.schedule('0 0 * * *', async () => {
+        await updateExpiredTokens();
+      });
+      logger.info('Token expiration check scheduled.');
+    } catch (error) {
+        writeErrosToLogs(error);
+    }
+  }

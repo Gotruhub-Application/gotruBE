@@ -1,5 +1,5 @@
 import {Schema, Model, model, Query} from 'mongoose';
-import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord} from '../interfaces/organization';
+import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord, ICategory,IProduct} from '../interfaces/organization';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -232,6 +232,10 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
     required:false,
     default:false
   },
+  fcmToken:{
+    type:String,
+    default:""
+  },
   passToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
   tradeToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
   monitorToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
@@ -355,6 +359,48 @@ const SignInOutRecordSchema: Schema = new Schema({
   },
 }, { timestamps: true });
 
+
+const categorySchema:Schema<ICategory> = new Schema<ICategory>({
+  name: { type: String, required: true },
+  image: { type: Schema.Types.ObjectId, ref: 'Media' },
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+}, { timestamps: true }); // Include timestamps
+
+categorySchema.pre('find', function () {
+  this
+  .populate('image')
+  .populate('organization')
+});
+
+categorySchema.pre('findOne', function () {
+  this
+  .populate('image')
+  .populate('organization')
+});
+
+// Define the Product schema
+const productSchema:Schema<IProduct> = new Schema<IProduct>({
+  productCoverImage: { type: Schema.Types.ObjectId, ref: 'Media', required: true },
+  uploadedBy: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+  colors: { type: [String] },
+  price: { type: Number, required: true },
+  quantity: { type: Number, required: true },
+  size: { type: [String], required: true },
+  category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
+  productName: { type: String, required: true },
+  description: { type: String, required: true },
+  flavor: { type: [String]},
+  minimumQuantity: { type: Number, required: true },
+}, { timestamps: true }); // Include timestamps
+
+productSchema.pre('findOne', function () {
+  this
+  .populate('productCoverImage')
+  .populate('category')
+  .populate('uploadedBy')
+});
+
+
 export const Organization: Model<IOrganization> = model<IOrganization>('Organization', OrganizationSchema);
 export const Token: Model<Itoken> = model<Itoken>('Token', TokenSchema);
 export const Unit: Model<IUnit> = model<IUnit>('Unit', UnitSchema);
@@ -364,3 +410,5 @@ export const AppToken: Model<IappToken> = model<IappToken>('AppToken', appTokenS
 export const Plan: Model<IPlan> = model<IPlan>('Plan', PlanSchema);
 export const SignInOutRecordModel: Model<ISignInOutRecord> = model<ISignInOutRecord>('SignInOutRecord', SignInOutRecordSchema);
 
+export const Category:Model<ICategory> = model<ICategory>('Category', categorySchema);
+export const Product:Model<IProduct> = model<IProduct>('Product', productSchema);

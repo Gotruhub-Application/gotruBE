@@ -94,6 +94,7 @@ export interface Iuser extends Document {
   passToken?: {type:Schema.Types.ObjectId},
   tradeToken?: {type:Schema.Types.ObjectId},
   monitorToken?: {type:Schema.Types.ObjectId},
+  fcmToken:string
 }
 
 export interface ISignInOutRecord extends Document {
@@ -111,4 +112,24 @@ export interface ISignInOutRecord extends Document {
   scanned:boolean,
   createdAt:Date,
   updatedAt:Date
+}
+
+export interface ICategory extends Document {
+  name: string;
+  image:Schema.Types.ObjectId,
+  organization:Schema.Types.ObjectId;
+}
+
+export interface IProduct extends Document {
+  productCoverImage: Schema.Types.ObjectId;
+  uploadedBy: Schema.Types.ObjectId;
+  colors: string[];
+  price: number;
+  quantity: number;
+  size?: string[];
+  category: Schema.Types.ObjectId;
+  productName: string;
+  description: string;
+  flavor?: string[];
+  minimumQuantity: number;
 }

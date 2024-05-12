@@ -122,6 +122,7 @@ export async function handlefileUpload(req: Request, res: Response, next: NextFu
 
 export const IsAuthenticatedOrganization =async (req:Request, res:Response, next:NextFunction) =>{
   // Check if the Authorization header exists in the request
+  console.log("123455")
   if (!req.headers.authorization) {
       return failedResponse(res, 401, 'Access denied. Authorization header missing.');
   }
@@ -151,6 +152,7 @@ export const IsAuthenticatedOrganization =async (req:Request, res:Response, next
 
 export const IsAuthenticatedUser =async (req:Request, res:Response, next:NextFunction) =>{
   // Check if the Authorization header exists in the request
+  console.log("helllllll")
   if (!req.headers.authorization) {
       return failedResponse(res, 401, 'Access denied. Authorization header missing.');
   }
