@@ -94,7 +94,8 @@ export interface Iuser extends Document {
   passToken?: {type:Schema.Types.ObjectId},
   tradeToken?: {type:Schema.Types.ObjectId},
   monitorToken?: {type:Schema.Types.ObjectId},
-  fcmToken:string
+  fcmToken:string,
+  appPermissions:[string],
 }
 
 export interface ISignInOutRecord extends Document {
@@ -132,4 +133,5 @@ export interface IProduct extends Document {
   description: string;
   flavor?: string[];
   minimumQuantity: number;
+  inStock:boolean
 }

@@ -279,7 +279,7 @@ export class OrgUsers {
   };
 
   static async getUsers (req:Request, res:Response, next:NextFunction){
-    const ITEMS_PER_PAGE = 1;
+    const ITEMS_PER_PAGE = 10;
     try {
         const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
         const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
@@ -288,7 +288,7 @@ export class OrgUsers {
           organization: req.params.organizationId
         })
         .skip(skip)
-        .limit(ITEMS_PER_PAGE);;
+        .limit(ITEMS_PER_PAGE);
         return successResponse(res,200,"Success",{users} )
 
     } catch (error:any) {
@@ -313,7 +313,7 @@ export class OrgUsers {
 
   static async updateSingleUser (req:Request, res:Response, next:NextFunction){
     try {
-      const { error, value } = orgUpdateUserValidator.validate(req.body);
+      const { error, value } = orgUserValidator.validate(req.body);
       if (error) {
           return failedResponse (res, 400, `${error.details[0].message}`)
       }

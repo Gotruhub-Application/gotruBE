@@ -37,19 +37,21 @@ export const orgUserValidator = Joi.object({
   }).allow(""),
   guardians: Joi.when('role', {
     is: Joi.valid('student'), // If role is not 'student'
-    then:objectIdValidator.objectId().required()
+    then:objectIdValidator.objectId(),
+    otherwise: Joi.optional()
   }).allow(""),
   children:  Joi.when('role', {
     is: Joi.valid('guardian'), // If role is not 'student'
-    then:Joi.array().unique().items(objectIdValidator.objectId()).min(1).required()
+    then:Joi.array().unique().items(objectIdValidator.objectId()).min(1),
+    otherwise: Joi.optional()
   }).allow(""),
   relationImage:  Joi.when('role', {
     is: Joi.valid('student'), // If role is not 'student'
     then:objectIdValidator.objectId().required().min(1).required()
   }).allow(""),
-  piviotUnit: objectIdValidator.objectId().when('role', { // Apply validation when role is 'student'
+  piviotUnit: Joi.when('role', { // Apply validation when role is 'student'
     is: 'student',
-    then: Joi.required(),
+    then: objectIdValidator.objectId().required(),
     otherwise: Joi.optional() // Not required if role is not 'student'
   }).allow(""),
   subUnit: objectIdValidator.objectId().allow(""),
@@ -59,6 +61,11 @@ export const orgUserValidator = Joi.object({
     then: Joi.required(),
     otherwise: Joi.optional() // Not required if role is not 'guardian'
   }).allow(""),
+  appPermissions: Joi.when('role',{
+    is:"staff",
+    then:Joi.array().unique().items(Joi.string().valid('pass', 'trade', 'monitor')).required().min(1),
+    otherwise: Joi.optional()
+  }),
   role: Joi.string().valid('student', 'guardian', 'staff', 'admin').required()
 }).options({ abortEarly: false });
 
