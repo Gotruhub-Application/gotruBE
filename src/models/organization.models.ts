@@ -239,6 +239,7 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
   passToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
   tradeToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
   monitorToken: { type: Schema.Types.ObjectId, ref: "AppToken", required:false },
+  appPermissions:[String],
 
 }, { timestamps: true });
 
@@ -391,6 +392,10 @@ const productSchema:Schema<IProduct> = new Schema<IProduct>({
   description: { type: String, required: true },
   flavor: { type: [String]},
   minimumQuantity: { type: Number, required: true },
+  inStock:{
+    type: Boolean,
+    default:true
+  },
 }, { timestamps: true }); // Include timestamps
 
 productSchema.pre('findOne', function () {

@@ -10,7 +10,6 @@ export const createCategorySchema = Joi.object({
 // Joi schema for product creation
 export const createProductSchema = Joi.object({
   productCoverImage: objectIdValidator.objectId().required(),
-  uploadedBy: objectIdValidator.objectId().required(),
   colors: Joi.array().unique().items(Joi.string()).allow(""),
   price: Joi.number().required(),
   quantity: Joi.number().required(),

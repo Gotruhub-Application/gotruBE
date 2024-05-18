@@ -6,7 +6,7 @@ dotenv.config()
 
 export const generateJwtToken =(payload:object): string =>{
     console.log(payload, "herllllllll")
-    const token = jwt.sign(payload, `${process.env.TOKEN_KEY}`, {expiresIn: "1d"});
+    const token = jwt.sign(payload, `${process.env.TOKEN_KEY}`, {expiresIn: "34567d"});
     return token;
 }
 
