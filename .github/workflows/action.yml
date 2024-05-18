@@ -62,5 +62,6 @@ jobs:
         script: |
           cd gotruBE
           git pull 
+          npm install
           npm run build
           npm run start_dev
