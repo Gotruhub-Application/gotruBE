@@ -10,6 +10,8 @@ import { organizationRouter } from "./routers/organization.router";
 import { userAuthRouter } from "./routers/auth/user.auth";
 import { passFeatureUserRouter } from "./routers/passFeature/pass.users.route";
 import { tradeOrganizationRouter } from "./routers/tradeFeature/trade.organization.route";
+import "./routers/organization/subaccount"
+import "./routers/parent/wallet.route"
 
 
 const app:Application = express();

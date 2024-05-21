@@ -5,7 +5,7 @@ import { BlackListedTokenValidator } from "../../validators/auth/general.validat
 import { BlackListedToken } from "../../models/general.models";
 import crypto from "crypto"
 import { sendTemplateMail, sentMail } from "../../support/helpers";
-import { Plan } from "../../models/organization.models";
+import { Plan, WalletModel, WalletTransactionModel } from "../../models/organization.models";
 import { pl } from "@faker-js/faker";
 
 
@@ -40,16 +40,46 @@ export const paystackWebhook = async(req:Request, res:Response)=>{
         const event = req.body;
         const plans = event.data.metadata
         for (const plan of plans){
-            await Plan.findByIdAndUpdate(plan.custom_fields._id,{$set:{paidStatus:true}})
+            if(plan.custom_fields.type == "wallet"){
+
+                const wallet = await WalletModel.findOneAndUpdate(
+                    { user: plan.cart_id },
+                    { $inc: { balance: event.data.amount/100 } },
+                    { new: true }
+                );
+                if (wallet){
+                    await WalletTransactionModel.create({
+                        wallet: wallet._id,
+                        user:wallet.user,
+                        type:"credit",
+                        amount:(event.data.amount/100),
+                      });
+                }
+                
+
+                const context ={
+                    date:new Date(event.data.paid_at).toLocaleDateString(),
+                    email:event.data.customer.email,
+                    amount: event.data.amount/100,
+                }
+        
+                await sendTemplateMail(event.data.customer.email,"Wallet fund successful","templates/paystack.html",context)
+
+            }else{
+                // console.log(plan, "sadbasdbsa")
+                await Plan.findByIdAndUpdate(plan.custom_fields._id,{$set:{paidStatus:true}})
+                const context ={
+                    date:new Date(event.data.paid_at).toLocaleDateString(),
+                    email:event.data.customer.email,
+                    amount: event.data.amount/100,
+                }
+        
+                await sendTemplateMail(event.data.customer.email,"Subscription payment successful","templates/paystack.html",context)
+            }
+            
         }
 
-        const context ={
-            date:new Date(event.data.paid_at).toLocaleDateString(),
-            email:event.data.customer.email,
-            amount: event.data.amount,
-        }
-
-        await sendTemplateMail(event.data.customer.email,"Subscription payment successful","templates/paystack.html",context)
+        
         // Do something with event  
         return successResponse(res, 200, "Success")
     }

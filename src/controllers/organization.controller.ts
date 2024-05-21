@@ -1,10 +1,10 @@
 import { Media } from "../models/media.models";
-import { AppToken, Plan, SubUnit, Unit, User } from "../models/organization.models";
+import { AppToken, Plan, SubUnit, SubaccountModel, Unit, User } from "../models/organization.models";
 import { Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
-import { failedResponse, initiatePaystack, successResponse } from "../support/http";
-import { SubUnitValidator, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, unitValidator, useAppTokenValidator } from "../validators/organization.validator";
+import { createPaystackSubAccount, failedResponse, initiatePaystack, successResponse } from "../support/http";
+import { SubUnitValidator, UnpdatesubaccountJoiSchema, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, subaccountJoiSchema, unitValidator, useAppTokenValidator } from "../validators/organization.validator";
 import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
 import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
@@ -485,6 +485,7 @@ export class BuySubcriptionPlan {
       const metadata = plans.map(plan => ({
         cart_id: req.params.organizationId, // Adjust based on your data structure
         custom_fields: {
+            type:"plan",
             _id: plan._id, // Assuming this is the plan ID
             Organization: plan.Organization // Assuming this is the Organization ID
             // Add other fields as needed
@@ -582,3 +583,81 @@ export class AppAccessTokens {
   }
 }
 
+
+
+export class SubaccountController {
+    static async createSubaccount(req: Request, res: Response) {
+        try {
+            // Validate request body against Joi schema
+            const { error, value } = subaccountJoiSchema.validate(req.body);
+            if (error) {
+                return failedResponse(res, 400, error.details[0].message);
+            }
+
+            value.organization = req.params.organizationId;
+            // Check if the organization already has a subaccount
+            const existingAcc = await SubaccountModel.findOne({ organization: value.organization });
+            if (existingAcc) return failedResponse(res, 400, "You can only have one payment account.");
+
+            // Create new Subaccount
+    
+            value.percentage_charge = 0.0
+            value.metadata ={"custom_fields":[{"display_name":"Cart ID","variable_name": "cart_id","value": "8393"}]}
+            const sub_acc = await createPaystackSubAccount(value)
+            if(!sub_acc.status) return failedResponse(res, 400, "error", sub_acc);
+            const newSubaccount = await SubaccountModel.create(value);
+            return successResponse(res, 201, "Subaccount created successfully.",{newSubaccount,sub_acc});
+
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while creating the subaccount.");
+        }
+    }
+
+    static async updateSubaccount(req: Request, res: Response) {
+        try {
+            // Validate request body against Joi schema
+            const { error, value } = UnpdatesubaccountJoiSchema.validate(req.body);
+            if (error) {
+                return failedResponse(res, 400, error.details[0].message);
+            }
+
+            // Update the subaccount
+            const updatedSubaccount = await SubaccountModel.findOneAndUpdate(
+                {organization: req.params.organizationId },
+                value,
+                { new: true, runValidators: true }
+            );
+
+            if (!updatedSubaccount) {
+                return failedResponse(res, 404, "Subaccount not found.");
+            }
+            // value.percentage_charge = 0.0
+            // value.metadata ={"custom_fields":[{"display_name":"Cart ID","variable_name": "cart_id","value": "8393"}]}
+            // const sub_acc = createPaystackSubAccount(value)
+            // console.log(sub_acc, "heyyy")
+
+            return successResponse(res, 200, "Subaccount updated successfully.", updatedSubaccount);
+
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while updating the subaccount.");
+        }
+    };
+    static async getSubaccount(req: Request, res: Response) {
+      try {
+          const {organizationId } = req.params;
+          const subaccount = await SubaccountModel.findOne({ organization: organizationId });
+
+          if (!subaccount) {
+              return failedResponse(res, 404, "Subaccount not found.");
+          }
+
+          return successResponse(res, 200, "Subaccount retrieved successfully.", subaccount);
+
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, "An error occurred while retrieving the subaccount.");
+      }
+  };
+}

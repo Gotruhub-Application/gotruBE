@@ -30,6 +30,21 @@ export interface IOrganization extends Document {
   isVerified:boolean
 }
 
+
+export interface ISubaccount extends Document {
+  business_name: string;
+  settlement_bank: string;
+  account_number: string;
+  // percentage_charge: number;
+  description: string;
+  primary_contact_email: string;
+  primary_contact_name: string;
+  primary_contact_phone: string;
+  subaccount_code:string;
+  // metadata: string; // Assuming metadata is a stringified JSON object
+  organization: Schema.Types.ObjectId; // Assuming organization is a string representing ObjectId
+}
+
 export interface Itoken extends Document{
   email: Schema.Types.ObjectId;
   token: string;
@@ -96,6 +111,32 @@ export interface Iuser extends Document {
   monitorToken?: {type:Schema.Types.ObjectId},
   fcmToken:string,
   appPermissions:[string],
+  bankName:string,
+  accountNum:string,
+  accountName:string,
+}
+export interface IWallet extends Document {
+  user: Schema.Types.ObjectId;
+  pin:string;
+  // changedPin:boolean;
+  balance: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export interface IWalletTransaction extends Document {
+  wallet: IWallet['_id'];
+  type: 'credit' | 'debit';
+  user: Schema.Types.ObjectId;
+  amount: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+export interface IWithdrawalRequest extends Document {
+  wallet: IWallet['_id'];
+  user: Iuser['_id'];
+  timestamp: Date;
+  amount: number;
+  status: 'pending' | 'completed' | 'rejected';
 }
 
 export interface ISignInOutRecord extends Document {

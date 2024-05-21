@@ -1,6 +1,6 @@
 import {Router} from "express"
 import { IsAuthenticatedUser,IsAuthenticatedOrganization } from "../../support/middleware"
-import { Catetgory, Products } from "../../controllers/organization/tradeFeatures/organization.trade.controllers";
+import { Catetgory, Products, WithdrawalRequestController } from "../../controllers/organization/tradeFeatures/organization.trade.controllers";
 
 export const tradeOrganizationRouter = Router();
 
@@ -17,3 +17,8 @@ tradeOrganizationRouter
 .get("/products/:id",IsAuthenticatedOrganization,Products.getSingleProduct)
 .put("/products/:id",IsAuthenticatedOrganization,Products.updateSingleProduct)
 .delete("/products/:id",IsAuthenticatedOrganization,Products.deleteSingleProduct)
+
+// withdrawasl
+.get("/withdrawals", IsAuthenticatedOrganization, WithdrawalRequestController.getAllWithdrawalRequests)
+.get("/withdrawals/:id", IsAuthenticatedOrganization, WithdrawalRequestController.getWithdrawalRequestById)
+.put("/withdrawals/:id", IsAuthenticatedOrganization, WithdrawalRequestController.updateWithdrawalRequest)
