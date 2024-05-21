@@ -24,7 +24,6 @@ organizationRouter
 .put("/users/get-user/:id",IsAuthenticatedOrganization, OrgUsers.updateSingleUser)
 .delete("/users/get-user/:id",IsAuthenticatedOrganization, OrgUsers.deleteSingleUser)
 
-
 .post("/plan/add-to-cart",IsAuthenticatedOrganization, BuySubcriptionPlan.orderPlan)
 .get("/plan/my-plans",IsAuthenticatedOrganization, BuySubcriptionPlan.getAllMyPlans)
 .get("/plan/pending",IsAuthenticatedOrganization, BuySubcriptionPlan.myPendingPlans)

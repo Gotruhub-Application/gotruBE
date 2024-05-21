@@ -128,3 +128,40 @@ export const useAppTokenValidator = Joi.object({
   token: Joi.string().required(),
   subscriptionType: objectIdValidator.objectId().required()
 })
+
+export const subaccountJoiSchema = Joi.object({
+  business_name: Joi.string().required(),
+  settlement_bank: Joi.string().required(),
+  account_number: Joi.string().required(),
+  // percentage_charge: Joi.number().min(0).max(100).required(),
+  description: Joi.string().required(),
+  primary_contact_email: Joi.string().email().required(),
+  primary_contact_name: Joi.string().required(),
+  primary_contact_phone: Joi.string()
+    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .required()
+    .messages({
+      'string.pattern.base': 'Primary contact phone number must be a valid international phone number.',
+      'any.required': 'Primary contact phone number is required.',
+    }),
+  // metadata: Joi.string().optional(),
+  // organization: Joi.string().required(), // Assuming organization is a string representing ObjectId
+});
+
+
+export const UnpdatesubaccountJoiSchema = Joi.object({
+  business_name: Joi.string().optional(),
+  settlement_bank: Joi.string().optional(),
+  account_number: Joi.string().optional(),
+  description: Joi.string().optional(),
+  primary_contact_email: Joi.string().email().optional(),
+  primary_contact_name: Joi.string().optional(),
+  primary_contact_phone: Joi.string()
+    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .optional()
+    .messages({
+      'string.pattern.base': 'Primary contact phone number must be a valid international phone number.',
+      'any.required': 'Primary contact phone number is required.',
+    }),
+
+});

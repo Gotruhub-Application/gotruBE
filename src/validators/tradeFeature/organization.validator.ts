@@ -35,3 +35,7 @@ export const updateProductSchema = Joi.object({
   flavor: Joi.array().items(Joi.string()),
   minimumQuantity: Joi.number(),
 });
+
+export const updateWithdrawalRequestSchema = Joi.object({
+  status: Joi.string().valid("rejected","completed","pending").required()
+});

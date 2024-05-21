@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, successResponse } from "../../../support/http"; 
 import { writeErrosToLogs } from "../../../support/helpers";
-import { createCategorySchema, createProductSchema } from "../../../validators/tradeFeature/organization.validator";
-import { Category, Product } from "../../../models/organization.models";
+import { createCategorySchema, createProductSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
+import { Category, Product, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../../../models/organization.models";
 import { Media } from "../../../models/media.models";
 
 export class Catetgory {
@@ -189,6 +189,114 @@ export class Products {
         }catch(error:any){
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
+        }
+    };
+};
+
+
+export class WithdrawalRequestController {
+
+
+    // Get all Withdrawal Requests
+    static async getAllWithdrawalRequests(req: Request, res: Response) {
+        try {
+            const organizationId  = req.params.organizationId;
+            console.log(organizationId, "sv")
+
+            const { page = 1, limit = 10 } = req.query;
+
+            const pageNumber = parseInt(page as string, 10) || 1;
+            const limitNumber = parseInt(limit as string, 10) || 10;
+
+            const withdrawalRequests = await WithdrawalRequest.find()
+                .populate({
+                    path: 'user',
+                    match: { organizationId },
+                    select: 'fullName email organization'
+                })
+                .skip((pageNumber - 1) * limitNumber)
+                .limit(limitNumber);
+
+                console.log(withdrawalRequests.length, "sv")
+
+
+            const totalWithdrawalRequests = withdrawalRequests.length;
+            const totalPages = Math.ceil(totalWithdrawalRequests / limitNumber);
+
+            return successResponse(res, 200, "Success", {
+                withdrawalRequests,
+                totalPages,
+                currentPage: pageNumber,
+                totalWithdrawalRequests,
+            });
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while retrieving the withdrawal requests.");
+        }
+    }
+    // Get Withdrawal Request by ID
+    static async getWithdrawalRequestById(req: Request, res: Response) {
+        try {
+            const { id, organizationId} = req.params;
+            const withdrawalRequest = await WithdrawalRequest.findById(id).populate({
+                path: 'user',
+                match: { organizationId },
+                select: 'fullName email organization'
+            });
+            
+            if (!withdrawalRequest) {
+                return failedResponse(res, 404, "Withdrawal request not found.");
+            }
+
+            return successResponse(res, 200, "Success", withdrawalRequest);
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while retrieving the withdrawal request.");
+        }
+    }
+
+    // Update Withdrawal Request (status only)
+    static async updateWithdrawalRequest(req: Request, res: Response) {
+        try {
+            const { id, organizationId} = req.params;
+
+            const { error, value } = updateWithdrawalRequestSchema.validate(req.body);
+            if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+
+            const withdrawalRequest = await WithdrawalRequest.findById(id).populate({
+                path: 'user',
+                match: { organizationId },
+                select: 'fullName email organization'
+            });
+
+            if (!withdrawalRequest) {
+                return failedResponse(res, 404, "Withdrawal request not found.");
+            }
+
+            if (value.status === 'rejected') {
+                // Refund the amount to the wallet
+                const wallet = await WalletModel.findById(withdrawalRequest.wallet);
+                if (wallet) {
+                    wallet.balance += withdrawalRequest.amount;
+                    await wallet.save();
+
+                    // Create a credit transaction
+                    await WalletTransactionModel.create({
+                        wallet: withdrawalRequest.wallet,
+                        user: wallet.user,
+                        amount: withdrawalRequest.amount,
+                        type: 'credit'
+                    });
+                }
+            }
+
+            withdrawalRequest.status = value.status;
+            await withdrawalRequest.save();
+
+            return successResponse(res, 200, "Withdrawal request updated successfully.", withdrawalRequest);
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while updating the withdrawal request.");
         }
     };
 }

@@ -1,5 +1,6 @@
 import {Schema, Model, model, Query} from 'mongoose';
-import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord, ICategory,IProduct} from '../interfaces/organization';
+import bcrypt from "bcrypt"
+import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord, ICategory,IProduct, ISubaccount, IWallet, IWalletTransaction, IWithdrawalRequest} from '../interfaces/organization';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -203,7 +204,18 @@ const UserSchema: Schema<Iuser> = new Schema<Iuser>({
   },
   passQrcode: {
     type: String,
-    required: false,
+    default:""
+  },
+  bankName: {
+    type: String,
+    default:""
+  },
+  accountNum: {
+    type: String,
+    default:""
+  },
+  accountName: {
+    type: String,
     default:""
   },
   email: {
@@ -264,6 +276,88 @@ UserSchema.pre('find', function () {
   .populate('subUnit')
   .populate('signature')
   .populate('relationImage');
+});
+
+UserSchema.pre("save", async function(next){
+  if (this.isNew && this.role == "student"){
+    const salt = await bcrypt.genSalt(10);
+    const password = await bcrypt.hash("0000",salt)
+    await WalletModel.create({
+      user:this._id,
+      pin:password
+    });
+  }
+  next();
+})
+
+const walletSchema: Schema<IWallet> = new Schema(
+  {
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    balance: { type: Number,default: 0 },
+    pin:String,
+    // changedPin:{
+    //   type:Boolean, default:false
+    // }
+  },
+  {
+    timestamps: true,
+  }
+);
+
+
+const walletTransactionSchema: Schema<IWalletTransaction> = new Schema(
+  {
+    wallet: { type: Schema.Types.ObjectId, ref: 'Wallet', required: true },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    type: { type: String, enum: ['credit', 'debit'], required: true },
+    amount: { type: Number, required: true },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const withdrawalRequestSchema:Schema<IWithdrawalRequest> = new Schema<IWithdrawalRequest>({
+  wallet: { type: Schema.Types.ObjectId, ref: 'Wallet', required: true },
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  amount: { type: Number, required: true },
+  status: { type: String, enum: ['pending', 'completed', 'rejected'], default: 'pending' },
+},{
+  timestamps: true,
+}
+);
+
+withdrawalRequestSchema.pre('findOne', function () {
+  this
+  .populate('user')
+  .populate('wallet')
+});
+
+
+// Pre-save hook to handle wallet update and transaction creation
+withdrawalRequestSchema.pre<IWithdrawalRequest>('save', async function (next) {
+  if (this.isNew) {
+      const wallet = await WalletModel.findById(this.wallet);
+      if (!wallet) {
+          return next(new Error('Associated wallet not found.'));
+      }
+      if (wallet.balance < this.amount) {
+          return next(new Error('Insufficient funds in wallet.'));
+      }
+
+      // Debit the wallet
+      wallet.balance -= this.amount;
+      await wallet.save();
+
+      // Create a debit transaction
+      await WalletTransactionModel.create({
+          wallet: this.wallet,
+          user: this.user,
+          amount: this.amount,
+          type: 'debit'
+      });
+  }
+  next();
 });
 
 const PlanSchema:Schema<IPlan> = new Schema<IPlan>({
@@ -406,6 +500,64 @@ productSchema.pre('findOne', function () {
 });
 
 
+const SubaccountSchema: Schema<ISubaccount> = new Schema<ISubaccount>({
+  business_name: {
+      type: String,
+      required: true,
+  },
+  settlement_bank: {
+      type: String,
+      required: true,
+  },
+  account_number: {
+      type: String,
+      required: true,
+  },
+  // percentage_charge: {
+  //     type: Number,
+  //     required: true,
+  //     min: 0,
+  //     max: 100,
+  // },
+  description: {
+      type: String,
+      required: true,
+  },
+  primary_contact_email: {
+      type: String,
+      required: true,
+      // match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address.'],
+  },
+  primary_contact_name: {
+      type: String,
+      required: true,
+  },
+  primary_contact_phone: {
+      type: String,
+      required: true,
+      // match: [/^\+?[1-9]\d{1,14}$/, 'Please use a valid phone number.'],
+  },
+  // metadata: {
+  //     type: String,
+  //     required: false,
+  // },
+  subaccount_code:{
+    type:String,
+    default:""
+  },
+  organization: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+  },
+}, {
+  timestamps: true,
+});
+
+export const WithdrawalRequest: Model<IWithdrawalRequest> = model<IWithdrawalRequest>('WithdrawalRequest', withdrawalRequestSchema);
+export const SubaccountModel = model<ISubaccount>('Subaccount', SubaccountSchema);
+export const WalletModel: Model<IWallet> = model<IWallet>('Wallet', walletSchema);
+export const WalletTransactionModel: Model<IWalletTransaction> = model<IWalletTransaction>('WalletTransaction', walletTransactionSchema);
 export const Organization: Model<IOrganization> = model<IOrganization>('Organization', OrganizationSchema);
 export const Token: Model<Itoken> = model<Itoken>('Token', TokenSchema);
 export const Unit: Model<IUnit> = model<IUnit>('Unit', UnitSchema);
