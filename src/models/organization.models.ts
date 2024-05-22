@@ -508,7 +508,7 @@ const OrderSchema: Schema<IOrder> = new Schema<IOrder>({
   }],
   totalAmount: { type: Number, required: true },
   status: { type: String, enum: ['pending', 'completed', 'rejected'], default: 'pending' },
-  walletTransaction: { type: Schema.Types.ObjectId, ref: 'WalletTransaction', required: true },
+  // walletTransaction: { type: Schema.Types.ObjectId, ref: 'WalletTransaction', required: true },
   paymentMode: { type: String, enum: ['wallet', 'cash'], default: 'wallet' },
 }, { timestamps: true });
 

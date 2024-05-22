@@ -46,7 +46,7 @@ export const orgUserValidator = Joi.object({
     otherwise: Joi.optional()
   }).allow(""),
   relationImage:  Joi.when('role', {
-    is: Joi.valid('student'), // If role is not 'student'
+    is: Joi.valid('guardian'), // If role is not 'student'
     then:objectIdValidator.objectId().required().min(1).required(),
     otherwise: Joi.optional()
   }).allow(""),
