@@ -52,12 +52,12 @@ const cartSchema = Joi.array().items(productSchema).min(1).required();
 // Define the main payload schema
 export const payloadSchema = Joi.object({
   cart: cartSchema,
-  child_id:Joi.when('paymentTpe',{
+  child_id:Joi.when('paymentMode',{
     is:"wallet",
     then: objectIdValidator.objectId().required(),
     otherwise:Joi.optional().allow("")
   }),
-  walletPin: Joi.when('paymentTpe',{
+  walletPin: Joi.when('paymentMode',{
     is:"wallet",
     then: Joi.string().length(4).required(),
     otherwise:Joi.optional().allow("")

@@ -184,7 +184,7 @@ export interface IOrder extends Document {
   totalAmount: number;
   paymentMode: string;
   status: string;
-  walletTransaction: Schema.Types.ObjectId;
+  // walletTransaction: Schema.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
