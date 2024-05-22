@@ -47,7 +47,8 @@ export const orgUserValidator = Joi.object({
   }).allow(""),
   relationImage:  Joi.when('role', {
     is: Joi.valid('student'), // If role is not 'student'
-    then:objectIdValidator.objectId().required().min(1).required()
+    then:objectIdValidator.objectId().required().min(1).required(),
+    otherwise: Joi.optional()
   }).allow(""),
   piviotUnit: Joi.when('role', { // Apply validation when role is 'student'
     is: 'student',
@@ -126,7 +127,7 @@ export const signInOutRecordValidator = Joi.object({
 export const useAppTokenValidator = Joi.object({
   child: objectIdValidator.objectId().required(),
   token: Joi.string().required(),
-  subscriptionType: objectIdValidator.objectId().required()
+  // subscriptionType: objectIdValidator.objectId().required()
 })
 
 export const subaccountJoiSchema = Joi.object({

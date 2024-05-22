@@ -1,6 +1,6 @@
 import {Schema, Model, model, Query} from 'mongoose';
 import bcrypt from "bcrypt"
-import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord, ICategory,IProduct, ISubaccount, IWallet, IWalletTransaction, IWithdrawalRequest} from '../interfaces/organization';
+import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord, ICategory,IProduct, ISubaccount, IWallet, IWalletTransaction, IWithdrawalRequest, IOrder} from '../interfaces/organization';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -499,6 +499,18 @@ productSchema.pre('findOne', function () {
   .populate('uploadedBy')
 });
 
+const OrderSchema: Schema<IOrder> = new Schema<IOrder>({
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  attendant: { type: Schema.Types.ObjectId, ref: 'User' },
+  items: [{
+    product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    quantity: { type: Number, required: true },
+  }],
+  totalAmount: { type: Number, required: true },
+  status: { type: String, enum: ['pending', 'completed', 'rejected'], default: 'pending' },
+  walletTransaction: { type: Schema.Types.ObjectId, ref: 'WalletTransaction', required: true },
+  paymentMode: { type: String, enum: ['wallet', 'cash'], default: 'wallet' },
+}, { timestamps: true });
 
 const SubaccountSchema: Schema<ISubaccount> = new Schema<ISubaccount>({
   business_name: {
@@ -554,6 +566,7 @@ const SubaccountSchema: Schema<ISubaccount> = new Schema<ISubaccount>({
   timestamps: true,
 });
 
+export const Order:Model<IOrder> = model<IOrder>('Order', OrderSchema);
 export const WithdrawalRequest: Model<IWithdrawalRequest> = model<IWithdrawalRequest>('WithdrawalRequest', withdrawalRequestSchema);
 export const SubaccountModel = model<ISubaccount>('Subaccount', SubaccountSchema);
 export const WalletModel: Model<IWallet> = model<IWallet>('Wallet', walletSchema);
