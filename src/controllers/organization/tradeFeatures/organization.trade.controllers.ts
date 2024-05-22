@@ -353,6 +353,7 @@ export class CartController {
                     items: value.cart,
                     totalAmount,
                     status: 'completed',
+                    organization,
                     paymentMode: value.paymentMode,
                     // walletTransaction: walletTransaction[0]._id
                 });
@@ -365,6 +366,7 @@ export class CartController {
                     items: value.cart,
                     totalAmount,
                     status: 'completed',
+                    organization,
                     paymentMode: value.paymentMode,
                     
                 });
@@ -388,6 +390,148 @@ export class CartController {
             session.endSession();
             writeErrosToLogs(error);
             return failedResponse(res, 500, "An error occurred while processing the checkout.");
+        }
+    }
+};
+
+
+export class OrderController {
+    // Get all orders for the requesting user with pagination
+    static async getUserOrders(req: Request, res: Response) {
+        try {
+            const { child_id} = req.params
+            const { page = 1, limit = 10 } = req.query;
+
+            const orders = await Order.find({ user: child_id })
+                .limit(Number(limit))
+                .skip((Number(page) - 1) * Number(limit))
+                .exec();
+
+            const count = await Order.countDocuments({ user: child_id });
+
+            return successResponse(res, 200, "Orders retrieved successfully.", {
+                orders,
+                totalPages: Math.ceil(count / Number(limit)),
+                currentPage: Number(page),
+                totalOrders: count
+            });
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while retrieving the orders.");
+        }
+    }
+
+    // Get all orders for the admin with pagination
+    static async getAllOrders(req: Request, res: Response) {
+        try {
+            const { organizationId:organization} = req.params
+            const { page = 1, limit = 10 } = req.query;
+
+            // if (role !== 'admin') {
+            //     return failedResponse(res, 403, "Unauthorized access.");
+            // }
+
+            const orders = await Order.find({organization})
+                .limit(Number(limit))
+                .skip((Number(page) - 1) * Number(limit))
+                .exec();
+
+            const count = await Order.countDocuments();
+
+            return successResponse(res, 200, "Orders retrieved successfully.", {
+                orders,
+                totalPages: Math.ceil(count / Number(limit)),
+                currentPage: Number(page),
+                totalOrders: count
+            });
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while retrieving the orders.");
+        }
+    }
+
+    // Get order by ID for the requesting user
+    static async getUserOrderById(req: Request, res: Response) {
+        try {
+
+            const { orderId, child_id} = req.params;
+
+            const order = await Order.findOne({ _id: orderId, user: child_id });
+
+            if (!order) {
+                return failedResponse(res, 404, "Order not found.");
+            }
+
+            return successResponse(res, 200, "Order retrieved successfully.", order);
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while retrieving the order.");
+        }
+    }
+
+    // Get order by ID for the admin
+    static async getAdminOrderById(req: Request, res: Response) {
+        try {
+
+            const { orderId,organizationId:organization } = req.params;
+
+            // if (role !== 'admin') {
+            //     return failedResponse(res, 403, "Unauthorized access.");
+            // }
+
+            const order = await Order.findOne({_id:orderId, organization:organization});
+
+            if (!order) {
+                return failedResponse(res, 404, "Order not found.");
+            }
+
+            return successResponse(res, 200, "Order retrieved successfully.", order);
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while retrieving the order.");
+        }
+    }
+
+    // Update order status by the admin
+    static async updateOrderStatus(req: Request, res: Response) {
+        try {
+            const {organizationId:organization } = req.params;
+            const { orderId } = req.params;
+            const { status } = req.body;
+
+
+            const order = await Order.findOne({_id:orderId, organization:organization});
+
+            if (!order) {
+                return failedResponse(res, 404, "Order not found.");
+            }
+
+            order.status = status;
+            await order.save();
+
+            return successResponse(res, 200, "Order status updated successfully.", order);
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while updating the order status.");
+        }
+    }
+
+    // Delete order by the admin
+    static async deleteOrder(req: Request, res: Response) {
+        try {
+            const {organizationId:organization} = req.params
+            const { orderId } = req.params;
+
+            const order = await Order.findOneAndDelete({_id:orderId, organization:organization});
+
+            if (!order) {
+                return failedResponse(res, 404, "Order not found.");
+            }
+
+            return successResponse(res, 200, "Order deleted successfully.");
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while deleting the order.");
         }
     }
 }

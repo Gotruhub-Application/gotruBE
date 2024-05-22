@@ -179,6 +179,7 @@ export interface IProduct extends Document {
 
 export interface IOrder extends Document {
   user: Schema.Types.ObjectId;
+  organization: Schema.Types.ObjectId;
   attendant: Schema.Types.ObjectId;
   items: Array<{ product: Schema.Types.ObjectId, quantity: number }>;
   totalAmount: number;
