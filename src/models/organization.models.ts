@@ -501,16 +501,33 @@ productSchema.pre('findOne', function () {
 
 const OrderSchema: Schema<IOrder> = new Schema<IOrder>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
   attendant: { type: Schema.Types.ObjectId, ref: 'User' },
   items: [{
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true },
   }],
   totalAmount: { type: Number, required: true },
-  status: { type: String, enum: ['pending', 'completed', 'rejected'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'completed', 'delivered'], default: 'pending' },
   // walletTransaction: { type: Schema.Types.ObjectId, ref: 'WalletTransaction', required: true },
   paymentMode: { type: String, enum: ['wallet', 'cash'], default: 'wallet' },
 }, { timestamps: true });
+
+OrderSchema.pre('find', function () {
+  this
+  .populate('user')
+  .populate('items.product')
+  .populate('attendant')
+
+});
+
+OrderSchema.pre('findOne', function () {
+  this
+  .populate('user')
+  .populate('items.product')
+  .populate('attendant')
+
+});
 
 const SubaccountSchema: Schema<ISubaccount> = new Schema<ISubaccount>({
   business_name: {
