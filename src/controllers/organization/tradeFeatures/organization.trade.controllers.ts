@@ -499,7 +499,7 @@ export class OrderController {
             const { orderId } = req.params;
             const { status } = req.body;
 
-
+            
             const order = await Order.findOne({_id:orderId, organization:organization});
 
             if (!order) {

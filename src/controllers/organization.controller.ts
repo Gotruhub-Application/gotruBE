@@ -396,22 +396,7 @@ export class OrgUsers {
 export class BuySubcriptionPlan {
   static async orderPlan (req:Request, res:Response){
     try {
-      // const planArray: Array<object> =[];
-     
-      // for (const plan of req.body){
-      //   const { error, value } = purchasePlanValidator.validate(value);
-      //   if (error) return failedResponse (res, 400, `${error.details[0].message}`)
-      //   const subscriptionTypeExist = await Subscription.findById(value.subscriptionType)
-      //   if (!subscriptionTypeExist) return failedResponse (res, 404, "One of the subscription type not found")
 
-      //   value.Organization = req.params.organizationId
-      //   value.amount = (value.quantity * parseFloat(subscriptionTypeExist.amount.toString()));
-      //   value.planValidity= subscriptionTypeExist.planValidity
-      //   value.quantityLeft= value.quantity
-
-      //   planArray.push(value)
-      // }
-      
       const { error, value } = purchasePlanValidator.validate(req.body);
       if (error) return failedResponse (res, 400, `${error.details[0].message}`)
       const subscriptionTypeExist = await Subscription.findById(value.subscriptionType)
