@@ -175,4 +175,16 @@ export interface IProduct extends Document {
   flavor?: string[];
   minimumQuantity: number;
   inStock:boolean
+};
+
+export interface IOrder extends Document {
+  user: Schema.Types.ObjectId;
+  attendant: Schema.Types.ObjectId;
+  items: Array<{ product: Schema.Types.ObjectId, quantity: number }>;
+  totalAmount: number;
+  paymentMode: string;
+  status: string;
+  walletTransaction: Schema.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }

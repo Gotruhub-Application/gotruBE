@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, successResponse } from "../../../support/http"; 
 import { writeErrosToLogs } from "../../../support/helpers";
-import { createCategorySchema, createProductSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
-import { Category, Product, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../../../models/organization.models";
+import { createCategorySchema, createProductSchema, payloadSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
+import { Category, Order, Product, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../../../models/organization.models";
 import { Media } from "../../../models/media.models";
+import mongoose from 'mongoose';
+import bcrypt from "bcrypt"
 
 export class Catetgory {
     static async addCategory(req: Request, res: Response) {
@@ -299,4 +301,94 @@ export class WithdrawalRequestController {
             return failedResponse(res, 500, "An error occurred while updating the withdrawal request.");
         }
     };
-}
+};
+
+
+export class CartController {
+    static async checkOut(req: Request, res: Response) {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+  
+      try {
+
+        const { uploadedBy:organization, _id:user,role } = (req as any).user;
+        const { error, value } = payloadSchema.validate(req.body);
+        if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+        
+        const { child_id } = value;
+        const productIds = value.cart.map((item: any) => item.product);
+        const products = await Product.find({ _id: { $in: productIds }, organization }).session(session);
+        const productMap = new Map(products.map(product => [product._id.toString(), product]));
+        
+        if(role !== "staff" && value.paymentMode === 'cash') return failedResponse(res, 403, `Only staffs can initiate cash a transaction. Please use a staff account.`);
+        let totalAmount = 0;
+        for (const item of value.cart) {
+          const product = productMap.get(item.product);
+          if (!product) return failedResponse(res, 400, `Product with id ${item.product} not found.`);
+          if (product.quantity < item.quantity) return failedResponse(res, 400, `Product with id ${item.product} only has ${product.quantity} piecies left.`);
+          totalAmount += product.price * item.quantity;
+        }
+  
+        if (value.paymentMode === 'wallet') {
+          const wallet = await WalletModel.findOne({ user: child_id }).select("+pin").session(session);
+          if (!wallet) return failedResponse(res, 404, `Child wallet not found.`);
+  
+          const isValidPin = await bcrypt.compare(value.walletPin, wallet.pin);
+          if (!isValidPin) return failedResponse(res, 400, `Invalid wallet credentials.`);
+  
+          if (wallet.balance < totalAmount) return failedResponse(res, 400, `Insufficient wallet balance`);
+  
+          wallet.balance -= totalAmount;
+          await wallet.save({ session });
+  
+          const walletTransaction = await WalletTransactionModel.create([{
+            wallet: wallet._id,
+            user: wallet.user,
+            amount: totalAmount,
+            type: "debit"
+          }], { session });
+  
+          const newOrder = new Order({
+            user: wallet.user,
+            attendant:role === "staff" ? "attendant_value": "",
+            items: value.cart,
+            totalAmount,
+            status: 'completed',
+            paymentMode:value.paymentMode,
+            walletTransaction: walletTransaction[0]._id
+          });
+          await newOrder.save({ session });
+  
+        } else if (value.paymentMode === 'cash') {
+  
+          const newOrder = new Order({
+            user: user,
+            attendant:role,
+            items: value.cart,
+            totalAmount,
+            status: 'completed',
+            paymentMode:value.paymentMode
+          });
+          await newOrder.save({ session });
+        }
+  
+        for (const item of value.cart) {
+          const product = productMap.get(item.product);
+          if (product) {
+            product.quantity -= item.quantity;
+            await product.save({ session });
+          }
+        }
+  
+        await session.commitTransaction();
+        session.endSession();
+  
+        return successResponse(res, 200, "Success");
+      } catch (error: any) {
+        await session.abortTransaction();
+        session.endSession();
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, "An error occurred while processing the checkout.");
+      }
+    }
+  }

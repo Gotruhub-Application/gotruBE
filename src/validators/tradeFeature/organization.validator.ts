@@ -39,3 +39,28 @@ export const updateProductSchema = Joi.object({
 export const updateWithdrawalRequestSchema = Joi.object({
   status: Joi.string().valid("rejected","completed","pending").required()
 });
+
+// Define the product schema
+const productSchema = Joi.object({
+  product: objectIdValidator.objectId().required(), // Assuming product_id is a string
+  quantity: Joi.number().integer().min(1).required()
+});
+
+// Define the cart schema
+const cartSchema = Joi.array().items(productSchema).min(1).required();
+
+// Define the main payload schema
+export const payloadSchema = Joi.object({
+  cart: cartSchema,
+  child_id:Joi.when('paymentTpe',{
+    is:"wallet",
+    then: objectIdValidator.objectId().required(),
+    otherwise:Joi.optional().allow("")
+  }),
+  walletPin: Joi.when('paymentTpe',{
+    is:"wallet",
+    then: Joi.string().length(4).required(),
+    otherwise:Joi.optional().allow("")
+  }),
+  paymentMode:Joi.string().valid("wallet","cash").required()
+});

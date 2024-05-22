@@ -1,6 +1,6 @@
 import { Media } from "../models/media.models";
 import { AppToken, Plan, SubUnit, SubaccountModel, Unit, User } from "../models/organization.models";
-import { Subscription } from "../models/admin.models";
+import { Feature, Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
 import { createPaystackSubAccount, failedResponse, initiatePaystack, successResponse } from "../support/http";
@@ -9,6 +9,7 @@ import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErro
 import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
 import { array } from "joi";
+import { ObjectId } from "mongoose";
 
 
 export class OrganizatioinUnits {
@@ -200,9 +201,12 @@ export class OrgUsers {
 
             // validate parents
               // Find the documents for the provided feature IDs
-              const parent = await User.findById(value.guardians);
+              if(value.guardians){
+                const parent = await User.findById(value.guardians);
             
-              if (!parent) return failedResponse(res,404, "guardians not found.")
+                if (!parent) return failedResponse(res,404, "guardians not found.")
+              }
+              
             // validate unit
             const unit = await Unit.findOne({
               _id:value.piviotUnit, 
@@ -552,30 +556,42 @@ export class AppAccessTokens {
       const child = await User.findById(value.child);      
       if (!child) return failedResponse(res,404, "Child not found.")
       
-      const subPlanType = await Subscription.findById(value.subscriptionType)
-      if (!subPlanType) return failedResponse (res, 404, "subscriptionType not found.")
+      // const subPlanType = await Subscription.findById(value.subscriptionType)
+      // if (!subPlanType) return failedResponse (res, 404, "subscriptionType not found.")
 
-      const token = await AppToken.findOneAndUpdate({token: value.token, user:(req as any).user._id}).populate('plan');
+      const token = await AppToken.findOne({token: value.token, user:(req as any).user._id}).populate('plan');
       if (!token) return failedResponse (res, 404, "App token not found.")
+      if (token.used) return failedResponse (res, 400, "This token has been used.")
       
-      if (token) {
-        if ('planValidity' in token.plan) {
-          const currentDate = new Date();
-          token.used = true;
-          token.expires_at =  new Date(currentDate.setDate(currentDate.getDate() + (token.plan.planValidity-1)));
-          child.passToken = token._id
-          await child.save()
-          await token.save()
 
-          return successResponse(res,200, "Feature unlocked.")
-        } else {
-          console.log('Plan validity not available');
+      if ('planValidity' in token.plan) {
+        const currentDate = new Date();
+        
+        const subPlanType = await Subscription.findById(token.plan.subscriptionType)
+        if (!subPlanType) return failedResponse (res, 404, "subscriptionType not found.")
+        const features = subPlanType.feature
+        for(const feature of features){
+            const _feature = await Feature.findById(feature)
+            if(_feature !=null && _feature.name.toLocaleLowerCase() == "gotrupass"){
+              child.passToken = token._id
+            }else if (_feature !=null  && _feature.name.toLocaleLowerCase() == "gotrutrade"){
+              child.tradeToken = token._id
+            }else if (_feature !=null  && _feature.name.toLocaleLowerCase() == "gotrumonitor"){
+              child.monitorToken = token._id
+            }else{
+              return failedResponse (res, 400, "Feature  not found. Please contact support.")
+            }
         }
-      } else {
-        console.log('Token not found');
-      }
-      if (token.used) return failedResponse (res, 400, "THis token has been used.")
+        
+        token.used = true;
+        token.expires_at =  new Date(currentDate.setDate(currentDate.getDate() + (token.plan.planValidity-1)));
+        await child.save()
+        await token.save()
 
+        return successResponse(res,200, "Feature unlocked.")
+      };
+      return failedResponse (res, 400, "Plan validity cannot be deatermined.")
+              
     } catch (error:any) {
       writeErrosToLogs(error)
       return failedResponse(res, 500, error.message)
