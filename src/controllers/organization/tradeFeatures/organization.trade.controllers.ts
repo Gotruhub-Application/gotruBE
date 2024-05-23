@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, successResponse } from "../../../support/http"; 
 import { writeErrosToLogs } from "../../../support/helpers";
-import { createCategorySchema, createProductSchema, payloadSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
+import { createCategorySchema, createProductSchema, payloadSchema, updateOrderStatusSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
 import { Category, Order, Product, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../../../models/organization.models";
 import { Media } from "../../../models/media.models";
 import mongoose from 'mongoose';
@@ -319,6 +319,8 @@ export class CartController {
             const products = await Product.find({ _id: { $in: productIds }, organization }).session(session);
             const productMap = new Map(products.map(product => [product._id.toString(), product]));
 
+            if(role !== "staff" && value.paymentMode === 'cash') return failedResponse(res, 403, `Only staffs can initiate cash a transaction. Please use a staff account.`);
+
             let totalAmount = 0;
             let newOrder;
             for (const item of value.cart) {
@@ -436,7 +438,7 @@ export class OrderController {
                 .skip((Number(page) - 1) * Number(limit))
                 .exec();
 
-            const count = await Order.countDocuments();
+            const count = await Order.countDocuments({organization});
 
             return successResponse(res, 200, "Orders retrieved successfully.", {
                 orders,
@@ -499,6 +501,9 @@ export class OrderController {
             const { orderId } = req.params;
             const { status } = req.body;
 
+            const { error, value } = updateOrderStatusSchema.validate(req.body);
+            if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+
             
             const order = await Order.findOne({_id:orderId, organization:organization});
 
@@ -506,7 +511,7 @@ export class OrderController {
                 return failedResponse(res, 404, "Order not found.");
             }
 
-            order.status = status;
+            order.status = value.status;
             await order.save();
 
             return successResponse(res, 200, "Order status updated successfully.", order);

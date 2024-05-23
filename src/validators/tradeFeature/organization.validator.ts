@@ -64,3 +64,7 @@ export const payloadSchema = Joi.object({
   }),
   paymentMode:Joi.string().valid("wallet","cash").required()
 });
+
+export const updateOrderStatusSchema = Joi.object({
+  status: Joi.string().valid("rejected","completed","pending","delivered").required()
+});
