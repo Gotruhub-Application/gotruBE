@@ -26,7 +26,7 @@ organizationRouter
 
 .post("/plan/add-to-cart",IsAuthenticatedOrganization, BuySubcriptionPlan.orderPlan)
 .get("/plan/my-plans",IsAuthenticatedOrganization, BuySubcriptionPlan.getAllMyPlans)
-.get("/plan/:id",IsAuthenticatedOrganization, BuySubcriptionPlan.getMyPlanById)
+.get("/plan/single/:id",IsAuthenticatedOrganization, BuySubcriptionPlan.getMyPlanById)
 .get("/plan/pending",IsAuthenticatedOrganization, BuySubcriptionPlan.myPendingPlans)
 .get("/plan/pay",IsAuthenticatedOrganization, BuySubcriptionPlan.buyPlan)
 .delete("/plan/:id",IsAuthenticatedOrganization, BuySubcriptionPlan.removePlan)
