@@ -435,6 +435,27 @@ export class BuySubcriptionPlan {
 
   };
 
+  static async getMyPlanById (req:Request, res:Response){
+
+    try {
+      const {id} = req.params
+
+      const plan = await Plan.findOne({ Organization: req.params.organizationId, _id:id })
+      // if (plan){
+      //   if("feature" in plan.subscriptionType){
+      //     const features = await Feature.find({_id:{ $in: plan.subscriptionType.feature }})
+      //     return successResponse(res, 200, "Success", {plan, features} );
+      //   }
+      // }                               
+
+      return successResponse(res, 200, "Success", plan );
+  } catch (error: any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+  }
+
+};
+
   static async myPendingPlans (req:Request, res:Response){
     const ITEMS_PER_PAGE = 10;
     try {

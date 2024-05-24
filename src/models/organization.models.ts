@@ -396,6 +396,16 @@ const PlanSchema:Schema<IPlan> = new Schema<IPlan>({
   timestamps: true,
 })
 
+PlanSchema.pre('find', function (next) {
+  this.populate("subscriptionType");
+  next();
+});
+PlanSchema.pre('findOne', function (next) {
+  this.populate("subscriptionType");
+  next();
+});
+
+
 const appTokenSchema:Schema<IappToken> = new Schema<IappToken>({
   token: {
     type: String,
