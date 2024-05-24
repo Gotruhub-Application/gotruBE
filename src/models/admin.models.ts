@@ -15,6 +15,15 @@ const SubscriptionSchema: Schema<Isubscription> = new Schema<Isubscription>({
     feature: [{ type: Schema.Types.ObjectId, ref: "Feature", required: true }],
 }, { timestamps: true });
 
+SubscriptionSchema.pre('find', function (next) {
+    this.populate("feature");
+    next();
+  });
+
+SubscriptionSchema.pre('findOne', function (next) {
+    this.populate("feature");
+    next();
+  });
 // Create models for Feature and Subscription
 const Subscription: Model<Isubscription> = model<Isubscription>('Subscription', SubscriptionSchema);
 const Feature: Model<Ifeature> = model<Ifeature>('Feature', FeatureSchema);
