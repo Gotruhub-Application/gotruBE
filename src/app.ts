@@ -13,6 +13,7 @@ import { tradeOrganizationRouter } from "./routers/tradeFeature/trade.organizati
 import "./routers/organization/subaccount"
 import "./routers/parent/wallet.route"
 import "./routers/monitorFeature/organization.monitor"
+import "./routers/monitorFeature/users.monitor"
 
 
 const app:Application = express();
