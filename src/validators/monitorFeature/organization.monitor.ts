@@ -91,9 +91,9 @@ export const createSessionSchema = Joi.object({
 
 // Joi validation schema for attendance
 export const createAttendanceSchema = Joi.object({
-    term:objectIdValidator.objectId().required().messages({
-        'string.pattern.base': 'Term ID must be a valid ObjectId'
-    }),
+    // term:objectIdValidator.objectId().required().messages({
+    //     'string.pattern.base': 'Term ID must be a valid ObjectId'
+    // }),
     location: Joi.object({
         lat: Joi.string().required(),
         long: Joi.string().required()
@@ -103,9 +103,9 @@ export const createAttendanceSchema = Joi.object({
 });
 
 export const updateAttendanceSchema = Joi.object({
-    term:objectIdValidator.objectId().allow('').messages({
-        'string.pattern.base': 'Term ID must be a valid ObjectId'
-    }),
+    // term:objectIdValidator.objectId().allow('').messages({
+    //     'string.pattern.base': 'Term ID must be a valid ObjectId'
+    // }),
     location: Joi.object({
         lat: Joi.string().allow(''),
         long: Joi.string().allow('')

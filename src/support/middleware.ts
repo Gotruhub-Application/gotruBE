@@ -151,8 +151,7 @@ export const IsAuthenticatedOrganization =async (req:Request, res:Response, next
 }
 
 export const IsAuthenticatedUser =async (req:Request, res:Response, next:NextFunction) =>{
-  // Check if the Authorization header exists in the request
-  console.log("helllllll")
+
   if (!req.headers.authorization) {
       return failedResponse(res, 401, 'Access denied. Authorization header missing.');
   }
@@ -162,7 +161,7 @@ export const IsAuthenticatedUser =async (req:Request, res:Response, next:NextFun
   }
   try {
       const decodedToken = verifyJwtToken(token)
-      logger.info(decodedToken)
+
       req.params.email= decodedToken.email; 
       req.params.role= decodedToken.role; 
       req.params.userId= decodedToken.id;

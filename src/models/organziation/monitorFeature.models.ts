@@ -78,7 +78,7 @@ classScheduleSchema.pre("save",async function(next){
 
 const attendanceSchema: Schema<IAttendance> = new Schema<IAttendance>({
   organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
-  term: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
+  term: { type: Schema.Types.ObjectId, ref: 'Term' },
   location: {
     lat: { type: String, required: true },
     long: { type: String, required: true }
@@ -89,6 +89,17 @@ const attendanceSchema: Schema<IAttendance> = new Schema<IAttendance>({
   classScheduleId: { type: Schema.Types.ObjectId, ref: 'ClassSchedule', required: true },
   scanned_time:{type:Number}
 }, { timestamps: true });
+
+attendanceSchema.pre("find", function(){
+  this
+  .populate("classScheduleId")
+  .populate("term")
+});
+attendanceSchema.pre("findOne", function(){
+  this
+  .populate("classScheduleId")
+  .populate("term")
+});
 
 attendanceSchema.pre("save", async function (next) {
   if (this.isNew) {

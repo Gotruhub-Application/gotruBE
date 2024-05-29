@@ -4,6 +4,8 @@ import { writeErrosToLogs } from "../../../support/helpers";
 import { createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema } from "../../../validators/monitorFeature/organization.monitor";
 import { AttendanceModel, ClassScheduleModel, CourseModel, SessionModel, SubUnitCourseModel, TermModel } from "../../../models/organziation/monitorFeature.models";
 import { logger } from "../../../logger";
+import { AppToken, User } from "../../../models/organization.models";
+import { schedule } from "node-cron";
 
 export class Session {
     static async addSession(req: Request, res: Response) {
@@ -504,12 +506,46 @@ export class AttendanceController {
     static async addAttendance(req: Request, res: Response) {
         try {
             const { error, value } = createAttendanceSchema.validate(req.body);
+            const {role, _id:userId, organization}= (req as any).user
             if (error) return failedResponse(res, 400, `${error.details[0].message}`);
 
+            // validate course expiration
+            const schedule = await ClassScheduleModel.findOne({_id:value.classScheduleId, organization})
+            if(!schedule) failedResponse(res, 404, "classSchedule not found");
+            if(schedule?.expired) failedResponse(res, 400, "Failed. Monitor source subscription has expired for this schedule.");
+
+            // validate role
+            const user = await User.findById(userId);
+            if(role === "student"){
+                console.log(user?.monitorToken, "asdas")
+                const token = await AppToken.findById(user?.monitorToken)
+                if (!token) {
+                    return failedResponse(res, 400, "Student has no active monitor end subscription");
+                }
+
+                if (token.expires_at.getTime() < Date.now()) {
+                    token.expired = true;
+                    await token.save();
+                    return failedResponse(res, 400, "Your monitor end subscription has expired token has expired");
+                };
+
+                // if(user?.subUnit != schedule?.subUnit) return failedResponse(res, 400, "You cannot take attendance in another sub-unit."); 
+            }else if(role === "staff"){
+                if(!schedule?.coordinators.includes(userId) ) return failedResponse(res, 400, "You are not this course coordinator."); 
+            }
+
+            // validate the scanning user is in the sub unit or it's a coordinator
+            value.term = schedule?.term;
+            value.user = userId;
             // save attendance
             value.organization = req.params.organizationId;
             const attendance = await AttendanceModel.create(value);
-            return successResponse(res, 201, "Attendance added successfully", attendance );
+            // Populate details
+            const populatedAttendance = await AttendanceModel.findById(attendance._id)
+                .populate({ path: 'user', model: 'User' })
+                .populate({ path: 'classScheduleId', model: 'ClassSchedule' });
+
+            return successResponse(res, 201, "Attendance added successfully", populatedAttendance);
 
         } catch (error: any) {
             writeErrosToLogs(error);

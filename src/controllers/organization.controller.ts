@@ -250,7 +250,7 @@ export class OrgUsers {
           }
         }
 
-        if (value.role != "student"){
+        if (value.email){
           // validate profileImage
           const userExist = await User.findOne({
             defaultEmail:value.email, 
