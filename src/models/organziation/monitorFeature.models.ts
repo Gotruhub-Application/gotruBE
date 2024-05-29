@@ -94,11 +94,13 @@ attendanceSchema.pre("find", function(){
   this
   .populate("classScheduleId")
   .populate("term")
+  .populate("user")
 });
 attendanceSchema.pre("findOne", function(){
   this
   .populate("classScheduleId")
   .populate("term")
+  .populate("user")
 });
 
 attendanceSchema.pre("save", async function (next) {

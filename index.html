@@ -1,20 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fetch Data Every 3 Minutes</title>
-</head>
-<body>
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOASURBVO3BQY7kSAIDQWdA//+ybx/mwJMAIZU1XbM0i38w84/DTDnMlMNMOcyUw0w5zJTDTDnMlMNMOcyUw0w5zJTDTDnMlMNMufhQEn6SSktCU2lJaCqfSMIdlZaEn6TyicNMOcyUw0y5eJnKm5LwRBKayhNJ+CaVNyXhTYeZcpgph5ly8WVJeELlTUloKi0Jd1RaEt6UhCdUvukwUw4z5TBTLn45lTtJuKNyJwlNpSXhv+QwUw4z5TBTLn65JDSVptKS0FRaEp5Q+S85zJTDTDnMlIsvU/kmlZaEOyp/E5W/yWGmHGbKYaZcvCwJPykJTaUl4U4SmkpLwp0kNJU7SfibHWbKYaYcZsrFh1T+TSotCd+UhKZyR+U3OcyUw0w5zJT4Bx9IQlO5k4RvUmlJuKPSkvAmlTtJaCotCU+ofOIwUw4z5TBTLl6WhKbSVFoSmspPSkJTaUn4SUloKneS8KbDTDnMlMNMuXiZSkvCHZU7Sbij0pLQVFoSmsoTKi0Jd5JwR6Ul4QmVNx1mymGmHGbKxYdUnlBpSWgqTeVNKi0JTeUTKi0JTaUloancScIdlU8cZsphphxmysWHktBUmsodlTtJaCotCZ9QaUm4k4Q7SWgq36TypsNMOcyUw0y5eFkSnlBpSWgqT6i0JDSVloSm8kQSnkjCm5LQVD5xmCmHmXKYKRdfpnInCXeS0FTuJOEJlTtJaCpN5U4SmkpLwhMq33SYKYeZcpgpFy9TeZPKHZWWhKZyJwmfSMKbkvAJlU8cZsphphxmysWXJeGOSktCS8IdlabSkvCEyp0kfCIJT6i0JDSVNx1mymGmHGZK/INfLAlN5U4SmsonktBUnkjCJ1TedJgph5lymCkXH0rCT1K5k4Sm0lRaEp5QeSIJTeWOyp0kfNNhphxmymGmXLxM5U1JeFMSmkpLQlP5hMpvcpgph5lymCkXX5aEJ1TelISflIQ3JaGptCQ0lU8cZsphphxmysX/GZWWhCeScEflThKeUPlJh5lymCmHmXLxy6m0JDSVloSm0pLwiSQ0lTcl4ZsOM+UwUw4z5eLLVP5mSXhCpSXhCZVPqLQkvOkwUw4z5TBTLl6WhJ+UhDtJeFMS7qjcScITKi0J33SYKYeZcpgp8Q9m/nGYKYeZcpgph5lymCmHmXKYKYeZcpgph5lymCmHmXKYKYeZcpgp/wOQhXksQwtE/AAAAABJRU5ErkJggg==" alt="" srcset="">
-    <script>
-        setInterval(() => {
-            fetch('https://api-gotruhub.onrender.com/')
-                .then(response => response.json())
-                .then(data => console.log(data))
-                .catch(error => console.error('Error:', error));
-        }, 180000); // 180000 milliseconds = 3 minutes
-    </script>
-</body>
+<!doctype html> <!-- Important: must specify -->
+<html>
+  <head>
+    <meta charset="utf-8"> <!-- Important: rapi-doc uses utf8 characters -->
+    <script type="module" src="https://unpkg.com/rapidoc/dist/rapidoc-min.js"></script>
+  </head>
+  <body>
+    <rapi-doc spec-url = "https://petstore.swagger.io/v2/swagger.json"> </rapi-doc>
+  </body>
 </html>

@@ -37,5 +37,5 @@ organizationRouter
 
 .post("/attendance", IsAuthenticatedUser, AttendanceController.addAttendance)
 .get("/attendance/schedule/:classScheduleId", IsAuthenticatedOrganization, AttendanceController.getAllAttendances)
-.get("/attendance/:attendanceId", IsAuthenticatedOrganization, AttendanceController.getSingleAttendance)
-.delete("/attendance/:attendanceId", IsAuthenticatedOrganization, AttendanceController.deleteSingleAttendance)
+.get("/attendance/:id", IsAuthenticatedOrganization, AttendanceController.getSingleAttendance)
+.delete("/attendance/:id", IsAuthenticatedOrganization, AttendanceController.deleteSingleAttendance)
