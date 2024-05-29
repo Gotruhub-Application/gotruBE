@@ -13,7 +13,8 @@ export function initiatePaystack(metadata: Array<object>, email: string, totalAm
     const params = JSON.stringify({
         "email": email,
         "amount": totalAmount.toString(),
-        "metadata": metadata
+        "metadata": metadata,
+        "reference":`GOTRU_${Date.now()}`,
     });
 
     const options = {

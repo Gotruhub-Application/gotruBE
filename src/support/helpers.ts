@@ -200,3 +200,13 @@ async function updateExpiredTokens(): Promise<void> {
         writeErrosToLogs(error);
     }
   }
+
+  export function ConvertDateTimeToNumber():number{
+    const timestamp = Date.now();
+    const date = new Date(timestamp);
+    
+    const hours = date.getHours();  // No need to convert to string
+    const minutes = date.getMinutes();  // No need to convert to string
+    
+    return hours * 100 + minutes;  // Combine hours and minutes into a single number
+  }

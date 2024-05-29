@@ -250,7 +250,7 @@ export class OrgUsers {
           }
         }
 
-        if (value.role != "student"){
+        if (value.email){
           // validate profileImage
           const userExist = await User.findOne({
             defaultEmail:value.email, 
@@ -587,11 +587,11 @@ export class AppAccessTokens {
         const features = subPlanType.feature
         for(const feature of features){
             const _feature = await Feature.findById(feature)
-            if(_feature !=null && _feature.name.toLocaleLowerCase() == "gotrupass"){
+            if(_feature?.name.toLocaleLowerCase() == "gotrupass"){
               child.passToken = token._id
-            }else if (_feature !=null  && _feature.name.toLocaleLowerCase() == "gotrutrade"){
+            }else if ( _feature?.name.toLocaleLowerCase() == "gotrutrade"){
               child.tradeToken = token._id
-            }else if (_feature !=null  && _feature.name.toLocaleLowerCase() == "gotrumonitor"){
+            }else if ( _feature?.name.toLocaleLowerCase() == "gotrumonitor"){
               child.monitorToken = token._id
             }else{
               return failedResponse (res, 400, "Feature  not found. Please contact support.")

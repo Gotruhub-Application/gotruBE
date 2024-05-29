@@ -63,4 +63,5 @@ jobs:
           cd gotruBE
           git pull 
           npm install
+          npm run forever_kill
           npm run start_dev

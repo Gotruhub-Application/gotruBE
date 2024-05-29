@@ -12,6 +12,8 @@ import { passFeatureUserRouter } from "./routers/passFeature/pass.users.route";
 import { tradeOrganizationRouter } from "./routers/tradeFeature/trade.organization.route";
 import "./routers/organization/subaccount"
 import "./routers/parent/wallet.route"
+import "./routers/monitorFeature/organization.monitor"
+import "./routers/monitorFeature/users.monitor"
 
 
 const app:Application = express();

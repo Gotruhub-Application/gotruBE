@@ -7,6 +7,7 @@ import crypto from "crypto"
 import { sendTemplateMail, sentMail } from "../../support/helpers";
 import { Plan, WalletModel, WalletTransactionModel } from "../../models/organization.models";
 import { pl } from "@faker-js/faker";
+import { SubUnitCourseModel } from "../../models/organziation/monitorFeature.models";
 
 
 const secret:any = process.env.PAYSTACK_SECRET_KEY;
@@ -65,6 +66,15 @@ export const paystackWebhook = async(req:Request, res:Response)=>{
         
                 await sendTemplateMail(event.data.customer.email,"Wallet fund successful","templates/paystack.html",context)
 
+            }else if(plan.custom_fields.type == "subUnitCourses"){
+                await SubUnitCourseModel.findByIdAndUpdate(plan.cart_id,{$set:{paidStatus:true}})
+                const context ={
+                    date:new Date(event.data.paid_at).toLocaleDateString(),
+                    email:event.data.customer.email,
+                    amount: event.data.amount/100,
+                }
+        
+                await sendTemplateMail(event.data.customer.email,"Course registraion payment successful","templates/paystack.html",context)
             }else{
                 // console.log(plan, "sadbasdbsa")
                 await Plan.findByIdAndUpdate(plan.custom_fields._id,{$set:{paidStatus:true}})
