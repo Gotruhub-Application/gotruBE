@@ -22,8 +22,8 @@ export const FeatureValidator=Joi.object({
 export const SubscriptionValidator=Joi.object({
   name: Joi.string().required().max(30),
   features:Joi.array().unique().items(objectIdValidator.objectId()).required().min(1),
-  duration: Joi.string().required(),
-  planValidity: Joi.number().positive().required(),
+  duration: Joi.string().allow(""),
+  planValidity: Joi.number().allow("").default(0),
   amount: Joi.number().positive().required(),
   description: Joi.string().required().max(300),
 })
@@ -31,8 +31,8 @@ export const SubscriptionValidator=Joi.object({
 export const UpdateSubscriptionValidator=Joi.object({
   name: Joi.string().max(30),
   features:Joi.array().unique().items(objectIdValidator.objectId()).required().min(1),
-  duration: Joi.string(),
-  planValidity: Joi.number().positive(),
+  duration: Joi.string().allow(""),
+  planValidity: Joi.number().positive().allow(""),
   amount: Joi.number().positive(),
   description: Joi.string().max(300),
 })
