@@ -9,9 +9,9 @@ const FeatureSchema: Schema<Ifeature> = new Schema<Ifeature>({
 const SubscriptionSchema: Schema<Isubscription> = new Schema<Isubscription>({
     name: { type: String, required: true },
     amount: { type:Schema.Types.Decimal128, required: true },
-    duration: { type: String, required: true },
+    duration: { type: String,},
     description: { type: String, required: true },
-    planValidity: { type: Number, required: true },
+    planValidity: { type: Number },
     feature: [{ type: Schema.Types.ObjectId, ref: "Feature", required: true }],
 }, { timestamps: true });
 
