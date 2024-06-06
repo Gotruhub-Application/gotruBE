@@ -65,10 +65,7 @@ export class FeaturesController {
     };
     static async DeleteSingleFeature(req:Request, res:Response) {
         try {
-            const { error, value } = FeatureValidator.validate(req.body);
-            if (error) {
-                return failedResponse(res, 400, `${error.details[0].message}`);
-            }
+
             const featureId:any= req.params.id
             const feature = await Feature.findOneAndDelete(featureId)
             if (!feature){
