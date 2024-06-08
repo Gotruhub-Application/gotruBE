@@ -282,22 +282,42 @@ export class OrgUsers {
     }
   };
 
-  static async getUsers (req:Request, res:Response, next:NextFunction){
+  static async getUsers(req: Request, res: Response, next: NextFunction) {
     const ITEMS_PER_PAGE = 10;
     try {
-        const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
-        const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
-        const users = await User.find({
-          role:{ $regex: new RegExp(req.params.role, 'i') }, 
-          organization: req.params.organizationId
-        })
+      const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
+      const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
+  
+      // Build the query object
+      const query: any = {
+        organization: req.params.organizationId,
+      };
+  
+      if (req.query.role) {
+        query.role = { $regex: new RegExp(req.query.role as string, 'i') };
+      }
+  
+      if (req.query.subUnit) {
+        query.subUnit = req.query.subUnit;
+      }
+  
+      if (req.query.piviotUnit) {
+        query.piviotUnit = req.query.piviotUnit;
+      }
+  
+      if (req.query.fullName) {
+        query.fullName = { $regex: new RegExp(req.query.fullName as string, 'i') };
+      }
+  
+      const users = await User.find(query)
         .skip(skip)
         .limit(ITEMS_PER_PAGE);
-        return successResponse(res,200,"Success",{users} )
-
-    } catch (error:any) {
+  
+      return successResponse(res, 200, "Success", { users });
+  
+    } catch (error: any) {
       logger.error(`Error at line ${error.name}: ${error.message}\n${error.stack}`);
-      return failedResponse(res,500, error.message)
+      return failedResponse(res, 500, error.message);
     }
   };
 
