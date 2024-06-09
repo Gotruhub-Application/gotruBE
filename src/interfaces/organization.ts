@@ -84,6 +84,7 @@ export interface ISubUnit extends Document {
   name:string
   unit: Schema.Types.ObjectId;
   organization: Schema.Types.ObjectId;
+  coordinator: Schema.Types.ObjectId;
 }
 
 export interface Iuser extends Document {

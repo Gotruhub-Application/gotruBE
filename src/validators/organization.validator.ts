@@ -10,6 +10,7 @@ export const unitValidator=Joi.object({
 export const SubUnitValidator=Joi.object({
   name: Joi.string().required(),
   unit: objectIdValidator.objectId().required(),
+  coordinator: objectIdValidator.objectId().required(),
 })
 
 export const orgStudentValidator = Joi.object({
