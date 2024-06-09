@@ -189,6 +189,7 @@ const SubUnitSchema:Schema<ISubUnit> = new Schema<ISubUnit>({
     ref:"Unit",
     required:true
   },
+  coordinator: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 }, {
   timestamps: true,
 })

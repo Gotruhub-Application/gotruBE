@@ -170,7 +170,7 @@ export const IsAuthenticatedUser =async (req:Request, res:Response, next:NextFun
       // check if the user has verifed their account
       const user = await User.findById(decodedToken.id)
       if (!(req as any).user.onboardingCompleted){
-          return failedResponse (res, 401, 'Account onbaording is not complated yet, please change password.22' )
+          return failedResponse (res, 401, 'Account onbaording is not complated yet, please change password.' )
       }
       next();
   } catch (error:any) {
