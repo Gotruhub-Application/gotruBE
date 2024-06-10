@@ -244,9 +244,10 @@ export class ContractPlan {
           const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
   
           const plans = await Plan.find({ paidStatus: true }).populate("subscriptionType")
-                                    .skip(skip)
-                                    .limit(ITEMS_PER_PAGE); // Limit the number of items per page
-                                    
+            .populate("Organization")
+            .skip(skip)
+            .limit(ITEMS_PER_PAGE); // Limit the number of items per page
+            
   
           return successResponse(res, 200, "Success", plans );
       } catch (error: any) {
