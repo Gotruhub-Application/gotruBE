@@ -21,7 +21,7 @@ adminRouter
 .post("/webhook/paystack", paystackWebhook)
 
 // contract plan
-
+.get("/contract-plan/all-plans", ContractPlan.getAllContractPlans)
 .post("/contract-plan/add-to-cart", ContractPlan.orderPlan)
 .get("/contract-plan/orgs-plans/:organizationId", ContractPlan.getAllOrgPlans)
 .get("/contract-plan/single/:id", ContractPlan.getOrgPlanById)
