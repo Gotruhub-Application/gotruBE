@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { FeaturesController, SubscriptionPlanController } from "../controllers/gotru.admin.controllers"
+import { ContractPlan, FeaturesController, SubscriptionPlanController } from "../controllers/gotru.admin.controllers"
 import { paystackWebhook } from "../controllers/auth/general.controllers"
 
 export const adminRouter = Router()
@@ -19,3 +19,12 @@ adminRouter
 .put("/subscriptions/:id", SubscriptionPlanController.UpdateSinglePlan)
 
 .post("/webhook/paystack", paystackWebhook)
+
+// contract plan
+
+.post("/contract-plan/add-to-cart", ContractPlan.orderPlan)
+.get("/contract-plan/orgs-plans/:organizationId", ContractPlan.getAllOrgPlans)
+.get("/contract-plan/single/:id", ContractPlan.getOrgPlanById)
+.get("/contract-plan/pending/:organizationId", ContractPlan.OrgPendingPlans)
+.get("/contract-plan/pay/:organizationId", ContractPlan.buyPlan)
+.delete("/contract-plan/:id", ContractPlan.removePlan)

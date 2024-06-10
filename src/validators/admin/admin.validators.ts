@@ -35,4 +35,10 @@ export const UpdateSubscriptionValidator=Joi.object({
   planValidity: Joi.number().positive().allow(""),
   amount: Joi.number().positive(),
   description: Joi.string().max(300),
-})
+});
+
+export const ContractpurchasePlanValidator = Joi.object({
+  quantity: Joi.number().required(),
+  subscriptionType: objectIdValidator.objectId().required(),
+  organizationId:objectIdValidator.objectId().required(),
+}).options({ abortEarly: false });

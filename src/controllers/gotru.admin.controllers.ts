@@ -2,7 +2,9 @@ import { logger } from "../logger";
 import { failedResponse, successResponse } from "../support/http";
 import { Feature, Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
-import { FeatureValidator, SubscriptionValidator, UpdateSubscriptionValidator } from "../validators/admin/admin.validators";
+import { ContractpurchasePlanValidator, FeatureValidator, SubscriptionValidator, UpdateSubscriptionValidator } from "../validators/admin/admin.validators";
+import { Plan } from "../models/organization.models";
+import { writeErrosToLogs } from "../support/helpers";
 
 
 export class FeaturesController {
@@ -191,3 +193,113 @@ export class SubscriptionPlanController {
         }
     };
 }
+
+export class ContractPlan {
+    static async orderPlan (req:Request, res:Response){
+      try {
+  
+        const { error, value } = ContractpurchasePlanValidator.validate(req.body);
+        if (error) return failedResponse (res, 400, `${error.details[0].message}`)
+        const subscriptionTypeExist = await Subscription.findById(value.subscriptionType)
+        if (!subscriptionTypeExist) return failedResponse (res, 404, "One of the subscription type not found")
+        value.Organization = value.organizationId
+        value.amount = (value.quantity * parseFloat(subscriptionTypeExist.amount.toString()));
+        value.planValidity= subscriptionTypeExist.planValidity
+        value.quantityLeft= value.quantity
+        value.isContract = true
+        
+        const plan = await Plan.create(value)
+        return successResponse(res, 200, "Success", {plan})
+  
+      } catch (error:any) {
+        writeErrosToLogs(error)
+        return failedResponse(res,500, error.message)
+        
+      }
+  
+    };
+    static async getAllOrgPlans (req:Request, res:Response){
+        const ITEMS_PER_PAGE = 10;
+        try {
+          const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
+          const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
+  
+          const plans = await Plan.find({ Organization: req.params.organizationId, paidStatus: true }).populate("subscriptionType")
+                                    .skip(skip)
+                                    .limit(ITEMS_PER_PAGE); // Limit the number of items per page
+                                    
+  
+          return successResponse(res, 200, "Success", { plans });
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
+      }
+  
+    };
+  
+    static async getOrgPlanById (req:Request, res:Response){
+  
+      try {
+        const {id} = req.params
+  
+        const plan = await Plan.findById(id)
+        if(!plan) return failedResponse(res, 404, "Not found" ); 
+
+        return successResponse(res, 200, "Success", plan );
+    } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+    }
+  
+  };
+  
+    static async OrgPendingPlans (req:Request, res:Response){
+      const ITEMS_PER_PAGE = 10;
+      try {
+        const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
+        const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
+  
+        const plans = await Plan.find({ Organization: req.params.organizationId, paidStatus: false })
+                                  .skip(skip)
+                                  .limit(ITEMS_PER_PAGE); // Limit the number of items per page
+  
+        return successResponse(res, 200, "Success", { plans });
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
+      }
+  
+    };
+  
+    static async removePlan (req:Request, res:Response){
+      try {
+  
+        const plan = await Plan.findByIdAndDelete(req.params.id)
+        if (!plan) return failedResponse (res, 404, "Plan not found")
+  
+        return successResponse(res,204)
+  
+      } catch (error:any) {
+        writeErrosToLogs(error)
+        return failedResponse (res, 500, `${error.details[0].message}`)
+        
+      }
+  
+    };
+  
+    static async buyPlan (req:Request, res:Response){
+      try {
+  
+        const plans = await Plan.updateMany({Organization: req.params.organizationId, paidStatus: false}, {paidStatus:true})
+        if (!plans) return failedResponse (res, 404, "No plan found.")
+        return successResponse(res, 200, "Success")
+  
+      } catch (error:any) {
+        writeErrosToLogs(error)
+        return failedResponse(res,500, error.message)
+        
+      }
+  
+    };
+  
+  }

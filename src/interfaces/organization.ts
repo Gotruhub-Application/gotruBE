@@ -60,6 +60,7 @@ export interface IPlan extends Document{
   amount: number;
   planValidity: number,
   paidStatus:boolean;
+  isContract:boolean;
   created_at?: Date;
   expires_at: Date;
 };
