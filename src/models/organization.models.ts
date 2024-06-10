@@ -388,6 +388,7 @@ const PlanSchema:Schema<IPlan> = new Schema<IPlan>({
     ref:"Subscription",
     required:true
   },
+  isContract: {type:Boolean, default:false},
   Organization: {
     type: Schema.Types.ObjectId,
     ref:"Organization",
