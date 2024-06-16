@@ -3,7 +3,7 @@ import { failedResponse, successResponse } from "../support/http";
 import { Feature, Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
 import { ContractpurchasePlanValidator, FeatureValidator, SubscriptionValidator, UpdateSubscriptionValidator } from "../validators/admin/admin.validators";
-import { Plan } from "../models/organization.models";
+import { Organization, Plan } from "../models/organization.models";
 import { writeErrosToLogs } from "../support/helpers";
 
 
@@ -322,4 +322,105 @@ export class ContractPlan {
   
     };
   
+  };
+
+
+  export class AdminSummary {
+    static async summary(req: Request, res: Response) {
+      try {
+        // Total income from subscriptions
+        const totalAmount = await Plan.aggregate([
+          {
+            $group: {
+              _id: null,
+              totalAmount: { $sum: "$amount" }
+            }
+          }
+        ]);
+  
+        const totalAmountContract = await Plan.aggregate([
+          {
+            $match: { isContract: true }
+          },
+          {
+            $group: {
+              _id: null,
+              totalAmount: { $sum: "$amount" }
+            }
+          }
+        ]);
+  
+        // Active plans
+        const activePlans = await Plan.countDocuments({ quantityLeft: { $gt: 0 }, paidStatus: true });
+        const totalOrgan = await Organization.countDocuments();
+  
+        // Total amounts grouped by subscription name
+        const result = await Plan.aggregate([
+            {
+              $lookup: {
+                from: 'subscriptions', // The name of the Subscription collection
+                localField: 'subscriptionType',
+                foreignField: '_id',
+                as: 'subscription'
+              }
+            },
+            {
+              $unwind: '$subscription'
+            },
+            {
+              $group: {
+                _id: { $toLower: '$subscription.name' }, // Convert subscription name to lowercase
+                totalAmount: { $sum: '$amount' }
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                subscriptionName: '$_id',
+                totalAmount: 1
+              }
+            }
+          ]);
+  
+        // Initialize the response object
+        const response = {
+          totalRevenue: 0,
+          totalAmountBasicPlan: 0,
+          totalAmountComboPlan: 0,
+          totalAmountBulkPlan: 0,
+          totalAmountResultPlan: 0,
+  
+          subRevenue: totalAmount.length > 0 ? totalAmount[0].totalAmount : 0,
+          activePlans: activePlans,
+          totalOrgan: totalOrgan,
+          totalAmountContract: totalAmountContract.length > 0 ? totalAmountContract[0].totalAmount : 0,
+        };
+        
+
+        // Populate the response object with the results from the aggregation
+        result.forEach(item => {
+          if (item.subscriptionName === 'basic') {
+            response.totalAmountBasicPlan = item.totalAmount;
+          } else if (item.subscriptionName === 'combo') {
+            response.totalAmountComboPlan = item.totalAmount;
+          } else if (item.subscriptionName === 'bulk') {
+            response.totalAmountBulkPlan = item.totalAmount;
+          } else if (item.subscriptionName === 'result') {
+            response.totalAmountResultPlan = item.totalAmount;
+          }
+        });
+  
+        // Calculate total revenue
+        response.totalRevenue = response.totalAmountBasicPlan +
+                                response.totalAmountBulkPlan +
+                                response.totalAmountComboPlan +
+                                response.totalAmountResultPlan;
+  
+        return successResponse(res, 200, "Success", response);
+  
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+      }
+    }
   }

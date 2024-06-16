@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { ContractPlan, FeaturesController, SubscriptionPlanController } from "../controllers/gotru.admin.controllers"
+import { AdminSummary, ContractPlan, FeaturesController, SubscriptionPlanController } from "../controllers/gotru.admin.controllers"
 import { paystackWebhook } from "../controllers/auth/general.controllers"
 
 export const adminRouter = Router()
@@ -28,3 +28,6 @@ adminRouter
 .get("/contract-plan/pending/:organizationId", ContractPlan.OrgPendingPlans)
 .get("/contract-plan/pay/:organizationId", ContractPlan.buyPlan)
 .delete("/contract-plan/:id", ContractPlan.removePlan)
+
+// summary
+.get("/summary", AdminSummary.summary)
