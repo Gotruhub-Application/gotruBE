@@ -111,10 +111,10 @@ export const purchasePlanValidator = Joi.object({
 export const sendUsersTokenValidator = Joi.object({
   users: Joi.array().items(
     Joi.object({
-      user: objectIdValidator.objectId().required(),
-      quantity: Joi.number().integer().min(1).required()
+      user: objectIdValidator.objectId().unique().required(),
+      quantity: Joi.number().integer().min(1).max(6).required()
     })
-  ).min(1).required(),
+  ).min(1).max(10).required(),
   plan: objectIdValidator.objectId().required(),
 });
 
