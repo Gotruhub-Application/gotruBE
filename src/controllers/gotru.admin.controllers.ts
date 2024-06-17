@@ -3,8 +3,9 @@ import { failedResponse, successResponse } from "../support/http";
 import { Feature, Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
 import { ContractpurchasePlanValidator, FeatureValidator, SubscriptionValidator, UpdateSubscriptionValidator } from "../validators/admin/admin.validators";
-import { Organization, Plan } from "../models/organization.models";
+import { Organization, Plan, User } from "../models/organization.models";
 import { writeErrosToLogs } from "../support/helpers";
+import mongoose from "mongoose";
 
 
 export class FeaturesController {
@@ -553,6 +554,123 @@ export class ContractPlan {
         writeErrosToLogs(error);
         return failedResponse(res, 500, error.message);
       }
-    }
+    };
+
+    static async getOrgUserSummary (req:Request, res:Response){
+      try {
+        const {organizationId} = req.params;
+        const organization = await Organization.findById(organizationId)
+        const totalStudents = await User.countDocuments({organization:organizationId, role:"student"});
+        const totalGuardian = await User.countDocuments({organization:organizationId, role:"guardian"});
+        const totalStaffs = await User.countDocuments({organization:organizationId, role:"staff"});
+
+        return successResponse(res, 200, "Success", {totalStudents,totalGuardian,totalStaffs, organization})
+  
+      } catch (error:any) {
+        writeErrosToLogs(error)
+        return failedResponse(res,500, error.message)
+        
+      }
+  
+    };
+
+    static async getOrgActiveSubSummary(req: Request, res: Response) {
+      try {
+        const { organizationId } = req.params;
+        const { page = 1, limit = 10 } = req.query; // Default values for pagination
+  
+        if (!mongoose.Types.ObjectId.isValid(organizationId as string)) {
+          return failedResponse(res, 400, 'Invalid organization ID');
+        }
+  
+        const pageNumber = parseInt(page as string, 10);
+        const pageSize = parseInt(limit as string, 10);
+        const skip = (pageNumber - 1) * pageSize;
+  
+        const plans = await Plan.find({
+          Organization: organizationId,
+          quantityLeft: { $gt: 0 },
+          paidStatus: true
+        })
+          .select('subscriptionType quantity quantityLeft')
+          .skip(skip)
+          .limit(pageSize);
+  
+        const totalPlans = await Plan.countDocuments({
+          Organization: organizationId,
+          quantityLeft: { $gt: 0 },
+          paidStatus: true
+        });
+  
+        const totalPages = Math.ceil(totalPlans / pageSize);
+  
+        const response = {
+          plans,
+          totalPlans,
+          totalPages,
+          currentPage: pageNumber,
+          pageSize
+        };
+  
+        return successResponse(res, 200, "Success", response);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+      }
+    };
+
+    static async organFeatureUsageMetric (req:Request, res:Response){
+      try {
+        const { organizationId } = req.params;
+    
+        if (!mongoose.Types.ObjectId.isValid(organizationId)) {
+          return failedResponse(res, 400, 'Invalid organization ID');
+        }
+    
+        const result = await Plan.aggregate([
+          {
+            $match: {
+              Organization: new mongoose.Types.ObjectId(organizationId),
+            }
+          },
+          {
+            $lookup: {
+              from: 'subscriptions', // The name of the Subscription collection
+              localField: 'subscriptionType',
+              foreignField: '_id',
+              as: 'subscription'
+            }
+          },
+          {
+            $unwind: '$subscription'
+          },
+          {
+            $group: {
+              _id: { $toLower: '$subscription.name' }, // Convert subscription name to lowercase
+              planCount: { $sum: 1 } // Count the number of plans
+            }
+          },
+          {
+            $project: {
+              _id: 0,
+              subscriptionName: '$_id',
+              planCount: 1
+            }
+          }
+        ]);
+
+        const total = result.reduce((acc, item) => acc + item.planCount, 0);
+
+        result.forEach(item => {
+          item.percentage = (item.planCount/total) * 100
+        });
+    
+        return successResponse(res, 200, "Success", {result, total});
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+      }
+  
+    };
 
   }

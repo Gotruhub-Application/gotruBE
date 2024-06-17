@@ -33,3 +33,6 @@ adminRouter
 .get("/summary", AdminSummary.summary)
 .get("/organizations", AdminSummary.getOrganizations)
 .get("/graph", AdminSummary.getSubscriptionRevenue)
+.get("/organizations/users-summary/:organizationId", AdminSummary.getOrgUserSummary)
+.get("/organizations/active-plans/:organizationId", AdminSummary.getOrgActiveSubSummary)
+.get("/organizations/feature-matric/:organizationId", AdminSummary.organFeatureUsageMetric)
