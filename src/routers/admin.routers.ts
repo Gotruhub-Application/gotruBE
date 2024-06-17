@@ -32,4 +32,4 @@ adminRouter
 // summary
 .get("/summary", AdminSummary.summary)
 .get("/organizations", AdminSummary.getOrganizations)
-.get("/graph/:organizationId", AdminSummary.getSubscriptionRevenue)
+.get("/graph", AdminSummary.getSubscriptionRevenue)
