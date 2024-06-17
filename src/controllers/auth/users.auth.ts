@@ -81,13 +81,28 @@ export class CompleteOnboarding {
                 fullName: userExist.fullName,
                 role: userExist.role,
                 organization: userExist.organization,
+                createdAt: userExist.createdAt,
+                updatedAt: userExist.updatedAt,
+                email:userExist.email,
+                profileImage: userExist.profileImage,
+                signature: userExist.signature,
+                children: userExist.children,
+                onboardingCompleted: userExist.onboardingCompleted,
+                defaultEmail: userExist.defaultEmail,
+                
+            }
+            const jwtData = {
+                _id: userExist._id,
+                fullName: userExist.fullName,
+                role: userExist.role,
+                organization: userExist.organization,
                 email:userExist.email,
                 onboardingCompleted: userExist.onboardingCompleted,
                 defaultEmail: userExist.defaultEmail,
                 
             }
             const responseData = {
-                access_token: generateJwtToken(details),details,
+                access_token: generateJwtToken(jwtData),details,
             };
             return successResponse(res, 200, "Success", { responseData });
 
