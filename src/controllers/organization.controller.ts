@@ -546,41 +546,104 @@ export class BuySubcriptionPlan {
 }
 
 export class AppAccessTokens {
+  // static async sendtokens(req: Request, res: Response) {
+  //   try {
+  //     const { error, value } = sendUsersTokenValidator.validate(req.body);
+  //     if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+    
+  //     const users = await User.find({ _id: { $in: value.users } });
+
+  //     if (users.length !== value.users.length) {
+  //       return failedResponse(res, 404, "One or more users IDs are invalid.");
+  //     };
+      
+  //     let plan = await Plan.findOne({_id:value.plan, Organization:req.params.organizationId});
+  //     if (!plan) return failedResponse(res, 404, "This plan does not exist.");
+
+  //     // ensure token left is sufficient for users to send to
+  //     const index = users.length;
+  //     if (plan.quantityLeft < users.length) return failedResponse(res, 400, `Cannot send plan quantity ${plan?.quantityLeft} to ${index} users`);
+      
+  //     const generatedTokens = [];
+    
+  //     for (const user of users) {
+  //       if (!user.defaultEmail) continue;
+
+  //       const token = await AppToken.create({ token: Date.now().toString(), plan: plan, user:user });
+  //       generatedTokens.push(token);
+  //       await sendTemplateMail(user.defaultEmail, "Application Access Token", "templates/appAccessToken.html", { token: token.token, fullname: user.fullName });
+  //     }
+  //     // Decrement the quantityLeft field by the number of tokens generated
+  //     await Plan.findByIdAndUpdate(value.plan, { $inc: { quantityLeft: -index } });
+  //     return successResponse(res, 200, "Tokens sent successfully.", { generatedTokens });
+  //   } catch (error: any) {
+  //     writeErrosToLogs(error)
+  //     return failedResponse(res, 500, error.message)
+  //   }
+  // }
+
   static async sendtokens(req: Request, res: Response) {
     try {
-      const { error, value } = sendUsersTokenValidator.validate(req.body);
-      if (error) return failedResponse(res, 400, `${error.details[0].message}`);
-    
-      const users = await User.find({ _id: { $in: value.users } });
+        const { error, value } = sendUsersTokenValidator.validate(req.body);
+        if (error) return failedResponse(res, 400, `${error.details[0].message}`);
 
-      if (users.length !== value.users.length) {
-        return failedResponse(res, 404, "One or more users IDs are invalid.");
-      };
-      
-      let plan = await Plan.findOne({_id:value.plan, Organization:req.params.organizationId});
-      if (!plan) return failedResponse(res, 404, "This plan does not exist.");
+        const userIds = value.users.map((userObj: { user: string }) => userObj.user);
+        const users = await User.find({ _id: { $in: userIds } });
 
-      // ensure token left is sufficient for users to send to
-      const index = users.length;
-      if (plan.quantityLeft < users.length) return failedResponse(res, 400, `Cannot send plan quantity ${plan?.quantityLeft} to ${index} users`);
-      
-      const generatedTokens = [];
-    
-      for (const user of users) {
-        if (!user.defaultEmail) continue;
+        if (users.length !== userIds.length) {
+            return failedResponse(res, 404, "One or more user IDs are invalid.");
+        }
 
-        const token = await AppToken.create({ token: Date.now().toString(), plan: plan, user:user });
-        generatedTokens.push(token);
-        await sendTemplateMail(user.defaultEmail, "Application Access Token", "templates/appAccessToken.html", { token: token.token, fullname: user.fullName });
-      }
-      // Decrement the quantityLeft field by the number of tokens generated
-      await Plan.findByIdAndUpdate(value.plan, { $inc: { quantityLeft: -index } });
-      return successResponse(res, 200, "Tokens sent successfully.", { generatedTokens });
+        let plan = await Plan.findOne({ _id: value.plan, Organization: req.params.organizationId });
+        if (!plan) return failedResponse(res, 404, "This plan does not exist.");
+
+        const totalRequiredQuantity = value.users.reduce((acc: number, userObj: { quantity: number }) => acc + userObj.quantity, 0);
+
+        if (plan.quantityLeft < totalRequiredQuantity) {
+            return failedResponse(res, 400, `Cannot send plan quantity ${totalRequiredQuantity} to users. Available quantity is ${plan.quantityLeft}`);
+        }
+
+        const tokenPromises = [];
+        const emailPromises = [];
+        let allGeneratedTokens: { [key: string]: string[] } = {};
+
+        for (const userObj of value.users) {
+            const user = users.find((u: any) => u._id.toString() === userObj.user);
+            if (!user || !user.defaultEmail) continue;
+
+            const generatedTokens: string[] = [];
+            for (let i = 0; i < userObj.quantity; i++) {
+                tokenPromises.push(
+                    AppToken.create({ token: Date.now().toString(), plan: plan._id, user: user._id }).then(token => {
+                        generatedTokens.push(token.token);
+                    })
+                );
+            }
+            allGeneratedTokens[user.defaultEmail] = generatedTokens;
+        }
+
+        await Promise.all(tokenPromises);
+
+        for (const [email, tokens] of Object.entries(allGeneratedTokens)) {
+            const user = users.find((u: any) => u.defaultEmail === email);
+            if (user) {
+                emailPromises.push(
+                    sendTemplateMail(email, "Application Access Token", "templates/appAccessToken.html", { token: tokens, fullname: user.fullName })
+                );
+            }
+        }
+
+        await Promise.all(emailPromises);
+
+        await Plan.findByIdAndUpdate(value.plan, { $inc: { quantityLeft: -totalRequiredQuantity } });
+
+        return successResponse(res, 200, "Tokens sent successfully.");
     } catch (error: any) {
-      writeErrosToLogs(error)
-      return failedResponse(res, 500, error.message)
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
     }
-  }
+}
+
 
   static async useAppTokenForChild(req: Request, res: Response) {
     try {
