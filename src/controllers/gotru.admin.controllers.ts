@@ -422,5 +422,137 @@ export class ContractPlan {
         writeErrosToLogs(error);
         return failedResponse(res, 500, error.message);
       }
+    };
+
+    static async getOrganizations(req: Request, res: Response) {
+      try {
+        // Get the current date and time
+        const now = new Date();
+  
+        // Calculate the start of this month
+        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+        // Calculate the start of last month
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  
+        // Calculate the start of this year
+        const startOfThisYear = new Date(now.getFullYear(), 0, 1);
+  
+        // Extract query parameters to determine the filter
+        const { filter } = req.query;
+  
+        let matchCondition = {};
+  
+        if (filter === 'thisMonth') {
+          matchCondition = { createdAt: { $gte: startOfThisMonth } };
+        } else if (filter === 'lastMonth') {
+          matchCondition = { createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth } };
+        } else if (filter === 'thisYear') {
+          matchCondition = { createdAt: { $gte: startOfThisYear } };
+        }
+  
+        // Query the database with the match condition and project only the required fields
+        const organizations = await Organization.find(matchCondition, {
+          nameOfEstablishment: 1,
+          email: 1,
+          phone: 1,
+          createdAt: 1,
+        }).exec();
+  
+        return successResponse(res, 200, 'Success', organizations);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+      }
+    };
+
+    static async getSubscriptionRevenue(req: Request, res: Response) {
+      try {
+        const now = new Date();
+        const { filter } = req.query;
+  
+        let startDate;
+  
+        switch (filter) {
+          case '12months':
+            startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+            break;
+          case '6months':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+            break;
+          case '1month':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+            break;
+          case '7days':
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+            break;
+          default:
+            startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+            break;
+        }
+  
+        const subscriptionData = await Plan.aggregate([
+          {
+            $match: {
+              createdAt: { $gte: startDate },
+              // Organization:organizationId
+            }
+          },
+          {
+            $lookup: {
+              from: 'subscriptions', // The name of the Subscription collection
+              localField: 'subscriptionType',
+              foreignField: '_id',
+              as: 'subscription'
+            }
+          },
+          {
+            $unwind: '$subscription'
+          },
+          {
+            $group: {
+              _id: {
+                month: { $month: '$createdAt' },
+                year: { $year: '$createdAt' },
+                subscriptionName: '$subscription.name'
+              },
+              totalAmount: { $sum: '$amount' }
+            }
+          },
+          {
+            $project: {
+              month: '$_id.month',
+              year: '$_id.year',
+              subscriptionName: '$_id.subscriptionName',
+              totalAmount: 1,
+              _id: 0
+            }
+          },
+          {
+            $sort: { year: 1, month: 1 }
+          }
+        ]);
+  
+        // Organize data by month and subscription type
+        const organizedData: { [key: string]: any } = {};
+  
+        subscriptionData.forEach(data => {
+          const { year, month, subscriptionName, totalAmount } = data;
+          const key = `${year}-${month}`;
+  
+          if (!organizedData[key]) {
+            organizedData[key] = {};
+          }
+  
+          organizedData[key][subscriptionName] = totalAmount;
+        });
+  
+        return successResponse(res, 200, 'Success', organizedData);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+      }
     }
+
   }
