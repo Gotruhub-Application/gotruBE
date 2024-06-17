@@ -103,10 +103,20 @@ export const purchasePlanValidator = Joi.object({
   subscriptionType: objectIdValidator.objectId().required(),
 }).options({ abortEarly: false });
 
+// export const sendUsersTokenValidator = Joi.object({
+//   users: Joi.array().unique().items(objectIdValidator.objectId()).min(1).max(10),
+//   plan: objectIdValidator.objectId().required(),
+// })
+
 export const sendUsersTokenValidator = Joi.object({
-  users: Joi.array().unique().items(objectIdValidator.objectId()).min(1).max(10),
+  users: Joi.array().items(
+    Joi.object({
+      user: objectIdValidator.objectId().required(),
+      quantity: Joi.number().integer().min(1).required()
+    })
+  ).min(1).required(),
   plan: objectIdValidator.objectId().required(),
-})
+});
 
 export const signInOutRecordValidator = Joi.object({
   user:  objectIdValidator.objectId(),
