@@ -81,12 +81,7 @@ export class CompleteOnboarding {
                 fullName: userExist.fullName,
                 role: userExist.role,
                 organization: userExist.organization,
-                createdAt: userExist.createdAt,
-                updatedAt: userExist.updatedAt,
                 email:userExist.email,
-                profileImage: userExist.profileImage,
-                signature: userExist.signature,
-                children: userExist.children,
                 onboardingCompleted: userExist.onboardingCompleted,
                 defaultEmail: userExist.defaultEmail,
                 
