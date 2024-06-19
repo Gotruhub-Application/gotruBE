@@ -1,7 +1,7 @@
 import {Router} from "express"
 import { Organization } from "../models/organization.models"
 import { AppAccessTokens, BuySubcriptionPlan, OrgUsers, OrganizatioinSubUnits, OrganizatioinUnits } from "../controllers/organization.controller"
-import { IsAuthenticatedNewUser, IsAuthenticatedOrganization, IsAuthenticatedStaff } from "../support/middleware"
+import { IsAuthenticatedNewUser, IsAuthenticatedOrganization, IsAuthenticatedStaff, IsAuthenticatedUser } from "../support/middleware"
 import { ScanChildQrCode, SignInOutRecordHistory } from "../controllers/organization/passFeatures/pass.controllers"
 
 export const organizationRouter = Router()
@@ -37,3 +37,22 @@ organizationRouter
 // pass features
 .get("/scan-qrcode/:id", IsAuthenticatedStaff, ScanChildQrCode.getDetails)
 .post("/sign-in-out",IsAuthenticatedOrganization, SignInOutRecordHistory.createHistory)
+
+
+// users copy
+
+.get("/mobile-section/units",IsAuthenticatedUser,OrganizatioinUnits.getUnits)
+.get("/mobile-section/units/:id",IsAuthenticatedUser,OrganizatioinUnits.getSingleUnit)
+
+.get("/mobile-section/unit/:id/subunits",IsAuthenticatedUser,OrganizatioinSubUnits.getSubbUnits)
+.get("/subunits/:id",IsAuthenticatedUser,OrganizatioinSubUnits.getSingleSubUnit)
+
+.get("/mobile-section/users/get-users/:role",IsAuthenticatedUser, OrgUsers.getUsers)
+.get("/mobile-section/users/get-user/:id",IsAuthenticatedUser, OrgUsers.getSingleUser)
+
+.post("/mobile-section/activate-feature",IsAuthenticatedNewUser,AppAccessTokens.useAppTokenForChild)
+
+// pass features
+.get("/mobile-section/scan-qrcode/:id", IsAuthenticatedStaff, ScanChildQrCode.getDetails)
+.post("/mobile-section/sign-in-out",IsAuthenticatedUser, SignInOutRecordHistory.createHistory)
+
