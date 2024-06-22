@@ -560,6 +560,7 @@ export class AttendanceController {
             const skip = (page - 1) * ITEMS_PER_PAGE;
             const attendances = await AttendanceModel.find({ organization: req.params.organizationId, classScheduleId:req.params.classScheduleId })
                 .skip(skip)
+                .sort({ createdAt: -1 })
                 .limit(ITEMS_PER_PAGE);
 
             return successResponse(res, 200, "Success", attendances );
