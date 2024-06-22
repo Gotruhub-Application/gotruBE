@@ -248,6 +248,8 @@ export const IsAuthenticatedGotruAdmin =async (req:Request, res:Response, next:N
     }
     try {
         const decodedToken = verifyJwtToken(token)
+        console.log(decodedToken, "sbvdsvesv")
+        req.params.userId= decodedToken._id;
         const isAdmin = decodedToken.isAdmin
         // Check if user is gotru 'admin'
         if (!isAdmin) {

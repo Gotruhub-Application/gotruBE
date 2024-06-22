@@ -6,7 +6,7 @@ import { failedResponse, successResponse } from "../../support/http";
 import { IAdminUser } from '../../interfaces/admin.interface';
 import { OtpToken, ValidateToken, verifyToken, writeErrosToLogs } from '../../support/helpers';
 import { orgEmailVerificationValidator, resentTokenValidator } from '../../validators/auth/organizations';
-import { LoginValidator, NewPasswordValidator } from '../../validators/auth/general.validators';
+import { ChangePasswordInDashboardValidator, LoginValidator, NewPasswordValidator } from '../../validators/auth/general.validators';
 import { generateJwtToken } from '../../support/generateTokens';
 import bcrypt from "bcrypt"
 
@@ -133,7 +133,28 @@ export class AdminResetPasswordController {
             return failedResponse(res, 500, error.message);
         }
     };
-  
+    static async changePasswordInDashBoard(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { error, value } = ChangePasswordInDashboardValidator.validate(req.body);
+            if (error) {
+            return failedResponse(res, 400, `${error.details[0].message}`);
+            }
+            
+            console.log(req.params.userId)
+            const userExist = await AdminUser.findById(req.params.userId)
+            if (!userExist) return failedResponse(res, 404, "User with this email does not exists.");
+            const verifyPassword = await bcrypt.compare(value.oldPassword, userExist.password)
+            if (!verifyPassword) return failedResponse(res, 400, "Incorrect old password.");
+            value.newPassword = await bcrypt.hash(value.newPassword, 10);
+            userExist.password = value.newPassword;
+            await userExist.save()
+            return successResponse(res, 200, "Password updated successfully.");
+            
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
+    };
   }
   
 
