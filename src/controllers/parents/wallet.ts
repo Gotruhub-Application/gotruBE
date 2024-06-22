@@ -63,11 +63,14 @@ export class ParentManageWallet {
             if (!child) {
                 return failedResponse(res, 404, "Child not found");
             };
-            // const wallet = await WalletModel.findOne({user:child_id})
-            // if (wallet !=null && !wallet.changedPin) return failedResponse(res, 400, "Use forget pin."); 
+            
+            // validate old pin
+            const wallet = await WalletModel.findOne({user:child_id})
+            if(!wallet) return failedResponse(res, 400, "wallet not found");
+            const corretOldPin = await bcrypt.compare(value.oldPin, wallet.pin)
+            if(!corretOldPin) return failedResponse(res, 400, "incorrect old pin");
 
-            const salt = await bcrypt.genSalt(10)
-            value.newPin = await bcrypt.hash(value.newPin, salt)
+            value.newPin = await bcrypt.hash(value.newPin, 10)
             await WalletModel.findOneAndUpdate({user:child_id}, {pin:value.newPin})
 
             return successResponse(res, 200, "Pin updated successfully");

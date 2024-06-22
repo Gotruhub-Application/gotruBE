@@ -1,6 +1,6 @@
 import {Router} from "express"
 import { Organization } from "../models/organization.models"
-import { AppAccessTokens, BuySubcriptionPlan, OrgUsers, OrganizatioinSubUnits, OrganizatioinUnits } from "../controllers/organization.controller"
+import { AppAccessTokens, BuySubcriptionPlan, OrgSummary, OrgUsers, OrganizatioinSubUnits, OrganizatioinUnits } from "../controllers/organization.controller"
 import { IsAuthenticatedNewUser, IsAuthenticatedOrganization, IsAuthenticatedStaff, IsAuthenticatedUser } from "../support/middleware"
 import { ScanChildQrCode, SignInOutRecordHistory } from "../controllers/organization/passFeatures/pass.controllers"
 
@@ -37,6 +37,10 @@ organizationRouter
 // pass features
 .get("/scan-qrcode/:id", IsAuthenticatedStaff, ScanChildQrCode.getDetails)
 .post("/sign-in-out",IsAuthenticatedOrganization, SignInOutRecordHistory.createHistory)
+.get("/pass-hostory", IsAuthenticatedOrganization, OrgSummary.getAllPassHistory)
+
+// summary
+.get("/my-orgnz-summary", IsAuthenticatedOrganization,OrgSummary.getOrgSummary)
 
 
 // users copy

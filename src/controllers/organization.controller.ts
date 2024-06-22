@@ -1,5 +1,5 @@
 import { Media } from "../models/media.models";
-import { AppToken, Plan, SubUnit, SubaccountModel, Unit, User } from "../models/organization.models";
+import { AppToken, Organization, Plan, Product, SignInOutRecordModel, SubUnit, SubaccountModel, Unit, User } from "../models/organization.models";
 import { Feature, Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
@@ -546,42 +546,6 @@ export class BuySubcriptionPlan {
 }
 
 export class AppAccessTokens {
-  // static async sendtokens(req: Request, res: Response) {
-  //   try {
-  //     const { error, value } = sendUsersTokenValidator.validate(req.body);
-  //     if (error) return failedResponse(res, 400, `${error.details[0].message}`);
-    
-  //     const users = await User.find({ _id: { $in: value.users } });
-
-  //     if (users.length !== value.users.length) {
-  //       return failedResponse(res, 404, "One or more users IDs are invalid.");
-  //     };
-      
-  //     let plan = await Plan.findOne({_id:value.plan, Organization:req.params.organizationId});
-  //     if (!plan) return failedResponse(res, 404, "This plan does not exist.");
-
-  //     // ensure token left is sufficient for users to send to
-  //     const index = users.length;
-  //     if (plan.quantityLeft < users.length) return failedResponse(res, 400, `Cannot send plan quantity ${plan?.quantityLeft} to ${index} users`);
-      
-  //     const generatedTokens = [];
-    
-  //     for (const user of users) {
-  //       if (!user.defaultEmail) continue;
-
-  //       const token = await AppToken.create({ token: Date.now().toString(), plan: plan, user:user });
-  //       generatedTokens.push(token);
-  //       await sendTemplateMail(user.defaultEmail, "Application Access Token", "templates/appAccessToken.html", { token: token.token, fullname: user.fullName });
-  //     }
-  //     // Decrement the quantityLeft field by the number of tokens generated
-  //     await Plan.findByIdAndUpdate(value.plan, { $inc: { quantityLeft: -index } });
-  //     return successResponse(res, 200, "Tokens sent successfully.", { generatedTokens });
-  //   } catch (error: any) {
-  //     writeErrosToLogs(error)
-  //     return failedResponse(res, 500, error.message)
-  //   }
-  // }
-
   static async sendtokens(req: Request, res: Response) {
     try {
         const { error, value } = sendUsersTokenValidator.validate(req.body);
@@ -776,3 +740,47 @@ export class SubaccountController {
   };
 };
 
+export class OrgSummary {
+  static async getOrgSummary (req:Request, res:Response){
+    try {
+      const {organizationId} = req.params;
+      const totalStudents = await User.countDocuments({organization:organizationId, role:"student"});
+      const totalGuardian = await User.countDocuments({organization:organizationId, role:"guardian"});
+      const totalStaffs = await User.countDocuments({organization:organizationId, role:"staff"});
+      const totalStocks = await Product.countDocuments({uploadedBy:organizationId})
+
+      return successResponse(res, 200, "Success", {totalStudents,totalGuardian,totalStaffs, totalStocks})
+
+    } catch (error:any) {
+      writeErrosToLogs(error)
+      return failedResponse(res,500, error.message)
+      
+    }
+
+  };
+
+  static async getAllPassHistory(req: Request, res: Response) {
+    const ITEMS_PER_PAGE = 10;
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const skip = (page - 1) * ITEMS_PER_PAGE; 
+        const history = await SignInOutRecordModel.find({
+            organization:req.params.organizationId
+        })
+        .populate("user")
+        .populate("other")
+        .populate("authorizationType")
+        .populate("approvalBy")
+        .sort({ createdAt: -1 }) // Sort by the most recent
+        .skip(skip)
+        .limit(ITEMS_PER_PAGE); // Limit the number of items per page
+
+
+
+        return successResponse(res, 200, "Success", history);
+    } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+    }
+}
+}

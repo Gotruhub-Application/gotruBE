@@ -23,3 +23,8 @@ export const LoginValidator=Joi.object({
   export const passwordValidator=Joi.object({
     password: Joi.string().min(6).required(),
   })
+
+  export const ChangePasswordInDashboardValidator=Joi.object({
+    oldPassword: Joi.string().min(6).required(),
+    newPassword: Joi.string().min(6).required(),
+  })

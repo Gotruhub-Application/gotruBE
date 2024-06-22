@@ -2,6 +2,7 @@ import Joi from "joi"
 
 export const UpdateWalletPinSchema = Joi.object({
     newPin: Joi.string().required().max(4).min(4),
+    oldPin: Joi.string().required().max(4).min(4),
 });
 
 export const fundWalletSchema = Joi.object({
