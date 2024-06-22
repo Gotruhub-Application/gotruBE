@@ -78,7 +78,7 @@ export class OrganizatioinUnits {
 
       static async deleteUnit (req:Request, res:Response, next:NextFunction){
         try {
-            const unit = await Unit.findOneAndDelete({id:req.params.unitId, organization:req.params.organizationId});
+            const unit = await Unit.findOneAndDelete({_id:req.params.id, organization:req.params.organizationId});
             if(!unit) return failedResponse(res,404, "Unit not found") 
           return successResponse(res,204 )
         } catch (error:any) {
