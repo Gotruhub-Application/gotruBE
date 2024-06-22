@@ -15,6 +15,7 @@ import "./routers/parent/wallet.route"
 import "./routers/monitorFeature/organization.monitor"
 import "./routers/monitorFeature/users.monitor"
 import "./routers/resulltfeature/resultfeature.routes"
+import { adminAuthRouter } from "./routers/auth/admin";
 
 
 const app:Application = express();
@@ -44,6 +45,7 @@ app.use("/", organizationRouter);
 app.use("/", userAuthRouter);
 app.use("/",passFeatureUserRouter);
 app.use("/trade",tradeOrganizationRouter)
+app.use("/",adminAuthRouter)
 
 app.get("/", (req: Request, res: Response) => {
     res.send({message:"welcome to express and typescript"});

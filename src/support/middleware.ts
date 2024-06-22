@@ -236,3 +236,28 @@ export const IsAuthenticatedNewUser =async (req:Request, res:Response, next:Next
       return failedResponse (res, 401, 'Invalid access token.' )
   }
 }
+
+export const IsAuthenticatedGotruAdmin =async (req:Request, res:Response, next:NextFunction) =>{
+    // Check if the Authorization header exists in the request
+    if (!req.headers.authorization) {
+        return failedResponse(res, 401, 'Access denied. Authorization header missing.');
+    }
+    const token =req.headers.authorization?.split(" ")[1] || req.cookies.token;
+    if (!token){
+        return failedResponse (res, 401, 'Access denied. No token provided.' )
+    }
+    try {
+        const decodedToken = verifyJwtToken(token)
+        const isAdmin = decodedToken.isAdmin
+        // Check if user is gotru 'admin'
+        if (!isAdmin) {
+            return failedResponse(res, 403, 'Permission denied.');
+        }
+        (req as any).user = decodedToken
+        next();
+    } catch (error:any) {
+      logger.error(error.message);
+        return failedResponse (res, 401, 'Invalid access token.' )
+    }
+  }
+  

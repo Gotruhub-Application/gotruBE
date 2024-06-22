@@ -11,3 +11,10 @@ export interface Isubscription extends Document {
     amount: Decimal128,
     description: string
 }
+
+export interface IAdminUser extends Document {
+    email: string;
+    fullname: string;
+    password: string;
+    isAdmin?: boolean;
+  }
