@@ -70,7 +70,7 @@ export class FeaturesController {
         try {
 
             const featureId:any= req.params.id
-            const feature = await Feature.findOneAndDelete(featureId)
+            const feature = await Feature.findByIdAndDelete(featureId)
             if (!feature){
                 return failedResponse(res, 404, `Feature with id ${featureId} not found`);
             }
