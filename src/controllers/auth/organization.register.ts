@@ -7,6 +7,7 @@ import { failedResponse, successResponse } from "../../support/http";
 import { OtpToken, ValidateToken, generateOrganizationDOmainCode, verifyToken } from "../../support/helpers"; 
 import { LoginValidator, NewPasswordValidator } from "../../validators/auth/general.validators";
 import { generateJwtToken } from "../../support/generateTokens";
+import { sendNotif } from "../../support/firebaseNotification";
 
 
 export const OrganizationSignup= async (req:Request, res:Response, next:NextFunction) => {
@@ -92,7 +93,7 @@ export const setPassword = async (req: Request, res: Response, next: NextFunctio
       if (!isOrganization.isVerified) {
         return failedResponse(res, 400, "Account not verified, please verify account.");
     }
-
+    await sendNotif("dxacpPtkwFpUUESfMlFdfB:APA91bHvDxRwXetjz6P2mtIQNR23SoEBJ9iI5l5zTjiCNcA-QSVZiHCCObQKEtMDUf_tytkJcsn1WKb80adF_jKBlJjhDJhskWS3Z933fdOAq4QhTcyRfS2vGWzrdSA3Ru7uaJVBSx--")
     return successResponse(res, 200, "Success");
   } catch (error:any) {
       // Log the error using your logger

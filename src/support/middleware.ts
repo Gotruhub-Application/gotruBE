@@ -12,9 +12,11 @@ dotenv.config()
  
 
 const {PROJ_ENV,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION,AWS_BUCKET} = process.env
+console.log(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, AWS_REGION, PROJ_ENV)
 let storage;
 // configure storage for development and production
 if (PROJ_ENV != "DEV"){
+    console.log("abjhbsdvfbdsvdsv11111")
     storage = multer.memoryStorage()
 }else{
     storage = multer.diskStorage({
@@ -37,7 +39,7 @@ const s3Config: S3ClientConfig = {
     },
     region: AWS_REGION || 'us-west-1', // Change the default region as per your requirement
   };
-  
+
 const s3 = new S3Client({ ...s3Config });
 
 
@@ -107,7 +109,7 @@ export async function handlefileUpload(req: Request, res: Response, next: NextFu
           const command = new PutObjectCommand(params);
           const data = await s3.send(command);
           logger.info(data)
-          filePath = `https://${AWS_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${key}`;
+          filePath = `https://${AWS_BUCKET}.s3.${AWS_REGION}.amazonaws.com/gotruhub/${key}`;
           req.body.file_key = key;
       }
 

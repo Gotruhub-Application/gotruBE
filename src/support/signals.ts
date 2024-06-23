@@ -2,6 +2,8 @@ import EventEmitter from 'events';
 import { Iuser } from '../interfaces/organization';
 import { User } from '../models/organization.models';
 import { generateQrcode } from './helpers';
+import { INotification } from '../interfaces/general.interface';
+import { Notification } from '../models/general.models';
 
 const userEmitter = new EventEmitter();
 
@@ -34,3 +36,7 @@ async function onUserCreated(user: Iuser) {
 
 // Subscribe to the user_created event
 userEmitter.on('user_created', onUserCreated);
+
+export async function createNotification(payload:INotification) {
+    await Notification.create(payload)
+}
