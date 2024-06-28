@@ -69,7 +69,7 @@ export const paystackWebhook = async(req:Request, res:Response)=>{
 
             }else if(plan.custom_fields.type == "subUnitCourses"){
                 console.log(plan.cart_id, "xyzzzz")
-                await SubUnitCourseModel.findByIdAndUpdate(plan.cart_id,{paid:true})
+                await SubUnitCourseModel.findByIdAndUpdate(plan.cart_id,{$set:{paid:true}})
                 const context ={
                     date:new Date(event.data.paid_at).toLocaleDateString(),
                     email:event.data.customer.email,
