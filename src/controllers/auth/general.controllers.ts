@@ -40,6 +40,7 @@ export const paystackWebhook = async(req:Request, res:Response)=>{
         // Retrieve the request's body
         const event = req.body;
         const plans = event.data.metadata
+        console.log(plans, "plansssss")
         for (const plan of plans){
             if(plan.custom_fields.type == "wallet"){
 
@@ -67,7 +68,8 @@ export const paystackWebhook = async(req:Request, res:Response)=>{
                 await sendTemplateMail(event.data.customer.email,"Wallet fund successful","templates/paystack.html",context)
 
             }else if(plan.custom_fields.type == "subUnitCourses"){
-                await SubUnitCourseModel.findByIdAndUpdate(plan.cart_id,{paidStatus:true})
+                console.log(plan.cart_id, "xyzzzz")
+                await SubUnitCourseModel.findByIdAndUpdate(plan.cart_id,{$set:{paid:true}})
                 const context ={
                     date:new Date(event.data.paid_at).toLocaleDateString(),
                     email:event.data.customer.email,
