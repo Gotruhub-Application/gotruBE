@@ -28,9 +28,9 @@ export const sendNotif = async (token:string, title:string="New message", body:s
         token: token,
       };
       const response = await admin.messaging().send(message);
-      console.log("Successfully sent message:", response);
+      
     } catch (error:any) {
-      console.error("Error sending message:", error.message);
+      
       throw error;
     }
   };

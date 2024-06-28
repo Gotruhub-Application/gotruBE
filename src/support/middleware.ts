@@ -12,11 +12,9 @@ dotenv.config()
  
 
 const {PROJ_ENV,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION,AWS_BUCKET} = process.env
-console.log(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, AWS_REGION, PROJ_ENV)
 let storage;
 // configure storage for development and production
 if (PROJ_ENV != "DEV"){
-    console.log("abjhbsdvfbdsvdsv11111")
     storage = multer.memoryStorage()
 }else{
     storage = multer.diskStorage({
@@ -124,7 +122,7 @@ export async function handlefileUpload(req: Request, res: Response, next: NextFu
 
 export const IsAuthenticatedOrganization =async (req:Request, res:Response, next:NextFunction) =>{
   // Check if the Authorization header exists in the request
-  console.log("123455")
+
   if (!req.headers.authorization) {
       return failedResponse(res, 401, 'Access denied. Authorization header missing.');
   }
@@ -250,7 +248,6 @@ export const IsAuthenticatedGotruAdmin =async (req:Request, res:Response, next:N
     }
     try {
         const decodedToken = verifyJwtToken(token)
-        console.log(decodedToken, "sbvdsvesv")
         req.params.userId= decodedToken._id;
         const isAdmin = decodedToken.isAdmin
         // Check if user is gotru 'admin'
