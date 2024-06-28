@@ -8,6 +8,7 @@ import { SubUnitValidator, UnpdatesubaccountJoiSchema, orgUpdateUserValidator, o
 import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
 import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
+import { AttendanceModel, SubUnitCourseModel } from "../models/organziation/monitorFeature.models";
 
 export class OrganizatioinUnits {
     static async getUnits (req:Request, res:Response, next:NextFunction){
@@ -757,27 +758,127 @@ export class OrgSummary {
   };
 
   static async getAllPassHistory(req: Request, res: Response) {
-    const ITEMS_PER_PAGE = 10;
+      const ITEMS_PER_PAGE = 10;
+      try {
+          const page = parseInt(req.query.page as string) || 1;
+          const skip = (page - 1) * ITEMS_PER_PAGE; 
+          const history = await SignInOutRecordModel.find({
+              organization:req.params.organizationId
+          })
+          .populate("user")
+          .populate("other")
+          .populate("authorizationType")
+          .populate("approvalBy")
+          .sort({ createdAt: -1 }) // Sort by the most recent
+          .skip(skip)
+          .limit(ITEMS_PER_PAGE); // Limit the number of items per page
+
+
+
+          return successResponse(res, 200, "Success", history);
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
+      }
+  };
+  static async getUnitSummary (req:Request, res:Response){
     try {
-        const page = parseInt(req.query.page as string) || 1;
-        const skip = (page - 1) * ITEMS_PER_PAGE; 
-        const history = await SignInOutRecordModel.find({
-            organization:req.params.organizationId
-        })
-        .populate("user")
-        .populate("other")
-        .populate("authorizationType")
-        .populate("approvalBy")
-        .sort({ createdAt: -1 }) // Sort by the most recent
-        .skip(skip)
-        .limit(ITEMS_PER_PAGE); // Limit the number of items per page
+      const {organizationId, unitId} = req.params;
+      const totalStudents = await User.countDocuments({organization:organizationId, role:"student", piviotUnit:unitId});
+      const totalSubUnits = await SubUnit.countDocuments({organization:organizationId, unit:unitId})
+      const subUnits = await SubUnit.find({ unit: unitId }).select('_id');
+      const subUnitIds = subUnits.map(subUnit => subUnit._id);
+      const totalAssignments = await SubUnitCourseModel.countDocuments({ subUnit: { $in: subUnitIds } });
 
+      return successResponse(res, 200, "Success", {totalStudents, totalSubUnits, totalAssignments})
 
-
-        return successResponse(res, 200, "Success", history);
-    } catch (error: any) {
-        writeErrosToLogs(error);
-        return failedResponse(res, 500, error.message);
+    } catch (error:any) {
+      writeErrosToLogs(error)
+      return failedResponse(res,500, error.message)
+      
     }
-}
+
+  };
+
+  static async getSubUnitSummary (req:Request, res:Response){
+    try {
+      const { organizationId, unitId } = req.params;
+
+        const subUnits = await SubUnit.find({ unit: unitId }).select('_id name');
+        const response = [];
+
+        for (const subUnit of subUnits) {
+            const subUnitId = subUnit._id;
+            const totalStudents = await User.countDocuments({ organization: organizationId, role: "student", subUnit: subUnitId });
+            const totalAssignments = await SubUnitCourseModel.countDocuments({ subUnit: subUnitId });
+
+            const data = {
+                name: subUnit.name,
+                id: subUnitId,
+                totalStudents,
+                totalAssignments
+            };
+
+            response.push(data);
+        }
+
+      return successResponse(res, 200, "Success", response);
+
+    } catch (error:any) {
+      writeErrosToLogs(error)
+      return failedResponse(res,500, error.message)
+      
+    }
+
+  };
+  static async getAttendanceSummary(req: Request, res: Response) {
+      try {
+          const { organizationId, unitId, date } = req.params;
+
+          // Fetch all students in the subunits
+          const students = await User.find({ organization: organizationId, role: 'student'}).select('_id');
+          const studentIds = students.map(student => student._id);
+
+          // Fetch attendance records for the specified date
+          const attendanceRecords = await AttendanceModel.find({
+              user: { $in: studentIds },
+              // createdAt: {
+              //     $gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
+              //     $lt: new Date(new Date(date).setHours(23, 59, 59, 999))
+              // }
+          });
+
+          let earlyCount = 0;
+          let lateCount = 0;
+          let presentCount = 0;
+
+          attendanceRecords.forEach(record => {
+              if (record.remark === 'Early') earlyCount++;
+              else if (record.remark === 'Late') lateCount++;
+              presentCount++;
+          });
+
+          const totalStudents = students.length;
+          const absentCount = totalStudents - presentCount;
+
+          const earlyPercentage = (earlyCount / totalStudents) * 100;
+          const latePercentage = (lateCount / totalStudents) * 100;
+          const absentPercentage = (absentCount / totalStudents) * 100;
+
+          const summary = {
+              earlyPercentage,
+              latePercentage,
+              absentPercentage,
+              totalStudents,
+              earlyCount,
+              lateCount,
+              absentCount
+          };
+
+          return successResponse(res, 200, "Success", summary);
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
+      }
+  }
 }

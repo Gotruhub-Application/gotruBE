@@ -14,14 +14,14 @@ export function emitUserCreationSignal(user: Iuser) {
 async function onUserCreated(user: Iuser) {
     try {
         if (user.role == "guardian" && user.children.length > 0) {
-            console.log(user, "fdsfbdsvvb")
+            
 
             // Set guardians for each child
             for (const childId of user.children) {
                 await User.findByIdAndUpdate(childId, { $set: { guardians: user._id } });
             }
         } else if (user.role === "student" && user.guardians) {
-            console.log(user, "12345678")
+            
   
             // Add student to the children array for guardians
             await User.findByIdAndUpdate(user.guardians, { $addToSet: { children: user._id } });
@@ -30,7 +30,7 @@ async function onUserCreated(user: Iuser) {
             await User.findByIdAndUpdate(user._id, { $set: { passQrcode } });
         }
     } catch (error) {
-        console.error("Error processing user creation:", error);
+        
     }
 }
 

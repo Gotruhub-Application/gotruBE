@@ -29,7 +29,6 @@ export function initiatePaystack(metadata: Array<object>, email: string, totalAm
     };
 
     return new Promise((resolve, reject) => {
-        console.log("hellooo")
         const req = https.request(options, res => {
             let data = '';
 
@@ -62,7 +61,7 @@ export async function createPaystackSubAccount(payload:object): Promise<any>{
         "account_number": "7025065702", 
         "percentage_charge": 18.2 
       })
-    console.log(params,"params")
+    
     const options = {
         hostname: 'api.paystack.co',
         port: 443,
@@ -75,7 +74,7 @@ export async function createPaystackSubAccount(payload:object): Promise<any>{
     };
     
     return new Promise((resolve, reject) => {
-        console.log("hellooo")
+        
         const req = https.request(options, res => {
             let data = '';
 
@@ -100,7 +99,7 @@ export async function createPaystackSubAccount(payload:object): Promise<any>{
 };
 
 export async function splitPaymentToSubAccount(payload:any): Promise<any>{
-    console.log(payload, "payload")
+    
     const params = JSON.stringify(payload);
     // JSON.stringify({
     //     "email": payload.email,
@@ -125,7 +124,6 @@ export async function splitPaymentToSubAccount(payload:any): Promise<any>{
       
     
     return new Promise((resolve, reject) => {
-        console.log("hellooo")
         const req = https.request(options, res => {
             let data = '';
 
