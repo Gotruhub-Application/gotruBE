@@ -67,7 +67,7 @@ export const paystackWebhook = async(req:Request, res:Response)=>{
                 await sendTemplateMail(event.data.customer.email,"Wallet fund successful","templates/paystack.html",context)
 
             }else if(plan.custom_fields.type == "subUnitCourses"){
-                await SubUnitCourseModel.findByIdAndUpdate(plan.custom_fields._id,{$set:{paidStatus:true}})
+                await SubUnitCourseModel.findByIdAndUpdate(plan.cart_id,{paidStatus:true})
                 const context ={
                     date:new Date(event.data.paid_at).toLocaleDateString(),
                     email:event.data.customer.email,
