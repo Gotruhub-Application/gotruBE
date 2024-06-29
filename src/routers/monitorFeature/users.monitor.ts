@@ -16,5 +16,5 @@ organizationRouter
 .get("/mobile-section/schedule/single/:id", IsAuthenticatedUser, ClassScheduleController.getSingleClassSchedule)
 
 .get("/mobile-section/attendance/schedule/:classScheduleId", IsAuthenticatedUser, AttendanceController.getAllAttendances)
-.get("/mobile-section/attendance/schedule", IsAuthenticatedUser, AttendanceController.getSingleUserAttendances)
+.get("/mobile-section/attendance/scheduleuser/:userId", IsAuthenticatedUser, AttendanceController.getSingleUserAttendances)
 .get("/mobile-section/attendance/:id", IsAuthenticatedUser, AttendanceController.getSingleAttendance)

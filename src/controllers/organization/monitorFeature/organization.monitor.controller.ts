@@ -573,7 +573,7 @@ export class AttendanceController {
     static async getSingleUserAttendances(req: Request, res: Response) {
         const ITEMS_PER_PAGE = 10;
         try {
-            const userId = (req as any).user._id;
+            const {userId} = req.params;
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
             const attendances = await AttendanceModel.find({ organization: req.params.organizationId, user:userId })
