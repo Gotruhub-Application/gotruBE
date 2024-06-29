@@ -569,6 +569,24 @@ export class AttendanceController {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
         }
+    };
+    static async getSingleUserAttendances(req: Request, res: Response) {
+        const ITEMS_PER_PAGE = 10;
+        try {
+            const {userId} = req.params;
+            const page = parseInt(req.query.page as string) || 1;
+            const skip = (page - 1) * ITEMS_PER_PAGE;
+            const attendances = await AttendanceModel.find({ organization: req.params.organizationId, user:userId })
+                .skip(skip)
+                .sort({ createdAt: -1 })
+                .limit(ITEMS_PER_PAGE);
+
+            return successResponse(res, 200, "Success", attendances );
+
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
     }
 
     static async getSingleAttendance(req: Request, res: Response) {

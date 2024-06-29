@@ -129,6 +129,14 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
     ref:"Media",
     required:false
   },
+  startLocation: {
+    lat: { type: String, default: "" },
+    long: { type: String, default: "" }
+  },
+  endLocation: {
+    lat: { type: String, default: "" },
+    long: { type: String, default: "" }
+  },
   isVerified:{
     type:Boolean,
     required:false,

@@ -70,6 +70,10 @@ export const createSessionSchema = Joi.object({
       lat: Joi.string().required(),
       long: Joi.string().required()
     }).required(),
+    endlocation: Joi.object({
+      lat: Joi.string().required(),
+      long: Joi.string().required()
+    }).required(),
     coordinators: Joi.array().unique().items(objectIdValidator.objectId()).required()
   });
   
@@ -82,6 +86,10 @@ export const createSessionSchema = Joi.object({
     startTime: Joi.number().allow(''),
     endTime: Joi.number().allow(''),
     location: Joi.object({
+      lat: Joi.string().allow(''),
+      long: Joi.string().allow('')
+    }).allow(''),
+    endlocation: Joi.object({
       lat: Joi.string().allow(''),
       long: Joi.string().allow('')
     }).allow(''),

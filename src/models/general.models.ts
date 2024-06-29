@@ -12,9 +12,11 @@ const BlackListTokenSchema :Schema<BlackListedTokenDocument> = new Schema<BlackL
 
 const notificationSchema: Schema<INotification> = new Schema<INotification>({
   owner: String,
+  organization: String,
+  title: String,
   type: { type: String, required: true }, // e.g., 'product', 'wallet', etc.
-  entityId: String, // ID of the related entity
-  entityModel: { type: String, required: true }, // Name of the related model, e.g., 'Product', 'Wallet'
+  // entityId: String, // ID of the related entity
+  // entityModel: { type: String, required: true }, // Name of the related model, e.g., 'Product', 'Wallet'
   message: { type: String, required: true },
   read: { type: Boolean, default: false },
 }, { timestamps: true });

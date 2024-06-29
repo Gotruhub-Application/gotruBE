@@ -267,7 +267,7 @@ export class OrganizationProfile {
       if (!updatedOrganization) {
         return failedResponse(res, 404, "Organization not found.");
       }
-  
+      
       return successResponse(res, 200, "VProfile updated successfully");
     } catch (error: any) {
       logger.error(`Error in OrganizationUpdateProfile at line ${error.lineNumber}: ${error.message}\n${error.stack}`);

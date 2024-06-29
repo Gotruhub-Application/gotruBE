@@ -1,6 +1,7 @@
 import { Schema, Document, Model, model } from 'mongoose';
 import { ISession, ICourse, ITerm,IAttendance,IClassSchedule, ISubUnitCourse } from '../../interfaces/organization/monitor.interface';
-import { ConvertDateTimeToNumber, generateQrcode } from '../../support/helpers';
+import { ConvertDateTimeToNumber, generateQrcode, isUserLocationInRange } from '../../support/helpers';
+import { CompareCoordinate } from '../../interfaces/general.interface';
 
 const sessionSchema: Schema<ISession> = new Schema<ISession>({
   name: { type: String, required: true },
@@ -64,6 +65,10 @@ const classScheduleSchema: Schema<IClassSchedule> = new Schema<IClassSchedule>({
     lat: { type: String, required: true },
     long: { type: String, required: true }
   },
+  endlocation: {
+    lat: { type: String, default: "" },
+    long: { type: String, default: "" }
+  },
   coordinators: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   qrcode: { type: String }
 }, { timestamps: true });
@@ -123,6 +128,16 @@ attendanceSchema.pre("save", async function (next) {
             this.remark = "Late";
           }
         }
+        // check if suspicious activity
+        const coordinates: CompareCoordinate = {
+          startLocation: { lat: schedule.location.lat, long: schedule.location.long }, // New York
+          endLocation: { lat: schedule.endlocation.lat, long:schedule.endlocation.long }, // Los Angeles
+          userLocation: {  lat: this.location.lat, long: this.location.long  } // Example user location
+        };
+        const resp = isUserLocationInRange(coordinates)
+        console.log(resp)
+
+
       }
     } catch (error:any) {
       return next(error);

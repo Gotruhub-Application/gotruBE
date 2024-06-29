@@ -43,6 +43,7 @@ export interface IClassSchedule extends Document {
   startTime: number;
   endTime: number;
   location: { lat: string; long: string };
+  endlocation: { lat: string; long: string };
   coordinators: Iuser['_id'][];
   qrcode: string;
 }
