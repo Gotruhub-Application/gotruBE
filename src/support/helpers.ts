@@ -247,8 +247,8 @@ export function isUserLocationInRange(coordinates: CompareCoordinate): boolean {
   const userLat = parseFloat(userLocation.lat);
   const userLong = parseFloat(userLocation.long);
 
-  const isLatInRange = (startLat <= userLat && userLat <= endLat) || (endLat <= userLat && userLat <= startLat);
-  const isLongInRange = (startLong <= userLong && userLong <= endLong) || (endLong <= userLong && userLong <= startLong);
+  const isLatInRange = (startLat <= userLat && userLat <= endLat);
+  const isLongInRange = (startLong <= userLong && userLong <= endLong);
 
   return isLatInRange && isLongInRange;
 }
