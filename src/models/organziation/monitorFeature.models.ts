@@ -80,6 +80,15 @@ classScheduleSchema.pre("save",async function(next){
   };
   next()
 });
+classScheduleSchema.pre("find", function(){
+  this
+  .populate("course")
+});
+classScheduleSchema.pre("findOne", function(){
+  this
+  .populate("course")
+});
+
 
 const attendanceSchema: Schema<IAttendance> = new Schema<IAttendance>({
   organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
@@ -98,14 +107,14 @@ const attendanceSchema: Schema<IAttendance> = new Schema<IAttendance>({
 attendanceSchema.pre("find", function(){
   this
   .populate("classScheduleId")
-  .populate("term")
-  .populate("user")
+  // .populate("term")
+  // .populate("user")
 });
 attendanceSchema.pre("findOne", function(){
   this
   .populate("classScheduleId")
-  .populate("term")
-  .populate("user")
+  // .populate("term")
+  // .populate("user")
 });
 
 attendanceSchema.pre("save", async function (next) {
