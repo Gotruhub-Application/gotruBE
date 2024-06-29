@@ -21,7 +21,6 @@ export interface INotification extends Document {
 
 export interface CreateNotificationParams {
   owner?: string;
-  organization?: string;
   title?: string;
   type?: string;
   message?: string;

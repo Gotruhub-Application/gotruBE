@@ -572,6 +572,7 @@ export class AttendanceController {
         const ITEMS_PER_PAGE = 10;
         try {
             const {userId} = req.params;
+            console.log(userId, "sbdbfbdv")
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
             const attendances = await AttendanceModel.find({ organization: req.params.organizationId, user:userId })

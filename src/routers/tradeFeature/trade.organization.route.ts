@@ -39,14 +39,14 @@ tradeOrganizationRouter
 .get("/mobile-section/category/:id",IsAuthenticatedUser,Catetgory.getSingleCategory)
 
 // Products
-.get("/mobile-section/products",IsAuthenticatedOrganization,Products.getAllProducts)
-.get("/mobile-section/products/:id",IsAuthenticatedOrganization,Products.getSingleProduct)
+.get("/mobile-section/products",IsAuthenticatedUser,Products.getAllProducts)
+.get("/mobile-section/products/:id",IsAuthenticatedUser,Products.getSingleProduct)
 
 // withdrawasl
 .post("/mobile-section/checkout", IsAuthenticatedUser, CartController.checkOut)
 
 // 
 .get('/mobile-section/child/:child_id/orders',IsAuthenticatedUser, OrderController.getUserOrders)
-.get('/mobile-section/admin/orders', IsAuthenticatedOrganization,OrderController.getAllOrders)
+.get('/mobile-section/admin/orders', IsAuthenticatedUser,OrderController.getAllOrders)
 .get('/mobile-section/child/:child_id/orders/:orderId',IsAuthenticatedUser, OrderController.getUserOrderById)
 
