@@ -73,9 +73,9 @@ export async function OtpToken(email:string,subject:string="Otp Token", template
 }
 
 export async function sendOnboardingMail(role:string, email:string, subject:string,template:string, context:object): Promise<boolean>{
-    if(role === "student"){
-        return false
-    }
+    // if(role === "student"){
+    //     return false
+    // }
     await sendTemplateMail(email,subject,template, context)
     return true;
 }

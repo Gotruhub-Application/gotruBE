@@ -238,14 +238,16 @@ export class OrgUsers {
 
           // validate children
           // Find the documents for the provided children IDs
-         
-          const children = await User.find({ _id: { $in: value.children } });
-          // const { kids, ...data } = value;
-
-          // Check if kids array is defined before accessing its length
-          if (children.length !== value.children.length) {
-            return failedResponse(res, 404, "One or more children IDs are invalid.");
+          if (value.children){
+            const children = await User.find({ _id: { $in: value.children } });
+            // const { kids, ...data } = value;
+  
+            // Check if kids array is defined before accessing its length
+            if (children.length !== value.children.length) {
+              return failedResponse(res, 404, "One or more children IDs are invalid.");
+            }
           }
+          
         }
 
         if (value.email){
@@ -267,10 +269,12 @@ export class OrgUsers {
         value["organization"] = req.params.organizationId
         const newUser  = await User.create(value)
         // send onbard mail to the new user
-        await sendOnboardingMail(value.role,value.defaultEmail,
-          "Complete Registeration","templates/user_onboarding.html",
-          {email:value.email, fullName:value.fullName, password:password}
-        )
+        if (value.email){
+          await sendOnboardingMail(value.role,value.defaultEmail,
+            "Complete Registeration","templates/user_onboarding.html",
+            {email:value.email, fullName:value.fullName, password:password}
+          )
+        }
         emitUserCreationSignal(newUser)
         return successResponse(res,201,"Unit created successfully",{newUser} )
 

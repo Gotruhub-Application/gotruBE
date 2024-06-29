@@ -20,5 +20,7 @@ authRouter
 .post("/reset-password/get-reset-token", ResetPasswordController.getResetToken)
 .post("/reset-password/validate-token", ResetPasswordController.verifyToken)
 .post("/reset-password/change-password", ResetPasswordController.changePassword)
+.post("/reset-password/dashboard/change-password", ResetPasswordController.changePasswordInDashBoard)
 .get("/profile/get-profile", IsAuthenticatedOrganization,OrganizationProfile.getProfile)
 .put("/profile/update-profile", IsAuthenticatedOrganization,OrganizationProfile.UpdateProfile)
+.delete("/profile/delete-account", IsAuthenticatedOrganization,OrganizationProfile.DeleteMyAccount)
