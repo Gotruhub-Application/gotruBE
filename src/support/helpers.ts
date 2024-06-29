@@ -215,18 +215,16 @@ async function updateExpiredTokens(): Promise<void> {
 
   export async function createNotification(params: CreateNotificationParams): Promise<void> {
     try {
-        const { owner, title, message } = params;
+        const { owner, title, type, message } = params;
+        console.log(params, "sdhfbsdfb")
 
         // Create a new notification document
-        const newNotification = new Notification({
-            owner,
-            title,
-            // type,
-            message
+        const newNotification = await Notification.create({
+            owner:owner,
+            title:title,
+            type:type,
+            message:message
         });
-
-        // Save the notification to the database
-        await newNotification.save();
 
         console.log(`Notification created: ${newNotification}`);
 
@@ -251,11 +249,4 @@ export function isUserLocationInRange(coordinates: CompareCoordinate): boolean {
   const isLongInRange = (startLong <= userLong && userLong <= endLong);
 
   return isLatInRange && isLongInRange;
-}
-
-// // Example usage:
-// const coordinates: CompareCoordinate = {
-//   startLocation: { lat: "40.712776", long: "-74.005974" }, // New York
-//   endLocation: { lat: "34.052235", long: "-118.243683" }, // Los Angeles
-//   userLocation: { lat: "39.904202", long: "-75.048943" } // Example user location
-// };
+};

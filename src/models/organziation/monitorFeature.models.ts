@@ -1,7 +1,7 @@
 import { Schema, Document, Model, model } from 'mongoose';
 import { ISession, ICourse, ITerm,IAttendance,IClassSchedule, ISubUnitCourse } from '../../interfaces/organization/monitor.interface';
-import { ConvertDateTimeToNumber, generateQrcode, isUserLocationInRange } from '../../support/helpers';
-import { CompareCoordinate } from '../../interfaces/general.interface';
+import { ConvertDateTimeToNumber, createNotification, generateQrcode, isUserLocationInRange } from '../../support/helpers';
+import { CompareCoordinate, CreateNotificationParams } from '../../interfaces/general.interface';
 
 const sessionSchema: Schema<ISession> = new Schema<ISession>({
   name: { type: String, required: true },
@@ -144,7 +144,16 @@ attendanceSchema.pre("save", async function (next) {
           userLocation: {  lat: this.location.lat, long: this.location.long  } // Example user location
         };
         const resp = isUserLocationInRange(coordinates)
-        console.log(resp)
+        if(!resp){
+          // send suspicous activity notification
+          const payload:CreateNotificationParams ={
+            owner:this.user,
+            title:`{this.attendanceType}`,
+            type:`suspicious_${this.attendanceType}`,
+            message:`New suspicious ${this.attendanceType} at ${this.location.lat, this.location.long }`
+          }
+          await createNotification(payload)
+        }
 
 
       }
