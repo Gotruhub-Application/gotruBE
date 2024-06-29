@@ -9,6 +9,8 @@ import qrcode from "qrcode";
 // cronr jobs
 import cron from "node-cron";
 import { AppToken } from "../models/organization.models";
+import { Notification } from "../models/general.models";
+import { CompareCoordinate, CreateNotificationParams } from "../interfaces/general.interface";
 
 
 dotenv.config()
@@ -209,4 +211,51 @@ async function updateExpiredTokens(): Promise<void> {
     const minutes = date.getMinutes();  // No need to convert to string
     
     return hours * 100 + minutes;  // Combine hours and minutes into a single number
-  }
+  };
+
+  export async function createNotification(params: CreateNotificationParams): Promise<void> {
+    try {
+        const { owner, title, message } = params;
+
+        // Create a new notification document
+        const newNotification = new Notification({
+            owner,
+            title,
+            // type,
+            message
+        });
+
+        // Save the notification to the database
+        await newNotification.save();
+
+        console.log(`Notification created: ${newNotification}`);
+
+        // Optionally return the created notification object or handle it as needed
+    } catch (error:any) {
+        writeErrosToLogs(error);
+        throw new Error(`Failed to create notification: ${error.message}`);
+    }
+};
+
+export function isUserLocationInRange(coordinates: CompareCoordinate): boolean {
+  const { startLocation, endLocation, userLocation } = coordinates;
+
+  const startLat = parseFloat(startLocation.lat);
+  const startLong = parseFloat(startLocation.long);
+  const endLat = parseFloat(endLocation.lat);
+  const endLong = parseFloat(endLocation.long);
+  const userLat = parseFloat(userLocation.lat);
+  const userLong = parseFloat(userLocation.long);
+
+  const isLatInRange = (startLat <= userLat && userLat <= endLat) || (endLat <= userLat && userLat <= startLat);
+  const isLongInRange = (startLong <= userLong && userLong <= endLong) || (endLong <= userLong && userLong <= startLong);
+
+  return isLatInRange && isLongInRange;
+}
+
+// // Example usage:
+// const coordinates: CompareCoordinate = {
+//   startLocation: { lat: "40.712776", long: "-74.005974" }, // New York
+//   endLocation: { lat: "34.052235", long: "-118.243683" }, // Los Angeles
+//   userLocation: { lat: "39.904202", long: "-75.048943" } // Example user location
+// };

@@ -37,6 +37,6 @@ async function onUserCreated(user: Iuser) {
 // Subscribe to the user_created event
 userEmitter.on('user_created', onUserCreated);
 
-export async function createNotification(payload:INotification) {
-    await Notification.create(payload)
-}
+// export async function createNotification(payload:INotification) {
+//     await Notification.create(payload)
+// }

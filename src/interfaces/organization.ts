@@ -1,4 +1,5 @@
 import { Decimal128, Document, Schema} from 'mongoose';
+import { IAttendance } from './organization/monitor.interface';
 
 export interface IOrganization extends Document {
   phone: string;
@@ -27,7 +28,9 @@ export interface IOrganization extends Document {
   referalCode?: string;
   nameOfEstablishment?: string;
   agency:string,
-  isVerified:boolean
+  isVerified:boolean,
+  startLocation: { lat: string; long: string };
+  endLocation: { lat: string; long: string };
 }
 
 
@@ -191,3 +194,19 @@ export interface IOrder extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// export interface PassSuspiciousActivities extends Document {
+//   organization: Schema.Types.ObjectId;
+//   record: ISignInOutRecord["_id"]
+//   description: string;
+//   createdAt: Date;
+//   updatedAt: Date;
+// };
+
+// export interface MonitorSuspiciousActivities extends Document {
+//   organization: Schema.Types.ObjectId;
+//   record: IAttendance["_id"];
+//   description: string;
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
