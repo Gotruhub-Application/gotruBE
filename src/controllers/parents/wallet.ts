@@ -242,7 +242,7 @@ export class ParentWithdrawalRequestController {
             };
 
             // Check if wallet exists and belongs to the user
-            const userWallet = await WalletModel.findOne({ user:child_id });
+            const userWallet = await WalletModel.findOne({ user:child_id }).select("-pin");
             if (!userWallet) {
                 return failedResponse(res, 404, 'Wallet not found or does not belong to the user.');
             }

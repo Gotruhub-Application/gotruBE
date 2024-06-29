@@ -4,8 +4,8 @@ import bcrypt from "bcrypt"
 import { OrgProfileUpdateValidator, OrgRegistrationValidation,orgEmailVerificationValidator, resentTokenValidator } from "../../validators/auth/organizations";
 import { logger } from "../../logger"; 
 import { failedResponse, successResponse } from "../../support/http";
-import { OtpToken, ValidateToken, generateOrganizationDOmainCode, verifyToken } from "../../support/helpers"; 
-import { LoginValidator, NewPasswordValidator } from "../../validators/auth/general.validators";
+import { OtpToken, ValidateToken, generateOrganizationDOmainCode, verifyToken, writeErrosToLogs } from "../../support/helpers"; 
+import { ChangePasswordInDashboardValidator, LoginValidator, NewPasswordValidator } from "../../validators/auth/general.validators";
 import { generateJwtToken } from "../../support/generateTokens";
 import { sendNotif } from "../../support/firebaseNotification";
 
@@ -217,6 +217,26 @@ export class ResetPasswordController {
           return failedResponse(res, 500, error.message);
       }
   };
+  static async changePasswordInDashBoard(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { error, value } = ChangePasswordInDashboardValidator.validate(req.body);
+        if (error) {
+        return failedResponse(res, 400, `${error.details[0].message}`);
+        }
+        const userExist = await Organization.findById(req.params.userId).select("password");
+        if (!userExist) return failedResponse(res, 404, "User with this email does not exists.");
+        const verifyPassword = await bcrypt.compare(value.oldPassword, userExist.password)
+        if (!verifyPassword) return failedResponse(res, 400, "Incorrect old password.");
+        value.newPassword = await bcrypt.hash(value.newPassword, 10);
+        userExist.password = value.newPassword;
+        await userExist.save()
+        return successResponse(res, 200, "Password updated successfully.");
+        
+    } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+    }
+};
 
 }
 
@@ -252,6 +272,17 @@ export class OrganizationProfile {
     } catch (error: any) {
       logger.error(`Error in OrganizationUpdateProfile at line ${error.lineNumber}: ${error.message}\n${error.stack}`);
       return failedResponse(res, 500, error.message);
+    }
+  };
+  static async DeleteMyAccount(req: Request, res: Response, next: NextFunction) {
+    try {
+        const userExist = await Organization.findByIdAndDelete(req.params.userId)
+        if (!userExist) return failedResponse(res, 404, "User with this email does not exists.");
+        return successResponse(res, 204);
+        
+    } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
     }
   };
 }
