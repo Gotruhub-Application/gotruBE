@@ -15,7 +15,7 @@ export class NotificationController {
         
             // Build query conditions
             const query: any = {
-                user: req.params.id,
+                owner: req.params.myId,
             };
         
             if (type) {
@@ -47,7 +47,7 @@ export class NotificationController {
     static async markAllAsRead(req: Request, res: Response) {
         try {
           const result = await Notification.updateMany(
-            { user: req.params.id, read: false },
+            { owner: req.params.myId, read: false },
             { read: true }
           );
     

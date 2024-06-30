@@ -86,11 +86,11 @@ export class ScanChildQrCode {
                 return failedResponse(res, 400, "Student has no active pass subscription");
             }
 
-            // if (token.expires_at.getTime() < Date.now()) {
-            //     token.expired = true;
-            //     await token.save();
-            //     return failedResponse(res, 400, "Pass token has expired");
-            // }
+            if (token.expires_at.getTime() < Date.now()) {
+                token.expired = true;
+                await token.save();
+                return failedResponse(res, 400, "Pass token has expired");
+            }
             const guardians = await User.findById(student.guardians)
             .populate({
                 path: "children",
