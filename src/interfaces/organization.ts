@@ -28,6 +28,7 @@ export interface IOrganization extends Document {
   referalCode?: string;
   nameOfEstablishment?: string;
   agency:string,
+  fcmToken:string,
   isVerified:boolean,
   startLocation: { lat: string; long: string };
   endLocation: { lat: string; long: string };

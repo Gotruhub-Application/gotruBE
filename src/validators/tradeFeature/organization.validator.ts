@@ -3,8 +3,8 @@ import { objectIdValidator } from '../auth/organizations';
 
 // Joi schema for category creation
 export const createCategorySchema = Joi.object({
-  name: Joi.string().required(),
-  image: objectIdValidator.objectId().allow(""),
+  name: Joi.string().required()
+  // image: objectIdValidator.objectId().allow(""),
 });
 
 // Joi schema for product creation

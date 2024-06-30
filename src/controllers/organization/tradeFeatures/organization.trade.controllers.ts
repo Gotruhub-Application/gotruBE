@@ -20,8 +20,8 @@ export class Catetgory {
             if (categoryExist) return failedResponse(res, 400, "duplicate category name not allowed.")
             // validate media exist
 
-            const validMediaId = await Media.findById(value.image)
-            if (!validMediaId) return failedResponse(res, 404, "This image does not exist");
+            // const validMediaId = await Media.findById(value.image)
+            // if (!validMediaId) return failedResponse(res, 404, "This image does not exist");
 
             // save category
             value.organization = req.params.organizationId
