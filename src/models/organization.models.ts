@@ -3,6 +3,7 @@ import bcrypt from "bcrypt"
 import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord, ICategory,IProduct, ISubaccount, IWallet, IWalletTransaction, IWithdrawalRequest, IOrder} from '../interfaces/organization';
 import { CompareCoordinate, CreateNotificationParams } from '../interfaces/general.interface';
 import { createNotification, isUserLocationInRange } from '../support/helpers';
+import { sendNotif } from '../support/firebaseNotification';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -502,12 +503,19 @@ SignInOutRecordSchema.pre("save", async function (next) {
       const resp = isUserLocationInRange(coordinates);
       if (!resp) {
         const payload: CreateNotificationParams = {
-          owner: record.user.toString(),
+          owner: orgnz._id.toString(),
           title: `suspicious_${record.actionType}`,
           type: `gotrupass`,
           message: `New suspicious ${record.actionType} at ${record.coordinate.lat}, ${record.coordinate.long}`
         };
         await createNotification(payload);
+        // send notification 
+        const notifyPayload = {
+          type: `gotrupass`,
+        };
+      
+      const token = "egKQbjIqTiapi7MMvQXU77:APA91bEb0rDg882auDKv7CBNJ2YhQrH1JpKZr81vYGxMeN_E3g7VKfU3BJ2yWXOVQv5J0m9Pl06mcLP8S1ba3MOg7apQEu_I9vMK9u7ANGM1MFkbvDTMdVSNmJcfxT-DjIu6JhMQn2bo"
+      await sendNotif(orgnz.fcmToken, `suspicious_${record.actionType}`, `New suspicious ${record.actionType} at ${record.coordinate.lat}, ${record.coordinate.long}`, notifyPayload)
       }
     } catch (error:any) {
       return next(error);

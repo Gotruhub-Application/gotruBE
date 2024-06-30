@@ -46,19 +46,19 @@ export function socket() {
       });
 
       //listen to admin send pass notifcation
-      socket.on(EVENTS.CLIENT.SEND_PARENT_SIGN_IN_OUT_MESSAGE, (message:any) => {
+      socket.on(EVENTS.CLIENT.SEND_PARENT_SIGN_IN_OUT_MESSAGE, async (message:any) => {
         // admin send parent signin-out message
-        handleAdminSendParentMessage(socket, message);
+        await handleAdminSendParentMessage(socket, message);
       });
 
       //listen to parent's send pass notifcation
-      socket.on(EVENTS.CLIENT.SEND_SIGN_IN_OUT_APPROVAL_TO_ADMIN, (message:any) => {
+      socket.on(EVENTS.CLIENT.SEND_SIGN_IN_OUT_APPROVAL_TO_ADMIN, async (message:any) => {
         // PARENT send ADMIN signin-out approve-decline
-        handleParentSendAdminApproveDecline(socket, message);
+        await handleParentSendAdminApproveDecline(socket, message);
       });
       
-      socket.on(EVENTS.CLIENT.RECEIVE_MESSAGE, (message:any) => {
-          handleReceiveMessage(socket, message);
+      socket.on(EVENTS.CLIENT.RECEIVE_MESSAGE, async (message:any) => {
+         await handleReceiveMessage(socket, message);
       });
 
     });

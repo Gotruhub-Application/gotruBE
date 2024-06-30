@@ -7,6 +7,7 @@ import { OtpToken, ValidateToken, generateOrganizationDOmainCode, generateQrcode
 import { LoginValidator, NewPasswordValidator, passwordValidator } from "../../validators/auth/general.validators";
 import { generateJwtToken } from "../../support/generateTokens";
 import { logger } from "../../logger"; 
+import { sendNotif } from "../../support/firebaseNotification";
 
 
 export class CompleteOnboarding {
@@ -108,6 +109,7 @@ export class CompleteOnboarding {
             if(value.fcmToken){
                 const user = await User.findByIdAndUpdate(userExist._id, {fcmToken:value.fcmToken})
               }
+            
             return successResponse(res, 200, "Success", { responseData });
 
         } catch (error:any) {
