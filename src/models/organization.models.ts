@@ -1,6 +1,8 @@
-import {Schema, Model, model, Query} from 'mongoose';
+import mongoose, {Schema, Model, model, Query} from 'mongoose';
 import bcrypt from "bcrypt"
 import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord, ICategory,IProduct, ISubaccount, IWallet, IWalletTransaction, IWithdrawalRequest, IOrder} from '../interfaces/organization';
+import { CompareCoordinate, CreateNotificationParams } from '../interfaces/general.interface';
+import { createNotification, isUserLocationInRange } from '../support/helpers';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -451,11 +453,14 @@ const appTokenSchema:Schema<IappToken> = new Schema<IappToken>({
   timestamps: true,
 })
 
-const SignInOutRecordSchema: Schema = new Schema({
+const SignInOutRecordSchema: Schema<ISignInOutRecord> = new Schema<ISignInOutRecord>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   authorizedFor: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   guardians: { type: Schema.Types.ObjectId, ref: 'User' },
-  coordinate: [{ type: String }],
+  coordinate: {
+    lat: { type: String, required: true },
+    long: { type: String, required: true }
+  },
   actionType: String,
   approvalBy: { type: Schema.Types.ObjectId, ref: 'User' },
   authorizationType: { type: String, required: true },
@@ -473,6 +478,40 @@ const SignInOutRecordSchema: Schema = new Schema({
     required:false
   },
 }, { timestamps: true });
+
+SignInOutRecordSchema.pre("save", async function (next) {
+  const record = this as ISignInOutRecord;
+
+  if (record.isNew) {
+    try {
+      const orgnz = await mongoose.model('Organization').findById(record.organization).select("startLocation endLocation").exec();
+      if (!orgnz) {
+        return next(new Error("Organization not found"));
+      }
+
+      const coordinates: CompareCoordinate = {
+        startLocation: { lat: orgnz.startLocation.lat as string, long: orgnz.startLocation.long as string },
+        endLocation: { lat: orgnz.endLocation.lat as string, long: orgnz.endLocation.long as string },
+        userLocation: { lat: record.coordinate.lat as string, long: record.coordinate.long as string }
+      };
+
+      const resp = isUserLocationInRange(coordinates);
+      if (!resp) {
+        const payload: CreateNotificationParams = {
+          owner: record.user.toString(),
+          title: `suspicious_${record.actionType}`,
+          type: `gotrupass`,
+          message: `New suspicious ${record.actionType} at ${record.coordinate.lat}, ${record.coordinate.long}`
+        };
+        await createNotification(payload);
+      }
+    } catch (error:any) {
+      return next(error);
+    }
+  }
+
+  next();
+});
 
 
 const categorySchema:Schema<ICategory> = new Schema<ICategory>({
@@ -518,6 +557,13 @@ productSchema.pre('findOne', function () {
   .populate('category')
   .populate('uploadedBy')
 });
+productSchema.pre('find', function () {
+  this
+  .populate('productCoverImage')
+  .populate('category')
+  .populate('uploadedBy')
+});
+
 
 const OrderSchema: Schema<IOrder> = new Schema<IOrder>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },

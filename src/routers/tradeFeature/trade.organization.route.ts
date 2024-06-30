@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { IsAuthenticatedUser,IsAuthenticatedOrganization } from "../../support/middleware"
+import { IsAuthenticatedUser,IsAuthenticatedOrganization, IsAuthenticatedStaff } from "../../support/middleware"
 import { CartController, Catetgory, OrderController, Products, WithdrawalRequestController } from "../../controllers/organization/tradeFeatures/organization.trade.controllers";
 
 export const tradeOrganizationRouter = Router();
@@ -23,7 +23,7 @@ tradeOrganizationRouter
 .get("/withdrawals", IsAuthenticatedOrganization, WithdrawalRequestController.getAllWithdrawalRequests)
 .get("/withdrawals/:id", IsAuthenticatedOrganization, WithdrawalRequestController.getWithdrawalRequestById)
 .put("/withdrawals/:id", IsAuthenticatedOrganization, WithdrawalRequestController.updateWithdrawalRequest)
-.post("/checkout", IsAuthenticatedUser, CartController.checkOut)
+.post("/checkout", IsAuthenticatedStaff, CartController.checkOut)
 
 // 
 .get('/child/:child_id/orders',IsAuthenticatedUser, OrderController.getUserOrders)

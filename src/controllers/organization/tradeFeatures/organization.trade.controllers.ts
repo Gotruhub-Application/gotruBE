@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, successResponse } from "../../../support/http"; 
-import { writeErrosToLogs } from "../../../support/helpers";
+import { createNotification, writeErrosToLogs } from "../../../support/helpers";
 import { createCategorySchema, createProductSchema, payloadSchema, updateOrderStatusSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
 import { Category, Order, Product, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../../../models/organization.models";
 import { Media } from "../../../models/media.models";
 import mongoose from 'mongoose';
 import bcrypt from "bcrypt"
+import { CreateNotificationParams } from "../../../interfaces/general.interface";
 
 export class Catetgory {
     static async addCategory(req: Request, res: Response) {
@@ -310,13 +311,14 @@ export class CartController {
         session.startTransaction();
 
         try {
-            const { uploadedBy: organization, _id: user, role } = (req as any).user;
+            const { organization, _id: user, role } = (req as any).user;
+
             const { error, value } = payloadSchema.validate(req.body);
             if (error) return failedResponse(res, 400, `${error.details[0].message}`);
 
             const { child_id } = value;
             const productIds = value.cart.map((item: any) => item.product);
-            const products = await Product.find({ _id: { $in: productIds }, organization }).session(session);
+            const products = await Product.find({ _id: { $in: productIds }, uploadedBy:organization }).session(session);
             const productMap = new Map(products.map(product => [product._id.toString(), product]));
 
             if(role !== "staff" && value.paymentMode === 'cash') return failedResponse(res, 403, `Only staffs can initiate cash a transaction. Please use a staff account.`);
@@ -382,6 +384,21 @@ export class CartController {
                     await product.save({ session });
                 }
             }
+            // create sale notification to admin
+            const payload: CreateNotificationParams = {
+                owner: organization,
+                title: `Sales alert`,
+                type: `gotrutrade`,
+                message: `#${totalAmount} of stocks has just been sold out via ${value.paymentMode}`
+                };
+            const payload2: CreateNotificationParams = {
+                owner: child_id,
+                title: `Purchase alert`,
+                type: `gotrutrade`,
+                message: `Your order was successful. Order ID ${newOrder?._id}`
+                };
+            await createNotification(payload); //admin
+            await createNotification(payload2); //user
 
             await session.commitTransaction();
             session.endSession();

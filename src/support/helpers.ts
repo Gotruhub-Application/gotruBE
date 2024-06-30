@@ -216,7 +216,6 @@ async function updateExpiredTokens(): Promise<void> {
   export async function createNotification(params: CreateNotificationParams): Promise<void> {
     try {
         const { owner, title, type, message } = params;
-        console.log(params, "sdhfbsdfb")
 
         // Create a new notification document
         const newNotification = await Notification.create({
@@ -225,8 +224,6 @@ async function updateExpiredTokens(): Promise<void> {
             type:type,
             message:message
         });
-
-        console.log(`Notification created: ${newNotification}`);
 
         // Optionally return the created notification object or handle it as needed
     } catch (error:any) {

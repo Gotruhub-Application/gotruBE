@@ -148,9 +148,9 @@ attendanceSchema.pre("save", async function (next) {
           // send suspicous activity notification
           const payload:CreateNotificationParams ={
             owner:this.user,
-            title:`{this.attendanceType}`,
-            type:`suspicious_${this.attendanceType}`,
-            message:`New suspicious ${this.attendanceType} at ${this.location.lat, this.location.long }`
+            title:`suspicious_${this.attendanceType}`,
+            type:`gotrumonitor`,
+            message:`New suspicious ${this.attendanceType} at ${this.location.lat}, ${this.location.long }`
           }
           await createNotification(payload)
         }

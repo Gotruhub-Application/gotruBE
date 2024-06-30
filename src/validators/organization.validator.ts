@@ -122,7 +122,10 @@ export const signInOutRecordValidator = Joi.object({
   user:  objectIdValidator.objectId(),
   authorizedFor: Joi.array().items(objectIdValidator.objectId()).min(1),
   guardians: objectIdValidator.objectId().required(),
-  coordinate: Joi.array().items(Joi.string()).required().max(2).min(2), 
+  coordinate: Joi.object({
+    lat: Joi.string().required(),
+    long: Joi.string().required()
+  }).required(),
   approvalBy: objectIdValidator.objectId().required(),
   other: Joi.when('authorizationType',{
     is:"other",
