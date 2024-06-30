@@ -36,7 +36,7 @@ organizationRouter
 
 // pass features
 .get("/scan-qrcode/:id", IsAuthenticatedStaff, ScanChildQrCode.getDetails)
-.post("/sign-in-out",IsAuthenticatedOrganization, SignInOutRecordHistory.createHistory)
+.post("/sign-in-out",IsAuthenticatedStaff, SignInOutRecordHistory.createHistory)
 .get("/pass-history", IsAuthenticatedOrganization, OrgSummary.getAllPassHistory)
 
 // summary

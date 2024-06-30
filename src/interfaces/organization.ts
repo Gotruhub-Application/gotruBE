@@ -150,7 +150,7 @@ export interface ISignInOutRecord extends Document {
   guardians: {type:Schema.Types.ObjectId},
   organization: {type:Schema.Types.ObjectId},
   other: {type:Schema.Types.ObjectId},
-  coordinate:[string],
+  coordinate:{ lat: string; long: string };
   actionType:string,
   approvalBy: Schema.Types.ObjectId,
   authorizationType: string,
