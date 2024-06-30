@@ -144,6 +144,10 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
     required:false,
     default:false
   },
+  fcmToken:{
+    type:String,
+    default:""
+  },
 }, {
   timestamps: true,
 });

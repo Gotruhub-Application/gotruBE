@@ -123,7 +123,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       if (!isValidPassword) {
           return failedResponse(res, 400, "Incorrect password");
       }
-
+      if(value.fcmToken){
+        await Organization.findOneAndUpdate({ email: value.email },{fcmToken:value.fcmToken})
+      }
       const {password, ...isOrganizationWithNoPassword} = isOrganization
       const access_token: string = generateJwtToken({ id: isOrganization._id, role: isOrganization.role, email: isOrganization.email });
       return successResponse(res, 200, "Success", { access_token, details: isOrganizationWithNoPassword });

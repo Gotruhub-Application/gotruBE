@@ -104,6 +104,10 @@ export class CompleteOnboarding {
             const responseData = {
                 access_token: generateJwtToken(jwtData),details,
             };
+            
+            if(value.fcmToken){
+                const user = await User.findByIdAndUpdate(userExist._id, {fcmToken:value.fcmToken})
+              }
             return successResponse(res, 200, "Success", { responseData });
 
         } catch (error:any) {
