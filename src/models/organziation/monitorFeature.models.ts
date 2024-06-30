@@ -2,6 +2,8 @@ import { Schema, Document, Model, model } from 'mongoose';
 import { ISession, ICourse, ITerm,IAttendance,IClassSchedule, ISubUnitCourse } from '../../interfaces/organization/monitor.interface';
 import { ConvertDateTimeToNumber, createNotification, generateQrcode, isUserLocationInRange } from '../../support/helpers';
 import { CompareCoordinate, CreateNotificationParams } from '../../interfaces/general.interface';
+import { sendNotif } from '../../support/firebaseNotification';
+import { Organization } from '../organization.models';
 
 const sessionSchema: Schema<ISession> = new Schema<ISession>({
   name: { type: String, required: true },
@@ -152,7 +154,15 @@ attendanceSchema.pre("save", async function (next) {
             type:`gotrumonitor`,
             message:`New suspicious ${this.attendanceType} at ${this.location.lat}, ${this.location.long }`
           }
-          await createNotification(payload)
+          await createNotification(payload);
+          // send notification 
+          const notifyPayload = {
+            type: `gotrumonitor`,
+          };
+          const orgnz = await Organization.findById(schedule.organization).select("fcmToken");
+          if (orgnz?.fcmToken) {
+            await sendNotif(orgnz.fcmToken, `suspicious_${this.attendanceType}`, `New suspicious ${this.attendanceType} at ${this.location.lat}, ${this.location.long}`, notifyPayload);
+          }; 
         }
 
 
