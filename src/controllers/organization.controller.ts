@@ -682,11 +682,14 @@ export class SubaccountController {
             // Create new Subaccount
     
             value.percentage_charge = 0.0
-            value.metadata ={"custom_fields":[{"display_name":"Cart ID","variable_name": "cart_id","value": "8393"}]}
+            // value.metadata ={"custom_fields":[{"display_name":"Cart ID","variable_name": "cart_id","value": "8393"}]}
             const sub_acc = await createPaystackSubAccount(value)
+            value.subaccount_code = sub_acc.data.subaccount_code;
+            value.settlement_bank = sub_acc.data.settlement_bank
+            value.account_name = sub_acc.data.account_name
             if(!sub_acc.status) return failedResponse(res, 400, "error", sub_acc);
-            const newSubaccount = await SubaccountModel.create(value);
-            return successResponse(res, 201, "Subaccount created successfully.",{newSubaccount,sub_acc});
+            await SubaccountModel.create(value);
+            return successResponse(res, 201, "Subaccount created successfully.");
 
         } catch (error: any) {
             writeErrosToLogs(error);

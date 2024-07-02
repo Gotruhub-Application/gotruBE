@@ -620,12 +620,9 @@ const SubaccountSchema: Schema<ISubaccount> = new Schema<ISubaccount>({
       type: String,
       required: true,
   },
-  // percentage_charge: {
-  //     type: Number,
-  //     required: true,
-  //     min: 0,
-  //     max: 100,
-  // },
+  account_name: {
+    type: String,
+  },
   description: {
       type: String,
       required: true,

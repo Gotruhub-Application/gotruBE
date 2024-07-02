@@ -54,13 +54,7 @@ export function initiatePaystack(metadata: Array<object>, email: string, totalAm
 
 export async function createPaystackSubAccount(payload:object): Promise<any>{
     
-    // const params = JSON.stringify(payload)
-    const params = JSON.stringify({
-        "business_name": "Sunshine Studios",
-        "settlement_bank": "C03", 
-        "account_number": "7025065702", 
-        "percentage_charge": 18.2 
-      })
+    const params = JSON.stringify(payload)
     
     const options = {
         hostname: 'api.paystack.co',
