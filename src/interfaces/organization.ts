@@ -39,6 +39,7 @@ export interface ISubaccount extends Document {
   business_name: string;
   settlement_bank: string;
   account_number: string;
+  account_name: string;
   // percentage_charge: number;
   description: string;
   primary_contact_email: string;
