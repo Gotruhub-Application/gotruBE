@@ -225,7 +225,7 @@ export class ResetPasswordController {
         if (error) {
         return failedResponse(res, 400, `${error.details[0].message}`);
         }
-        const userExist = await Organization.findById(req.params.userId).select("password");
+        const userExist = await Organization.findById(req.params.organizationId).select("password");
         if (!userExist) return failedResponse(res, 404, "User with this email does not exists.");
         const verifyPassword = await bcrypt.compare(value.oldPassword, userExist.password)
         if (!verifyPassword) return failedResponse(res, 400, "Incorrect old password.");
