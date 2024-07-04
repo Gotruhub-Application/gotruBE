@@ -125,11 +125,15 @@ export class Products {
             const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
             const filterByCategory = req.query.category;
             const filterByInstock = req.query.inStock === 'true'; // Convert string to boolean
+            const filterByproductName = req.query.name;
 
             const skip = (page - 1) * ITEMS_PER_PAGE;
     
             // Construct the filter object based on query parameters
             const filter: any = { uploadedBy: req.params.organizationId };
+            if (filterByproductName) {
+                filter.productName = { $regex: new RegExp(req.query.name as string, 'i') };
+            }
             if (filterByCategory) {
                 filter.category = filterByCategory;
             }
