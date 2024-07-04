@@ -90,6 +90,7 @@ export class CompleteOnboarding {
                 children: userExist.children,
                 onboardingCompleted: userExist.onboardingCompleted,
                 defaultEmail: userExist.defaultEmail,
+                appPermissions: userExist.appPermissions,
                 
             }
             const jwtData = {

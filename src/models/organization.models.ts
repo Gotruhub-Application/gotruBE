@@ -535,13 +535,13 @@ const categorySchema:Schema<ICategory> = new Schema<ICategory>({
 categorySchema.pre('find', function () {
   this
   .populate('image')
-  .populate('organization')
+  // .populate('organization')
 });
 
 categorySchema.pre('findOne', function () {
   this
   .populate('image')
-  .populate('organization')
+  // .populate('organization')
 });
 
 // Define the Product schema
@@ -567,13 +567,13 @@ productSchema.pre('findOne', function () {
   this
   .populate('productCoverImage')
   .populate('category')
-  .populate('uploadedBy')
+  // .populate('uploadedBy')
 });
 productSchema.pre('find', function () {
   this
   .populate('productCoverImage')
   .populate('category')
-  .populate('uploadedBy')
+  // .populate('uploadedBy')
 });
 
 
