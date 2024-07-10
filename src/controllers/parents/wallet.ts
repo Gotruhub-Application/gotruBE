@@ -86,7 +86,7 @@ export class ParentManageWallet {
             const { _id: guardianId } = (req as any).user;
             const { child_id } = req.params;
             const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10; // Default limit to 10 transactions per page
+            const limit = parseInt(req.query.page_size as string) || 10; // Default limit to 10 transactions per page
             const skip = (page - 1) * limit;
 
             const child = await User.findOne({
