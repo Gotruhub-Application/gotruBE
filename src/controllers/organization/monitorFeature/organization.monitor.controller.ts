@@ -437,8 +437,14 @@ export class ClassScheduleController {
             const classSchedules = await ClassScheduleModel.find({ organization:req.params.organizationId, subUnit:req.params.subUnitId })
                 .skip(skip)
                 .limit(ITEMS_PER_PAGE);
-
-            return successResponse(res, 200, "Success", classSchedules);
+            const returnPayload = classSchedules.map(schedule => ({
+                _id: schedule._id,
+                day: schedule.day,
+                course: schedule.course?.course?.name,
+                code: schedule.course?.course?.courseCode
+            }));
+            console.log("helllll")
+            return successResponse(res, 200, "Success", returnPayload);
 
         } catch (error: any) {
             writeErrosToLogs(error);
