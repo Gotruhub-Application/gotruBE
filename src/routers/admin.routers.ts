@@ -6,16 +6,16 @@ import { IsAuthenticatedGotruAdmin } from "../support/middleware"
 export const adminRouter = Router()
 
 adminRouter
-.get("/features", IsAuthenticatedGotruAdmin, FeaturesController.getAllFeatures)
+.get("/features",  FeaturesController.getAllFeatures)
 .post("/features", IsAuthenticatedGotruAdmin, FeaturesController.addFeature)
-.get("/features/:id", IsAuthenticatedGotruAdmin, FeaturesController.getSingleFeature)
+.get("/features/:id", FeaturesController.getSingleFeature)
 .delete("/features/:id", IsAuthenticatedGotruAdmin, FeaturesController.DeleteSingleFeature)
 .put("/features/:id", IsAuthenticatedGotruAdmin, FeaturesController.UpdateSingleFeature)
 
 //  Subscription plans
-.get("/subscriptions", IsAuthenticatedGotruAdmin, SubscriptionPlanController.getSubPlans)
+.get("/subscriptions", SubscriptionPlanController.getSubPlans)
 .post("/subscriptions", IsAuthenticatedGotruAdmin, SubscriptionPlanController.addSubPlans)
-.get("/subscriptions/:id", IsAuthenticatedGotruAdmin, SubscriptionPlanController.getSinglePlan)
+.get("/subscriptions/:id", SubscriptionPlanController.getSinglePlan)
 .delete("/subscriptions/:id", IsAuthenticatedGotruAdmin, SubscriptionPlanController.DeleteSinglePlan)
 .put("/subscriptions/:id", IsAuthenticatedGotruAdmin, SubscriptionPlanController.UpdateSinglePlan)
 
