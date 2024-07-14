@@ -60,7 +60,7 @@ export const createSessionSchema = Joi.object({
   
   // Joi Schema for ClassSchedule
   export const createClassScheduleSchema = Joi.object({
-    day:Joi.string().valid("monday","tuesday","wednessday","thursday", "friday", "saturday","sunday").required(),
+    day:Joi.string().valid("monday","tuesday","wednesday","thursday", "friday", "saturday","sunday").required(),
     // subUnit: objectIdValidator.objectId().required(),
     // term: objectIdValidator.objectId().required(),
     course: objectIdValidator.objectId().required(),
