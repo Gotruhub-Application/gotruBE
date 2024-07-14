@@ -72,30 +72,30 @@ export const orgUserValidator = Joi.object({
 }).options({ abortEarly: false });
 
 export const orgUpdateUserValidator = Joi.object({
-  fullName: Joi.string().required().max(30),
-  phone: Joi.string(),
-  guardians: objectIdValidator.objectId(),
+  fullName: Joi.string().allow(""),
+  phone: Joi.string().allow(""),
+  guardians: objectIdValidator.objectId().allow(""),
   children:  Joi.when('role', {
     is: Joi.valid('guardian'), // If role is not 'student'
-    then:Joi.array().unique().items(objectIdValidator.objectId()).min(1).required()
+    then:Joi.array().unique().items(objectIdValidator.objectId())
   }),
   relationImage:  Joi.when('role', {
     is: Joi.valid('guardian'), // If role is not 'student'
-    then:objectIdValidator.objectId().required()
-  }),
+    then:objectIdValidator.objectId().allow("")
+  }).allow(""),
   piviotUnit: objectIdValidator.objectId().when('role', { // Apply validation when role is 'student'
     is: 'student',
-    then: Joi.required(),
-    otherwise: Joi.optional() // Not required if role is not 'student'
-  }),
-  subUnit: objectIdValidator.objectId(),
-  profileImage: objectIdValidator.objectId().required(),
+    then: Joi.allow(""),
+    otherwise: Joi.optional() // Not allow ""if role is not 'student'
+  }).allow(""),
+  subUnit: objectIdValidator.objectId().allow(""),
+  profileImage: objectIdValidator.objectId().allow(""),
   signature: Joi.when('role', { // Apply validation when role is 'guardian'
     is: 'guardian',
-    then: Joi.required(),
-    otherwise: Joi.optional() // Not required if role is not 'guardian'
-  }),
-  role: Joi.string().valid('student', 'guardian', 'staff', 'admin').required()
+    then: Joi.allow(""),
+    otherwise: Joi.optional() // Not allow ""if role is not 'guardian'
+  }).allow(""),
+  role: Joi.string().valid('student', 'guardian', 'staff', 'admin').allow("")
 }).options({ abortEarly: false });
 
 export const purchasePlanValidator = Joi.object({

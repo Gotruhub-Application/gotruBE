@@ -78,7 +78,7 @@ export const createSessionSchema = Joi.object({
   });
   
   export const updateClassScheduleSchema = Joi.object({
-    day:Joi.string().valid("monday","tuesday","wednessday","thursday", "friday", "saturday","sunday").allow(""),
+    day:Joi.string().valid("monday","tuesday","wednesday","thursday", "friday", "saturday","sunday").allow(""),
     // subUnit: objectIdValidator.objectId().allow(''),
     // term: objectIdValidator.objectId().allow(''),
     expired: Joi.boolean().allow(''),

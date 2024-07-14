@@ -85,10 +85,12 @@ classScheduleSchema.pre("save",async function(next){
 classScheduleSchema.pre("find", function(){
   this
   .populate("course")
+  .populate("coordinators")
 });
 classScheduleSchema.pre("findOne", function(){
   this
   .populate("course")
+  .populate("coordinators")
 });
 
 
