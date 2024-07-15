@@ -120,7 +120,7 @@ export const sendUsersTokenValidator = Joi.object({
 
 export const signInOutRecordValidator = Joi.object({
   user:  objectIdValidator.objectId(),
-  authorizedFor: Joi.array().items(objectIdValidator.objectId()).min(1),
+  authorizedFor: Joi.array().items(objectIdValidator.objectId()),
   guardians: objectIdValidator.objectId().required(),
   coordinate: Joi.object({
     lat: Joi.string().required(),
