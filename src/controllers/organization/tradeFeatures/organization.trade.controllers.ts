@@ -207,15 +207,15 @@ export class WithdrawalRequestController {
     // Get all Withdrawal Requests
     static async getAllWithdrawalRequests(req: Request, res: Response) {
         try {
-            const organizationId  = req.params.organizationId;
-            console.log(organizationId, "sv")
+            const organizationId = req.params.organizationId;
+            console.log(organizationId, "sv");
 
             const { page = 1, limit = 10 } = req.query;
 
             const pageNumber = parseInt(page as string, 10) || 1;
             const limitNumber = parseInt(limit as string, 10) || 10;
 
-            const withdrawalRequests = await WithdrawalRequest.find()
+            const withdrawalRequests = await WithdrawalRequest.find({ user: { $ne: null } })
                 .populate({
                     path: 'user',
                     match: { organization: organizationId },
@@ -224,14 +224,14 @@ export class WithdrawalRequestController {
                 .skip((pageNumber - 1) * limitNumber)
                 .limit(limitNumber);
 
-                console.log(withdrawalRequests.length, "sv")
+            // Filter out withdrawal requests where the populated user is null
+            const filteredWithdrawalRequests = withdrawalRequests.filter(wr => wr.user !== null);
 
-
-            const totalWithdrawalRequests = withdrawalRequests.length;
+            const totalWithdrawalRequests = filteredWithdrawalRequests.length;
             const totalPages = Math.ceil(totalWithdrawalRequests / limitNumber);
 
             return successResponse(res, 200, "Success", {
-                withdrawalRequests,
+                withdrawalRequests: filteredWithdrawalRequests,
                 totalPages,
                 currentPage: pageNumber,
                 totalWithdrawalRequests,
