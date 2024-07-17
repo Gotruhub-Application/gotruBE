@@ -218,7 +218,7 @@ export class WithdrawalRequestController {
             const withdrawalRequests = await WithdrawalRequest.find()
                 .populate({
                     path: 'user',
-                    match: { organizationId },
+                    match: { organization: organizationId },
                     select: 'fullName email organization'
                 })
                 .skip((pageNumber - 1) * limitNumber)
@@ -247,7 +247,7 @@ export class WithdrawalRequestController {
             const { id, organizationId} = req.params;
             const withdrawalRequest = await WithdrawalRequest.findById(id).populate({
                 path: 'user',
-                match: { organizationId },
+                match: { organization: organizationId },
                 select: 'fullName email organization'
             });
             
@@ -272,7 +272,7 @@ export class WithdrawalRequestController {
 
             const withdrawalRequest = await WithdrawalRequest.findById(id).populate({
                 path: 'user',
-                match: { organizationId },
+                match: { organization: organizationId },
                 select: 'fullName email organization'
             });
 
