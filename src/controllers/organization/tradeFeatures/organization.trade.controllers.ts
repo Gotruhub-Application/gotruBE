@@ -221,6 +221,10 @@ export class WithdrawalRequestController {
                     match: { organization: organizationId },
                     select: 'fullName email organization'
                 })
+                .populate({
+                    path: 'wallet',
+                    select: 'balance'
+                })
                 .skip((pageNumber - 1) * limitNumber)
                 .limit(limitNumber);
 
@@ -249,6 +253,10 @@ export class WithdrawalRequestController {
                 path: 'user',
                 match: { organization: organizationId },
                 select: 'fullName email organization'
+            })
+            .populate({
+                path: 'wallet',
+                select: 'balance'
             });
             
             if (!withdrawalRequest) {
