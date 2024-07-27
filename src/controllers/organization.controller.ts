@@ -9,6 +9,7 @@ import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErro
 import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
 import { AttendanceModel, SubUnitCourseModel } from "../models/organziation/monitorFeature.models";
+import mongoose from "mongoose";
 
 export class OrganizatioinUnits {
     static async getUnits (req:Request, res:Response, next:NextFunction){
@@ -888,4 +889,87 @@ export class OrgSummary {
           return failedResponse(res, 500, error.message);
       }
   }
+};
+
+export class UserSummary {
+  static async passSummary(req: Request, res: Response) {
+    const { userId, date } = req.query;
+    const organizationId = req.params.organizationId;
+
+
+    try {
+
+      const signinTotal = await SignInOutRecordModel.countDocuments({
+        user: new mongoose.Types.ObjectId(userId as string),
+        organization: new mongoose.Types.ObjectId(organizationId as string),
+        actionType: "sign_in"
+      });
+
+      const signin = await SignInOutRecordModel.aggregate([
+        {
+          $match: {
+            user: new mongoose.Types.ObjectId(userId as string),
+            organization: new mongoose.Types.ObjectId(organizationId as string),
+            actionType: "sign_in"
+            // createdAt: { $gte: startDate, $lte: endDate } // Filter by date range
+          }
+        },
+        {
+          $group: {
+            _id: '$authorizationType', // Group by 'authorizationType'
+            count: { $sum: 1 } // Count the number of records in each group
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            authorizationType: '$_id',
+            count: 1,
+            percentage: {
+              $multiply: [{ $divide: ['$count', signinTotal] }, 100]
+            }
+          }
+        }
+      ]);
+
+
+      const signoutTotal = await SignInOutRecordModel.countDocuments({
+        user: new mongoose.Types.ObjectId(userId as string),
+        organization: new mongoose.Types.ObjectId(organizationId as string),
+        actionType: "sign_out"
+      });
+      const signout = await SignInOutRecordModel.aggregate([
+        {
+          $match: {
+            user: new mongoose.Types.ObjectId(userId as string),
+            organization: new mongoose.Types.ObjectId(organizationId as string),
+            actionType: "sign_out"
+            // createdAt: { $gte: startDate, $lte: endDate } // Filter by date range
+          }
+        },
+        {
+          $group: {
+            _id: '$authorizationType', // Group by 'authorizationType'
+            count: { $sum: 1 } // Count the number of records in each group
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            authorizationType: '$_id',
+            count: 1,
+            percentage: {
+              $multiply: [{ $divide: ['$count', signoutTotal] }, 100]
+            }
+          }
+        }
+      ]);
+
+      return successResponse(res, 200, "Success", {signin:signin, signout:signout});
+    } catch (error: any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+    }
+  }
 }
+
