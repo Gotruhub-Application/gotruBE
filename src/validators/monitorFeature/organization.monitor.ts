@@ -121,3 +121,15 @@ export const updateAttendanceSchema = Joi.object({
     attendanceType: Joi.string().valid('signin', 'signout').allow(''),
     classScheduleId: objectIdValidator.objectId().allow('')
 }).min(1);
+
+export const attendanceGradingValidationSchema = Joi.object({
+  name: Joi.string().valid('early', 'late', 'absent').required(),
+  value: Joi.number().max(100).min(0).required(),
+  time: Joi.number().max(60).min(0).required(),
+});
+
+export const attendanceGradingUpdateValidationSchema = Joi.object({
+  name: Joi.string().valid('early', 'late', 'absent').allow(""),
+  value: Joi.number().max(100).min(0).allow(""),
+  time: Joi.number().max(60).min(0).allow(""),
+});

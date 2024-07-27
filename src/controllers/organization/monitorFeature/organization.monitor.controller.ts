@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, initiatePaystack, successResponse } from "../../../support/http"; 
 import { writeErrosToLogs } from "../../../support/helpers";
-import { createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema } from "../../../validators/monitorFeature/organization.monitor";
-import { AttendanceModel, ClassScheduleModel, CourseModel, SessionModel, SubUnitCourseModel, TermModel } from "../../../models/organziation/monitorFeature.models";
+import { attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema } from "../../../validators/monitorFeature/organization.monitor";
+import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, SessionModel, SubUnitCourseModel, TermModel } from "../../../models/organziation/monitorFeature.models";
 import { logger } from "../../../logger";
 import { AppToken, User } from "../../../models/organization.models";
 import { schedule } from "node-cron";
@@ -529,13 +529,13 @@ export class AttendanceController {
                     return failedResponse(res, 400, "Student has no active monitor end subscription");
                 }
 
-                if (token.expires_at.getTime() < Date.now()) {
-                    token.expired = true;
-                    await token.save();
-                    return failedResponse(res, 400, "Your monitor end subscription has expired token has expired");
-                };
+                // if (token.expires_at.getTime() < Date.now()) {
+                //     token.expired = true;
+                //     await token.save();
+                //     return failedResponse(res, 400, "Your monitor end subscription has expired token has expired");
+                // };
 
-                if(user?.subUnit != schedule?.subUnit) return failedResponse(res, 400, "You cannot take attendance in another sub-unit."); 
+                // if(user?.subUnit != schedule?.subUnit) return failedResponse(res, 400, "You cannot take attendance in another sub-unit."); 
             }else if(role === "staff"){
                 if(!schedule?.coordinators.includes(userId) ) return failedResponse(res, 400, "You are not this course coordinator."); 
             }
@@ -635,4 +635,83 @@ export class AttendanceController {
             return failedResponse(res, 500, error.message);
         }
     }
-}
+};
+
+
+export class AttendanceGradingController {
+    // Create new attendance grading
+    static async createAttendanceGrading(req: Request, res: Response) {
+      try {
+        const { error, value } = attendanceGradingValidationSchema.validate(req.body);
+        if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+
+        // check if grading exists
+        const gradeExist = await AttendanceGrading.findOne({organization:req.params.organizationId, name:value.name});
+        if(gradeExist) return failedResponse(res, 400, `Grade name '${value.name}' already exist. duplicate not allowed.`);
+
+        value.organization = req.params.organizationId
+        const attendanceGrading = new AttendanceGrading(value);
+        await attendanceGrading.save();
+        return successResponse(res, 201, 'Attendance grading created successfully', attendanceGrading);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  
+    // Get all attendance gradings
+    static async getAllAttendanceGradings(req: Request, res: Response) {
+      try {
+        const gradings = await AttendanceGrading.find({organization:req.params.organizationId});
+        return successResponse(res, 200, 'Attendance gradings fetched successfully', gradings);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  
+    // Get a specific attendance grading
+    static async getSingleAttendanceGrading(req: Request, res: Response) {
+      try {
+        const { id } = req.params;
+        const grading = await AttendanceGrading.findById(id);
+        if (!grading) {
+          return failedResponse(res, 404, 'Attendance grading not found');
+        }
+        return successResponse(res, 200, 'Attendance grading fetched successfully', grading);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  
+    // Update attendance grading
+    static async updateAttendanceGrading(req: Request, res: Response) {
+      try {
+        const { id } = req.params;
+        const { error, value } = attendanceGradingUpdateValidationSchema.validate(req.body);
+        if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+  
+        const grading = await AttendanceGrading.findByIdAndUpdate(id, value, { new: true });
+  
+        if (!grading) {
+          return failedResponse(res, 404, 'Attendance grading not found');
+        }
+  
+        return successResponse(res, 200, 'Attendance grading updated successfully', grading);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  
+    // Delete attendance grading
+    static async deleteAttendanceGrading(req: Request, res: Response) {
+      try {
+        const { id } = req.params;
+        const grading = await AttendanceGrading.findByIdAndDelete(id);
+        if (!grading) {
+          return failedResponse(res, 404, 'Attendance grading not found');
+        }
+        return successResponse(res, 200, 'Attendance grading deleted successfully', grading);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  }

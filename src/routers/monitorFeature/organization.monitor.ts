@@ -1,4 +1,4 @@
-import { AttendanceController, ClassScheduleController, CourseController, Session, SubUnitCourseController, TermController } from "../../controllers/organization/monitorFeature/organization.monitor.controller";
+import { AttendanceController, AttendanceGradingController, ClassScheduleController, CourseController, Session, SubUnitCourseController, TermController } from "../../controllers/organization/monitorFeature/organization.monitor.controller";
 import { IsAuthenticatedOrganization, IsAuthenticatedUser } from "../../support/middleware";
 import { organizationRouter } from "../organization.router";
 
@@ -40,3 +40,10 @@ organizationRouter
 .get("/attendance/schedule/user/:userId", IsAuthenticatedOrganization, AttendanceController.getSingleUserAttendances)
 .get("/attendance/:id", IsAuthenticatedOrganization, AttendanceController.getSingleAttendance)
 .delete("/attendance/:id", IsAuthenticatedOrganization, AttendanceController.deleteSingleAttendance)
+
+
+.post('/attendance-grading', IsAuthenticatedOrganization, AttendanceGradingController.createAttendanceGrading)
+.get('/attendance-gradings', IsAuthenticatedOrganization, AttendanceGradingController.getAllAttendanceGradings)
+.get('/attendance-grading/:id', IsAuthenticatedOrganization, AttendanceGradingController.getSingleAttendanceGrading)
+.put('/attendance-grading/:id', IsAuthenticatedOrganization, AttendanceGradingController.updateAttendanceGrading)
+.delete('/attendance-grading/:id', IsAuthenticatedOrganization, AttendanceGradingController.deleteAttendanceGrading)

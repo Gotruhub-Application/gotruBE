@@ -1023,7 +1023,67 @@ export class UserSummary {
       console.error(error);
       return res.status(500).json({ success: false, message: "Internal server error" });
     }
+  };
+
+  static async getUserAttendanceSummary(req: Request, res: Response) {
+    try {
+      const { memberId } = req.params; // Assuming memberId is passed in params
+      
+      // Fetch all attendance records for the user
+      const attendances = await AttendanceModel.find({ user: memberId })
+        .populate({
+          path: 'classScheduleId',
+          select: 'course',
+          populate: {
+            path: 'course',
+            model: 'Course'
+          }
+        })
+        .populate('classScheduleId.course')
+        .exec();
+        
+      // Group by course and compute attendance metrics
+      const attendanceSummary: any = {};
+  
+      attendances.forEach(attendance => {
+        const courseId = attendance.classScheduleId.course._id.toString();
+        if (!attendanceSummary[courseId]) {
+          attendanceSummary[courseId] = {
+            courseName: attendance.classScheduleId.course.course.courseCode,
+
+            attendedSessions: 0,
+            rate: 0
+          };
+        }
+        
+        if (attendance.attendanceType === 'signin') {
+          attendanceSummary[courseId].rate += attendance.remark === "early" ? 100 : attendance.remark === "late" ? 50 : 0
+          attendanceSummary[courseId].attendedSessions += 1;
+        }
+      });
+  
+      // Transform the data into a response format
+      const response = Object.keys(attendanceSummary).map(courseId => {
+        const data = attendanceSummary[courseId];
+        console.log(data, "asnfdsbdfsdfvb")
+        return {
+          courseId,
+          courseName: data.courseName,
+          rate: data.rate,
+          attendedSessions: data.attendedSessions,
+          attendanceRate: data.attendedSessions > 0 ? (data.rate / data.attendedSessions): 0
+        };
+      })
+      // .filter(item => item.attendanceRate > 100); // Filter if needed
+  
+      return successResponse(res, 200, "Success", response);
+  
+    } catch (error: any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+    }
   }
+  
   
 }
 
