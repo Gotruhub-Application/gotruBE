@@ -1027,10 +1027,10 @@ export class UserSummary {
 
   static async getUserAttendanceSummary(req: Request, res: Response) {
     try {
-      const { memberId } = req.params; // Assuming memberId is passed in params
+      const { memberId, termId} = req.params; // Assuming memberId is passed in params
       
       // Fetch all attendance records for the user
-      const attendances = await AttendanceModel.find({ user: memberId })
+      const attendances = await AttendanceModel.find({ user: memberId, term:termId })
         .populate({
           path: 'classScheduleId',
           select: 'course',
@@ -1041,7 +1041,7 @@ export class UserSummary {
         })
         .populate('classScheduleId.course')
         .exec();
-        
+
       // Group by course and compute attendance metrics
       const attendanceSummary: any = {};
   
