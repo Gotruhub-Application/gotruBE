@@ -68,3 +68,5 @@ organizationRouter
 .get("/mobile-section/scan-qrcode/:id", IsAuthenticatedStaff, ScanChildQrCode.getDetails)
 .post("/mobile-section/sign-in-out",IsAuthenticatedUser, SignInOutRecordHistory.createHistory)
 
+.get('/mobile-section/attendance-summary/:memberId/:termId', IsAuthenticatedUser, UserSummary.getUserAttendanceSummary)
+
