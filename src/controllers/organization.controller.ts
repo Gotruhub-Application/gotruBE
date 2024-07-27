@@ -1,5 +1,5 @@
 import { Media } from "../models/media.models";
-import { AppToken, Organization, Plan, Product, SignInOutRecordModel, SubUnit, SubaccountModel, Unit, User } from "../models/organization.models";
+import { AppToken, Organization, Plan, Product, SignInOutRecordModel, SubUnit, SubaccountModel, Unit, User, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../models/organization.models";
 import { Feature, Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
@@ -970,6 +970,60 @@ export class UserSummary {
       writeErrosToLogs(error);
       return failedResponse(res, 500, error.message);
     }
+  };
+
+  static async walletInfo(req: Request, res: Response) {
+    const { memberId } = req.params;
+    console.log(memberId, "sdfdbvbd")
+  
+    try {
+      // Find the wallet associated with the user
+      const wallet = await WalletModel.findOne({ user: memberId });
+
+      if (!wallet) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+  
+      const walletId = wallet._id;
+  
+      // Compute total transactions (both credits and debits)
+      const totalTransactions = await WalletTransactionModel.aggregate([
+        { $match: { wallet: walletId } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]);
+  
+      // Compute total debits
+      const totalDebits = await WalletTransactionModel.aggregate([
+        { $match: { wallet: walletId, type: "debit" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]);
+  
+      // Compute total credits
+      const totalCredits = await WalletTransactionModel.aggregate([
+        { $match: { wallet: walletId, type: "credit" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]);
+  
+      // Compute total completed withdrawals
+      const totalWithdrawals = await WithdrawalRequest.aggregate([
+        { $match: { wallet: walletId, status: "completed" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]);
+  
+      const response = {
+        balance: wallet.balance,
+        totalTransactions: totalTransactions[0]?.total || 0,
+        totalDebits: totalDebits[0]?.total || 0,
+        totalCredits: totalCredits[0]?.total || 0,
+        totalWithdrawals: totalWithdrawals[0]?.total || 0
+      };
+  
+      return res.status(200).json({ success: true, data: response });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
   }
+  
 }
 
