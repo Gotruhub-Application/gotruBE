@@ -1,4 +1,4 @@
-import { Schema, Document } from 'mongoose';
+import { Schema,Types, Document } from 'mongoose';
 import { IOrganization, ISubUnit, Iuser } from '../organization';
 
 // Define the Session interface extending Mongoose Document
@@ -58,4 +58,13 @@ export interface IAttendance extends Document {
   user: Iuser['_id'];
   classScheduleId: IClassSchedule['_id'];
   scanned_time:number;
+}
+
+export interface IAttendanceGrading extends Document {
+  organization: Types.ObjectId;
+  name: 'early' | 'late' | 'absent';
+  value: number;
+  time: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

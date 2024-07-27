@@ -1,6 +1,6 @@
 import { Schema, Document, Model, model } from 'mongoose';
-import { ISession, ICourse, ITerm,IAttendance,IClassSchedule, ISubUnitCourse } from '../../interfaces/organization/monitor.interface';
-import { ConvertDateTimeToNumber, createNotification, generateQrcode, isUserLocationInRange } from '../../support/helpers';
+import { ISession, ICourse, ITerm,IAttendance,IClassSchedule, ISubUnitCourse, IAttendanceGrading } from '../../interfaces/organization/monitor.interface';
+import { ConvertDateTimeToNumber, createNotification, generateQrcode, isUserLocationInRange, writeErrosToLogs } from '../../support/helpers';
 import { CompareCoordinate, CreateNotificationParams } from '../../interfaces/general.interface';
 import { sendNotif } from '../../support/firebaseNotification';
 import { Organization } from '../organization.models';
@@ -125,22 +125,43 @@ attendanceSchema.pre("save", async function (next) {
   if (this.isNew) {
     try {
       this.scanned_time = ConvertDateTimeToNumber();
-      const schedule = await ClassScheduleModel.findById(this.classScheduleId);
+      // const schedule = await ClassScheduleModel.findById(this.classScheduleId);
 
-      if (schedule !== null) {
-        if (this.attendanceType === "signin") {
-          if (schedule.startTime < this.scanned_time) {
-            this.remark = "Late";
-          } else {
-            this.remark = "Early";
-          }
-        } else {
-          if (schedule.endTime < this.scanned_time) {
-            this.remark = "Early";
-          } else {
-            this.remark = "Late";
+      // if (schedule !== null) {
+      //   if (this.attendanceType === "signin") {
+      //     if (schedule.startTime < this.scanned_time) {
+      //       this.remark = "Late";
+      //     } else {
+      //       this.remark = "Early";
+      //     }
+      //   } else {
+      //     if (schedule.endTime < this.scanned_time) {
+      //       this.remark = "Early";
+      //     } else {
+      //       this.remark = "Late";
+      //     }
+      //   }
+      const schedule = await ClassScheduleModel.findById(this.classScheduleId).populate('organization');
+
+      if (schedule) {
+        const organizationId = schedule.organization._id;
+        const grading = await AttendanceGrading.find({ organization: organizationId });
+
+        // Determine the remark based on grading criteria
+        let remark = 'absent';
+        const timeDiff = this.scanned_time - schedule.startTime;
+
+        for (const grade of grading) {
+          if (grade.name === 'early' && timeDiff <= grade.time) {
+            remark = 'early';
+            break;
+          } else if (grade.name === 'late' && timeDiff > grade.time) {
+            remark = 'late';
+            break;
           }
         }
+        this.remark = remark;
+
         // check if suspicious activity
         const coordinates: CompareCoordinate = {
           startLocation: { lat: schedule.location.lat, long: schedule.location.long }, // New York
@@ -163,7 +184,12 @@ attendanceSchema.pre("save", async function (next) {
           };
           const orgnz = await Organization.findById(schedule.organization).select("fcmToken");
           if (orgnz?.fcmToken) {
-            await sendNotif(orgnz.fcmToken, `suspicious_${this.attendanceType}`, `New suspicious ${this.attendanceType} at ${this.location.lat}, ${this.location.long}`, notifyPayload);
+            try {
+              await sendNotif(orgnz.fcmToken, `suspicious_${this.attendanceType}`, `New suspicious ${this.attendanceType} at ${this.location.lat}, ${this.location.long}`, notifyPayload);
+            }catch(error:any){
+              writeErrosToLogs(error)
+            }
+            
           }; 
         }
 
@@ -177,6 +203,21 @@ attendanceSchema.pre("save", async function (next) {
 });
 
 
+const AttendanceGradingSchema: Schema<IAttendanceGrading> = new Schema<IAttendanceGrading>(
+  {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+    name: { type: String, enum: ['early', 'late', 'absent'], required: true },
+    time:{ type: Number, required: true, max: 60 },
+    value: { type: Number, required: true, max: 100 },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+
+
+
 // Models
 export const SessionModel: Model<ISession> = model<ISession>('Session', sessionSchema);
 export const CourseModel: Model<ICourse> = model<ICourse>('Course', courseSchema);
@@ -184,3 +225,5 @@ export const TermModel: Model<ITerm> = model<ITerm>('Term', termSchema);
 export const SubUnitCourseModel: Model<ISubUnitCourse> = model<ISubUnitCourse>('SubUnitCourse', subUnitCourseSchema);
 export const ClassScheduleModel: Model<IClassSchedule> = model<IClassSchedule>('ClassSchedule', classScheduleSchema);
 export const AttendanceModel: Model<IAttendance> = model<IAttendance>('Attendance', attendanceSchema);
+export const AttendanceGrading:Model<IAttendanceGrading> = model<IAttendanceGrading>('AttendanceGrading', AttendanceGradingSchema);
+

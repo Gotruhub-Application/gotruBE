@@ -48,6 +48,7 @@ organizationRouter
 // user summary
 .get('/pass-summary', IsAuthenticatedOrganization, UserSummary.passSummary)
 .get('/wallet-summary/:memberId', IsAuthenticatedOrganization, UserSummary.walletInfo)
+.get('/attendance-summary/:memberId', IsAuthenticatedOrganization, UserSummary.getUserAttendanceSummary)
 
 
 // users copy
