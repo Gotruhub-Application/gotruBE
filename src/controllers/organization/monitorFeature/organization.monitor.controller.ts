@@ -529,13 +529,13 @@ export class AttendanceController {
                     return failedResponse(res, 400, "Student has no active monitor end subscription");
                 }
 
-                // if (token.expires_at.getTime() < Date.now()) {
-                //     token.expired = true;
-                //     await token.save();
-                //     return failedResponse(res, 400, "Your monitor end subscription has expired token has expired");
-                // };
+                if (token.expires_at.getTime() < Date.now()) {
+                    token.expired = true;
+                    await token.save();
+                    return failedResponse(res, 400, "Your monitor end subscription has expired token has expired");
+                };
 
-                // if(user?.subUnit != schedule?.subUnit) return failedResponse(res, 400, "You cannot take attendance in another sub-unit."); 
+                if(user?.subUnit != schedule?.subUnit) return failedResponse(res, 400, "You cannot take attendance in another sub-unit."); 
             }else if(role === "staff"){
                 if(!schedule?.coordinators.includes(userId) ) return failedResponse(res, 400, "You are not this course coordinator."); 
             }
