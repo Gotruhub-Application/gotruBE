@@ -120,7 +120,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
       const isValidPassword = await bcrypt.compare(value.password, isOrganization.password);
       if (!isValidPassword) {
-          return failedResponse(res, 400, "Incorrect password");
+          return failedResponse(res, 400, "Incorrect credentials.");
       }
       if(value.fcmToken){
         await Organization.findOneAndUpdate({ email: value.email },{fcmToken:value.fcmToken})
