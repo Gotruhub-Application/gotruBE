@@ -55,6 +55,7 @@ export interface IAttendance extends Document {
   location: { lat: string; long: string };
   attendanceType: 'signin' | 'signout';
   remark: string;
+  isValid: boolean;
   user: Iuser['_id'];
   classScheduleId: IClassSchedule['_id'];
   scanned_time:number;

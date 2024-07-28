@@ -103,6 +103,7 @@ const attendanceSchema: Schema<IAttendance> = new Schema<IAttendance>({
   },
   attendanceType: { type: String, enum: ['signin', 'signout'], required: true },
   remark: { type: String },
+  isValid:{ type: Boolean, default:true },
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   classScheduleId: { type: Schema.Types.ObjectId, ref: 'ClassSchedule', required: true },
   scanned_time:{type:Number}
@@ -170,6 +171,7 @@ attendanceSchema.pre("save", async function (next) {
         };
         const resp = isUserLocationInRange(coordinates)
         if(!resp){
+          this.isValid = false
           // send suspicous activity notification
           const payload:CreateNotificationParams ={
             owner:this.user,
