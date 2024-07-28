@@ -120,7 +120,7 @@ export class Products {
         }
     };
     static async getAllProducts(req: Request, res: Response) {
-        const ITEMS_PER_PAGE = 10;
+        const ITEMS_PER_PAGE = 50;
         try {
             const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
             const filterByCategory = req.query.category;
