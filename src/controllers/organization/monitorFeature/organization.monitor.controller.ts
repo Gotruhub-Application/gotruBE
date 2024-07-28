@@ -559,14 +559,6 @@ export class AttendanceController {
                 };
 
                 if(user?.subUnit != schedule?.subUnit) return failedResponse(res, 400, "You cannot take attendance in another sub-unit."); 
-            }else if (role === "staff") {
-                // Ensure the user ID is in the coordinators array
-                const isCoordinator = schedule?.coordinators.some(
-                    coordinatorId => coordinatorId.toString() === userId.toString()
-                );
-                if (!isCoordinator) {
-                    return failedResponse(res, 400, "You are not this course's coordinator.");
-                }
             }
             // else if(role === "staff"){
             //     if(!schedule?.coordinators.includes(userId) ) return failedResponse(res, 400, "You are not this course's coordinator."); 
