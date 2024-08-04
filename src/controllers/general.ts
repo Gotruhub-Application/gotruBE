@@ -29,6 +29,7 @@ export class NotificationController {
                 .limit(ITEMS_PER_PAGE);
         
             const totalNotifications = await Notification.countDocuments(query);
+            const unreadCount = await Notification.countDocuments({read:false});
         
             const totalPages = Math.ceil(totalNotifications / ITEMS_PER_PAGE);
         
@@ -37,6 +38,7 @@ export class NotificationController {
                 currentPage: page,
                 totalPages,
                 totalNotifications,
+                unreadCount
             });
         } catch (error: any) {
             writeErrosToLogs(error);
