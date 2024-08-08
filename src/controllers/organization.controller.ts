@@ -340,14 +340,14 @@ export class OrgUsers {
 
   static async updateSingleUser (req:Request, res:Response, next:NextFunction){
     try {
-      const { error, value } = orgUserValidator.validate(req.body);
+      const { error, value } = orgUpdateUserValidator.validate(req.body);
       if (error) {
           return failedResponse (res, 400, `${error.details[0].message}`)
       }
       if (value.role == "student"){
 
             // Find the documents for the provided feature IDs
-            const parent = await User.findById(value.guardians);
+            const parent = await User.findById(value.guardians).select("-password");
             
             if (!parent) return failedResponse(res,404, "guardians not found.")
           // validate unit
