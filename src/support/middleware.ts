@@ -7,6 +7,9 @@ import { failedResponse, successResponse } from "./http";
 import crypto from "crypto"
 import { verifyJwtToken } from "./generateTokens";
 import { Organization, User } from "../models/organization.models";
+import path from "path";
+import {  CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand } from "@aws-sdk/client-s3";
+import { gzip } from 'zlib';
 
 dotenv.config()
  
@@ -23,7 +26,7 @@ if (PROJ_ENV != "DEV"){
         },
         filename: function (req, file, cb) {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-          cb(null, file.fieldname + '-' + uniqueSuffix + '.png')
+          cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
         }
       })
 }
@@ -41,83 +44,90 @@ const s3Config: S3ClientConfig = {
 const s3 = new S3Client({ ...s3Config });
 
 
-// export async function handlefileUpload(req: Request, res: Response, next: NextFunction): Promise<any> {
-//   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-//   const fieldname: string = "file";
-//   const environ: any = PROJ_ENV;
-
-//   if (!files[fieldname] || !files[fieldname][0]) {
-//       // Check if the expected fieldname is missing or empty
-//       return res.status(400).json({ error: "File field is missing or empty" });
-//   }
-
-//   try {
-//       let key = `${fieldname}.png`;
-//       let filePath;
-
-//       if (environ === "DEV") {
-//           const fieldName = files[fieldname][0].filename;
-//           filePath = `${req.protocol}://${req.get('host')}/${fieldName}`;
-//       } else {
-//           const fieldName = files[fieldname][0].buffer;
-//           logger.info(files[fieldname][0].filename);
-//           const params = {
-//               Bucket: AWS_BUCKET,
-//               Key: key,
-//               Body: fieldName, // File content
-//           };
-//           // Upload file to S3 bucket
-//           const command = new PutObjectCommand(params);
-//           const data = await s3.send(command);
-//           filePath = `https://${AWS_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${key}`;
-//       }
-
-//       req.body.file_url = filePath;
-//       next();
-//   } catch (error:any) {
-//       logger.error(error.message);
-//       return res.status(500).json({ error: "Internal server error" });
-//   }
-// }
+const PART_SIZE = 5 * 1024 * 1024; // 5MB part size
+const MAX_SIZE = 10 * 1024 * 1024; // 5MB part size
 
 export async function handlefileUpload(req: Request, res: Response, next: NextFunction): Promise<any> {
+    if (!req.file) {
+        return res.status(400).json({ error: "File field is missing or empty" });
+    }
 
+    const fieldname: string = req.file.filename;
+    const environ: any = PROJ_ENV;
 
-  if (!req.file) {
-      // Check if the expected fieldname is missing or empty
-      return res.status(400).json({ error: "File field is missing or empty" });
-  }
-  const fieldname:string = req.file.filename
-  const environ: any = PROJ_ENV;
-  try {
-      let key = `${crypto.randomUUID()}.png`;
-      let filePath;
-      if (environ === "DEV") {
-          filePath = `${req.protocol}://${req.get('host')}/${fieldname}`;
-          req.body.file_key = fieldname;
-      } else {
-          const fieldName = req.file.buffer;
+    try {
+        let key = `gotruhub/${crypto.randomUUID()}.png`;
+        let filePath;
 
-          const params = {
-              Bucket: AWS_BUCKET,
-              Key: `gotruhub/${key}`,
-              Body: fieldName, // File content
-          };
-          // Upload file to S3 bucket
-          const command = new PutObjectCommand(params);
-          const data = await s3.send(command);
-          logger.info(data)
-          filePath = `https://${AWS_BUCKET}.s3.${AWS_REGION}.amazonaws.com/gotruhub/${key}`;
-          req.body.file_key = key;
-      }
+        if (environ === "DEV") {
+            filePath = `${req.protocol}://${req.get('host')}/${fieldname}`;
+            req.body.file_key = fieldname;
+        } else {
+            const fileBuffer = req.file.buffer;
+            const fileSize = fileBuffer.length;
 
-      req.body.file_url = filePath;
-      
-      next();
-  } catch (error:any) {
-      logger.error(error.message);
-      return res.status(500).json({ error: "Internal server error" });
-  }
+            if (fileSize > PART_SIZE) {
+                if(fileSize > MAX_SIZE)  return failedResponse(res, 400, `File too large max is size is 10mb`);
+                // Use multipart upload for large files
+                const multipartUpload = await s3.send(new CreateMultipartUploadCommand({
+                    Bucket: AWS_BUCKET,
+                    Key: key,
+                }));
+
+                const uploadId = multipartUpload.UploadId;
+                const uploadPromises = [];
+                let partNumber = 1;
+
+                for (let start = 0; start < fileSize; start += PART_SIZE) {
+                    const end = Math.min(start + PART_SIZE, fileSize);
+                    const partBuffer = fileBuffer.slice(start, end);
+
+                    const uploadPartCommand = new UploadPartCommand({
+                        Bucket: AWS_BUCKET,
+                        Key: key,
+                        UploadId: uploadId,
+                        PartNumber: partNumber,
+                        Body: partBuffer,
+                    });
+
+                    uploadPromises.push(s3.send(uploadPartCommand));
+                    partNumber++;
+                }
+
+                const uploadResults = await Promise.all(uploadPromises);
+
+                await s3.send(new CompleteMultipartUploadCommand({
+                    Bucket: AWS_BUCKET,
+                    Key: key,
+                    UploadId: uploadId,
+                    MultipartUpload: {
+                        Parts: uploadResults.map((part, index) => ({
+                            ETag: part.ETag,
+                            PartNumber: index + 1,
+                        })),
+                    },
+                }));
+            } else {
+                // Use single upload for smaller files
+                const params = {
+                    Bucket: AWS_BUCKET,
+                    Key: key,
+                    Body: fileBuffer,
+                    ContentEncoding: 'gzip',
+                };
+                await s3.send(new PutObjectCommand(params));
+            }
+
+            filePath = `https://${AWS_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${key}`;
+            req.body.file_key = key;
+        }
+
+        req.body.file_url = filePath;
+        next();
+    } catch (error: any) {
+        logger.error(error.message);
+        return res.status(500).json({ error: "Internal server error" });
+    }
 }
 
 export const IsAuthenticatedOrganization =async (req:Request, res:Response, next:NextFunction) =>{
