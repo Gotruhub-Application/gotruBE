@@ -43,6 +43,7 @@ organizationRouter
 .get("/my-orgnz-summary", IsAuthenticatedOrganization,OrgSummary.getOrgSummary)
 .get("/my-orgnz-summary/unit/:unitId",IsAuthenticatedOrganization, OrgSummary.getUnitSummary)
 .get("/my-orgnz-summary/unit/:unitId/subunit-summary",IsAuthenticatedOrganization, OrgSummary.getSubUnitSummary)
+.get("/my-orgnz-summary/subunit-summary/:subUnitId",IsAuthenticatedOrganization, OrgSummary.getSingleSubUnitSummary)
 .get("/my-orgnz-summary/unit/:unitId/attendance-summary",IsAuthenticatedOrganization, OrgSummary.getAttendanceSummary)
 
 // user summary

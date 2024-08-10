@@ -796,7 +796,7 @@ export class OrgSummary {
       const totalSubUnits = await SubUnit.countDocuments({organization:organizationId, unit:unitId})
       const subUnits = await SubUnit.find({ unit: unitId }).select('_id');
       const subUnitIds = subUnits.map(subUnit => subUnit._id);
-      const totalAssignments = await SubUnitCourseModel.countDocuments({ subUnit: { $in: subUnitIds } });
+      const totalAssignments = await SubUnitCourseModel.countDocuments({ subUnit: { $in: subUnitIds }, paid:true });
 
       return successResponse(res, 200, "Success", {totalStudents, totalSubUnits, totalAssignments})
 
@@ -818,7 +818,7 @@ export class OrgSummary {
         for (const subUnit of subUnits) {
             const subUnitId = subUnit._id;
             const totalStudents = await User.countDocuments({ organization: organizationId, role: "student", subUnit: subUnitId });
-            const totalAssignments = await SubUnitCourseModel.countDocuments({ subUnit: subUnitId });
+            const totalAssignments = await SubUnitCourseModel.countDocuments({ subUnit: subUnitId, paid:true });
 
             const data = {
                 name: subUnit.name,
@@ -831,6 +831,30 @@ export class OrgSummary {
         }
 
       return successResponse(res, 200, "Success", response);
+
+    } catch (error:any) {
+      writeErrosToLogs(error)
+      return failedResponse(res,500, error.message)
+      
+    }
+
+  };
+  static async getSingleSubUnitSummary (req:Request, res:Response){
+    try {
+      const { organizationId, subUnitId } = req.params;
+
+        const subUnit = await SubUnit.findById(subUnitId).select('_id name');
+        const totalStudents = await User.countDocuments({ organization: organizationId, role: "student", subUnit: subUnitId });
+        const totalAssignments = await SubUnitCourseModel.countDocuments({ subUnit: subUnitId, paid:true });
+
+        const data = {
+            name: subUnit?.name,
+            id: subUnitId,
+            totalStudents,
+            totalAssignments
+        };
+
+      return successResponse(res, 200, "Success", data);
 
     } catch (error:any) {
       writeErrosToLogs(error)
