@@ -64,8 +64,8 @@ const classScheduleSchema: Schema<IClassSchedule> = new Schema<IClassSchedule>({
   startTime: { type: Number, required: true },
   endTime: { type: Number, required: true },
   location: {
-    lat: { type: String, required: true },
-    long: { type: String, required: true }
+    lat: { type: String, required: false },
+    long: { type: String, required: false }
   },
   endlocation: {
     lat: { type: String, default: "" },
@@ -77,7 +77,9 @@ const classScheduleSchema: Schema<IClassSchedule> = new Schema<IClassSchedule>({
 
 classScheduleSchema.pre("save",async function(next){
   if(this.isNew){
-    this.qrcode = await generateQrcode(this._id.toString())
+    this.qrcode = await generateQrcode(this._id.toString());
+    this.location = this.subUnit.location;
+    this.endlocation = this.subUnit.endLocation;
     // await this.save()
   };
   next()

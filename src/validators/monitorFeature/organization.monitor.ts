@@ -66,14 +66,14 @@ export const createSessionSchema = Joi.object({
     course: objectIdValidator.objectId().required(),
     startTime: Joi.number().required(),  // Assuming time format 'HH:mm'
     endTime: Joi.number().required(),
-    location: Joi.object({
-      lat: Joi.string().required(),
-      long: Joi.string().required()
-    }).required(),
-    endlocation: Joi.object({
-      lat: Joi.string().required(),
-      long: Joi.string().required()
-    }).required(),
+    // location: Joi.object({
+    //   lat: Joi.string().required(),
+    //   long: Joi.string().required()
+    // }).required(),
+    // endlocation: Joi.object({
+    //   lat: Joi.string().required(),
+    //   long: Joi.string().required()
+    // }).required(),
     coordinators: Joi.array().unique().items(objectIdValidator.objectId()).required()
   });
   
