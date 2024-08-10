@@ -31,11 +31,18 @@ export interface ISubUnitCourse extends Document {
   expired: boolean;
   paid: boolean;
 }
+export interface Ilocation extends Document {
+  name:string
+  organization: Types.ObjectId;
+  location: { lat: string; long: string };
+  endlocation: { lat: string; long: string };
+}
 
 // Create a timetable for different courses for a subunit
 export interface IClassSchedule extends Document {
   day:string;
   subUnit: ISubUnit['_id'];
+  locationId: Ilocation["_id"];
   term: ITerm['_id'];
   expired: boolean;
   course: ISubUnitCourse['_id'];

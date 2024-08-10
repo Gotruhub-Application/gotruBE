@@ -1,5 +1,5 @@
 import { Schema, Document, Model, model } from 'mongoose';
-import { ISession, ICourse, ITerm,IAttendance,IClassSchedule, ISubUnitCourse, IAttendanceGrading } from '../../interfaces/organization/monitor.interface';
+import { ISession, ICourse, ITerm,IAttendance,IClassSchedule, ISubUnitCourse, IAttendanceGrading, Ilocation } from '../../interfaces/organization/monitor.interface';
 import { ConvertDateTimeToNumber, createNotification, generateQrcode, isUserLocationInRange, writeErrosToLogs } from '../../support/helpers';
 import { CompareCoordinate, CreateNotificationParams } from '../../interfaces/general.interface';
 import { sendNotif } from '../../support/firebaseNotification';
@@ -54,11 +54,25 @@ subUnitCourseSchema.pre("findOne", function(){
   .populate("course");
 });
 
+const locationSchema:Schema<Ilocation> = new Schema<Ilocation>({
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+  name: { type: String, required:true},
+  location: {
+    lat: { type: String, required: true },
+    long: { type: String, required: true }
+  },
+  endlocation: {
+    lat: { type: String, required: true},
+    long: { type: String, required: true }
+  },
+})
+
 const classScheduleSchema: Schema<IClassSchedule> = new Schema<IClassSchedule>({
   day:{ type: String, required: true },
   subUnit: { type: Schema.Types.ObjectId, ref: 'SubUnit', required: true },
   term: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
   organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+  locationId: { type: Schema.Types.ObjectId, ref: 'Location', required: true },
   expired: { type: Boolean },
   course: { type: Schema.Types.ObjectId, ref: 'SubUnitCourse', required: true },
   startTime: { type: Number, required: true },
@@ -78,8 +92,12 @@ const classScheduleSchema: Schema<IClassSchedule> = new Schema<IClassSchedule>({
 classScheduleSchema.pre("save",async function(next){
   if(this.isNew){
     this.qrcode = await generateQrcode(this._id.toString());
-    this.location = this.subUnit.location;
-    this.endlocation = this.subUnit.endLocation;
+    const locationID =await LocationModel.findById(this.locationId);
+    if (locationID) {
+      this.location = locationID.location;
+      this.endlocation = locationID.endlocation;
+    }
+    console.log(this.location, this.endlocation, "sdfvdsvbdv", this.locationId)
     // await this.save()
   };
   next()
@@ -230,4 +248,4 @@ export const SubUnitCourseModel: Model<ISubUnitCourse> = model<ISubUnitCourse>('
 export const ClassScheduleModel: Model<IClassSchedule> = model<IClassSchedule>('ClassSchedule', classScheduleSchema);
 export const AttendanceModel: Model<IAttendance> = model<IAttendance>('Attendance', attendanceSchema);
 export const AttendanceGrading:Model<IAttendanceGrading> = model<IAttendanceGrading>('AttendanceGrading', AttendanceGradingSchema);
-
+export const LocationModel: Model<Ilocation>= model<Ilocation>("Location", locationSchema);

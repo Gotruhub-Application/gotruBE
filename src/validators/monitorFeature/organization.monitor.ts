@@ -64,6 +64,7 @@ export const createSessionSchema = Joi.object({
     // subUnit: objectIdValidator.objectId().required(),
     // term: objectIdValidator.objectId().required(),
     course: objectIdValidator.objectId().required(),
+    locationId: objectIdValidator.objectId().required(),
     startTime: Joi.number().required(),  // Assuming time format 'HH:mm'
     endTime: Joi.number().required(),
     // location: Joi.object({
@@ -76,12 +77,37 @@ export const createSessionSchema = Joi.object({
     // }).required(),
     coordinators: Joi.array().unique().items(objectIdValidator.objectId()).required()
   });
+
+  export const createLocationSchema = Joi.object({
+    name: Joi.string().required(),
+    location: Joi.object({
+      lat: Joi.string().required(),
+      long: Joi.string().required()
+    }).required(),
+    endlocation: Joi.object({
+      lat: Joi.string().required(),
+      long: Joi.string().required()
+    }).required(),
+  })
+
+  export const UpdateLocationSchema = Joi.object({
+    name: Joi.string().allow(""),
+    location: Joi.object({
+      lat: Joi.string().allow(""),
+      long: Joi.string().allow("")
+    }).allow(""),
+    endlocation: Joi.object({
+      lat: Joi.string().allow(""),
+      long: Joi.string().allow("")
+    }).allow(""),
+  })
   
   export const updateClassScheduleSchema = Joi.object({
     day:Joi.string().valid("monday","tuesday","wednesday","thursday", "friday", "saturday","sunday").allow(""),
     // subUnit: objectIdValidator.objectId().allow(''),
     // term: objectIdValidator.objectId().allow(''),
     expired: Joi.boolean().allow(''),
+    locationId: objectIdValidator.objectId().allow(""),
     course: objectIdValidator.objectId().allow(''),
     startTime: Joi.number().allow(''),
     endTime: Joi.number().allow(''),

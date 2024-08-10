@@ -10,15 +10,15 @@ export const unitValidator=Joi.object({
 export const SubUnitValidator=Joi.object({
   name: Joi.string().required(),
   unit: objectIdValidator.objectId().required(),
-  coordinator: objectIdValidator.objectId().required(),
-  location: Joi.object({
-    lat: Joi.string().required(),
-    long: Joi.string().required()
-  }).required(),
-  endlocation: Joi.object({
-    lat: Joi.string().required(),
-    long: Joi.string().required()
-  }).required(),
+  coordinator: objectIdValidator.objectId().required()
+  // location: Joi.object({
+  //   lat: Joi.string().required(),
+  //   long: Joi.string().required()
+  // }).required(),
+  // endlocation: Joi.object({
+  //   lat: Joi.string().required(),
+  //   long: Joi.string().required()
+  // }).required(),
 })
 
 export const orgStudentValidator = Joi.object({
