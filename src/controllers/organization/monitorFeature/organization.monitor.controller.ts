@@ -417,9 +417,9 @@ export class ClassScheduleController {
             // add term
             value.term = IspaidCourse.term;
             value.subUnit = IspaidCourse.subUnit;
-            const sortedCor = sortCoordinates(value.location, value.endlocation)
-            value.location = sortedCor[0]
-            value.endlocation = sortedCor[1]
+            // const sortedCor = sortCoordinates(value.location, value.endlocation)
+            // value.location = sortedCor[0]
+            // value.endlocation = sortedCor[1]
 
             // save class schedule
             const classSchedule = await ClassScheduleModel.create(value);
@@ -429,25 +429,25 @@ export class ClassScheduleController {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
         };
-        function sortCoordinates(point1:any, point2:any) {
-            // Extracting latitude and longitude from the points
-            const { lat: lat1, long: lon1 } = point1;
-            const { lat: lat2, long: lon2 } = point2;
+        // function sortCoordinates(point1:any, point2:any) {
+        //     // Extracting latitude and longitude from the points
+        //     const { lat: lat1, long: lon1 } = point1;
+        //     const { lat: lat2, long: lon2 } = point2;
           
-            // Compare latitude first
-            if (lat1 < lat2) {
-                return [point1, point2];
-            } else if (lat1 > lat2) {
-                return [point2, point1];
-            } else {
-                // If latitudes are equal, compare longitude
-                if (lon1 < lon2) {
-                    return [point1, point2];
-                } else {
-                    return [point2, point1];
-                }
-            }
-          };
+        //     // Compare latitude first
+        //     if (lat1 < lat2) {
+        //         return [point1, point2];
+        //     } else if (lat1 > lat2) {
+        //         return [point2, point1];
+        //     } else {
+        //         // If latitudes are equal, compare longitude
+        //         if (lon1 < lon2) {
+        //             return [point1, point2];
+        //         } else {
+        //             return [point2, point1];
+        //         }
+        //     }
+        //   };
     }
 
     static async getAllClassSchedules(req: Request, res: Response) {

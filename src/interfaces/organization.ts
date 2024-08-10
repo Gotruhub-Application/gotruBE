@@ -91,6 +91,8 @@ export interface ISubUnit extends Document {
   unit: Schema.Types.ObjectId;
   organization: Schema.Types.ObjectId;
   coordinator: Schema.Types.ObjectId;
+  location: { lat: string; long: string };
+  endlocation: { lat: string; long: string };
 }
 
 export interface Iuser extends Document {
