@@ -839,6 +839,30 @@ export class OrgSummary {
     }
 
   };
+  static async getSingleSubUnitSummary (req:Request, res:Response){
+    try {
+      const { organizationId, subUnitId } = req.params;
+
+        const subUnit = await SubUnit.findById(subUnitId).select('_id name');
+        const totalStudents = await User.countDocuments({ organization: organizationId, role: "student", subUnit: subUnitId });
+        const totalAssignments = await SubUnitCourseModel.countDocuments({ subUnit: subUnitId });
+
+        const data = {
+            name: subUnit?.name,
+            id: subUnitId,
+            totalStudents,
+            totalAssignments
+        };
+
+      return successResponse(res, 200, "Success", data);
+
+    } catch (error:any) {
+      writeErrosToLogs(error)
+      return failedResponse(res,500, error.message)
+      
+    }
+
+  };
   static async getAttendanceSummary(req: Request, res: Response) {
       try {
           const { organizationId, unitId, date } = req.params;
