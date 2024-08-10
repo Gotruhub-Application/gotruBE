@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, initiatePaystack, successResponse } from "../../../support/http"; 
 import { writeErrosToLogs } from "../../../support/helpers";
-import { attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema } from "../../../validators/monitorFeature/organization.monitor";
-import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, SessionModel, SubUnitCourseModel, TermModel } from "../../../models/organziation/monitorFeature.models";
+import { UpdateLocationSchema, attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createLocationSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema } from "../../../validators/monitorFeature/organization.monitor";
+import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel } from "../../../models/organziation/monitorFeature.models";
 import { logger } from "../../../logger";
 import { AppToken, User } from "../../../models/organization.models";
 import { schedule } from "node-cron";
@@ -448,7 +448,8 @@ export class ClassScheduleController {
         //         }
         //     }
         //   };
-    }
+    };
+
 
     static async getAllClassSchedules(req: Request, res: Response) {
         const ITEMS_PER_PAGE = 10;
@@ -530,7 +531,98 @@ export class ClassScheduleController {
     }
 };
 
+export class Location {
+    static async createLocation (req:Request, res:Response, next:NextFunction){
+        try {
+            const { error, value } = createLocationSchema.validate(req.body);
+            if (error) {
+                return failedResponse (res, 400, `${error.details[0].message}`)
+            }
+            const locationExist = await LocationModel.findOne({name:value.name, organization:req.params.organizationId});
+            if(locationExist) return failedResponse(res,404, "Location already exist") 
 
+            const sortedCor = sortCoordinates(value.location, value.endlocation)
+            value.location = sortedCor[0]
+            value.endlocation = sortedCor[1]
+            value["organization"] = req.params.organizationId
+            const location  = await LocationModel.create(value)
+          return successResponse(res,201,"Unit created successfully",{location} )
+  
+          function sortCoordinates(point1:any, point2:any) {
+            // Extracting latitude and longitude from the points
+            const { lat: lat1, long: lon1 } = point1;
+            const { lat: lat2, long: lon2 } = point2;
+          
+            // Compare latitude first
+            if (lat1 < lat2) {
+                return [point1, point2];
+            } else if (lat1 > lat2) {
+                return [point2, point1];
+            } else {
+                // If latitudes are equal, compare longitude
+                if (lon1 < lon2) {
+                    return [point1, point2];
+                } else {
+                    return [point2, point1];
+                }
+            }
+          };
+          
+        } catch (error:any) {
+          logger.error(`Error at line ${error.name}: ${error.message}\n${error.stack}`);
+          return failedResponse(res,500, error.message)
+        }
+      };
+
+      static async getLocations(req: Request, res: Response) {
+        try {
+            const locations = await LocationModel.find({ organization: req.params.organizationId });
+
+            return successResponse(res, 200, "Success", locations );
+
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
+    };
+    static async getSingleLocations(req: Request, res: Response) {
+        try {
+            const location = await LocationModel.findOne({ organization: req.params.organizationId, _id:req.params.id});
+
+            return successResponse(res, 200, "Success", location );
+
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
+    };
+    static async updateSingleLocation(req: Request, res: Response) {
+        try {
+            const { error, value } = UpdateLocationSchema.validate(req.body);
+            if (error) {
+                return failedResponse (res, 400, `${error.details[0].message}`)
+            }
+            const location = await LocationModel.findOneAndUpdate({ organization: req.params.organizationId, _id:req.params.id}, value);
+
+            return successResponse(res, 200, "Success", location );
+
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
+    };
+    static async deleteSingleLocation(req: Request, res: Response) {
+        try {
+            const location = await LocationModel.findOneAndDelete({ organization: req.params.organizationId, _id:req.params.id});
+
+            return successResponse(res, 204, "Success" );
+
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
+    };
+}
 export class AttendanceController {
     static async addAttendance(req: Request, res: Response) {
         try {
