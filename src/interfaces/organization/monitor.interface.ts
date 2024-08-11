@@ -20,6 +20,7 @@ export interface ITerm extends Document {
   sessionType: 'HS' | 'UN' | 'OT';
   sessionId: ISession['_id'];
   organization: IOrganization['_id'];
+  expired:boolean;
 }
 
 // Assign a course to a subunit

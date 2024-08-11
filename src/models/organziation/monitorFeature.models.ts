@@ -22,7 +22,8 @@ const termSchema: Schema<ITerm> = new Schema<ITerm>({
   endDate: { type: Date, required: true },
   sessionType: { type: String, enum: ['HS', 'UN', 'OT'], required: true },
   sessionId: { type: Schema.Types.ObjectId, ref: 'Session', required: true },
-  organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true }
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+  expired: { type: Boolean, default:false },
 }, { timestamps: true });
 
 termSchema.pre("find", function(){

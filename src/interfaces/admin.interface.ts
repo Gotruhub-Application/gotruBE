@@ -1,7 +1,8 @@
 import { Decimal128, Document, Schema } from "mongoose";
 
 export interface Ifeature extends Document {
-    name: string
+    name: string;
+    basePrice: number,
 }
 export interface Isubscription extends Document {
     name:string,
