@@ -33,6 +33,8 @@ export class OrganizatioinUnits {
                 return failedResponse (res, 400, `${error.details[0].message}`)
             }
             const unit = await Unit.findOne({ organization:req.params.organizationId, name:value.name});
+      
+
             value["organization"] = req.params.organizationId
             logger.info(value);
             
@@ -117,7 +119,8 @@ export class OrganizatioinSubUnits {
           const unitExist = await Unit.findOne({_id:value.unit, organization:req.params.organizationId});
           if(!unitExist) return failedResponse(res,404, "Unit not found") 
 
-          const unit = await SubUnit.findOne({ organization:req.params.organizationId, ...value});
+          const subUnit = await SubUnit.findOne({ organization:req.params.organizationId, name:value.name});
+          if(subUnit) return failedResponse(res,400, "sub-unit with this name already exist.") 
           value["organization"] = req.params.organizationId
 
           const newUnit  = await SubUnit.create(value)
