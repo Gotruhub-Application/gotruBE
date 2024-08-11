@@ -120,32 +120,8 @@ export class OrganizatioinSubUnits {
           const unit = await SubUnit.findOne({ organization:req.params.organizationId, ...value});
           value["organization"] = req.params.organizationId
 
-          if(unit) return failedResponse(res,400, "Subunit with this name already exist.") 
-          const sortedCor = sortCoordinates(value.location, value.endlocation)
-          value.location = sortedCor[0]
-          value.endlocation = sortedCor[1]
           const newUnit  = await SubUnit.create(value)
         return successResponse(res,201,"Unit created successfully",{newUnit} )
-
-        function sortCoordinates(point1:any, point2:any) {
-          // Extracting latitude and longitude from the points
-          const { lat: lat1, long: lon1 } = point1;
-          const { lat: lat2, long: lon2 } = point2;
-        
-          // Compare latitude first
-          if (lat1 < lat2) {
-              return [point1, point2];
-          } else if (lat1 > lat2) {
-              return [point2, point1];
-          } else {
-              // If latitudes are equal, compare longitude
-              if (lon1 < lon2) {
-                  return [point1, point2];
-              } else {
-                  return [point2, point1];
-              }
-          }
-        };
         
       } catch (error:any) {
         logger.error(`Error at line ${error.name}: ${error.message}\n${error.stack}`);

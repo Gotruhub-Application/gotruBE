@@ -205,14 +205,7 @@ const SubUnitSchema:Schema<ISubUnit> = new Schema<ISubUnit>({
     required:true
   },
   coordinator: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  // location: {
-  //   lat: { type: String, required: true },
-  //   long: { type: String, required: true }
-  // },
-  // endlocation: {
-  //   lat: { type: String, default: "" },
-  //   long: { type: String, default: "" }
-  // },
+
 }, {
   timestamps: true,
 })
