@@ -11,6 +11,7 @@ import cron from "node-cron";
 import { AppToken } from "../models/organization.models";
 import { Notification } from "../models/general.models";
 import { CompareCoordinate, CreateNotificationParams } from "../interfaces/general.interface";
+import { ClassScheduleModel, SubUnitCourseModel, TermModel } from "../models/organziation/monitorFeature.models";
 
 
 dotenv.config()
@@ -189,13 +190,45 @@ async function updateExpiredTokens(): Promise<void> {
     } catch (error) {
       logger.error('Error updating expired tokens:', error);
     }
+  };
+
+  async function updateExpiredForMonitorSource(): Promise<void> {
+    try {
+      const today = new Date();
+      const terms = await TermModel.find({ expired: false });
+  
+      for (const term of terms) {
+        if (term.endDate <= today) {
+          term.expired = true;
+          await term.save();
+  
+          // Expire associated SubUnitCourses
+          await SubUnitCourseModel.updateMany(
+            { term: term._id }, 
+            { $set: { expired: true } }
+          );
+  
+          // Expire associated ClassSchedules
+          await ClassScheduleModel.updateMany(
+            { term: term._id }, 
+            { $set: { expired: true } }
+          );
+        }
+      }
+  
+      logger.info(`Updated ${terms.length} expired terms.`);
+    } catch (error) {
+      logger.error('Error updating expired terms:', error);
+    }
   }
+
   
   // Schedule the cron job to run at midnight every day
   export function scheduleTokenExpirationCheck(): void {
     try {
       cron.schedule('0 0 * * *', async () => {
         await updateExpiredTokens();
+        await updateExpiredForMonitorSource()
       });
       logger.info('Token expiration check scheduled.');
     } catch (error) {
@@ -247,3 +280,18 @@ export function isUserLocationInRange(coordinates: CompareCoordinate): boolean {
 
   return isLatInRange && isLongInRange;
 };
+
+export function isLessThanFourMonths(startDate: string, endDate: string): boolean {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // Calculate the difference in months
+  const diffInMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+
+  // If the difference is less than 4 months and the end date is after the start date, return true
+  if (diffInMonths < 4 || (diffInMonths === 4 && end.getDate() < start.getDate())) {
+      return true;
+  } else {
+      return false;
+  }
+}

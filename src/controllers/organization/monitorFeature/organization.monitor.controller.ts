@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, initiatePaystack, successResponse } from "../../../support/http"; 
-import { writeErrosToLogs } from "../../../support/helpers";
+import { isLessThanFourMonths, writeErrosToLogs } from "../../../support/helpers";
 import { UpdateLocationSchema, attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createLocationSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema } from "../../../validators/monitorFeature/organization.monitor";
 import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel } from "../../../models/organziation/monitorFeature.models";
 import { logger } from "../../../logger";
 import { AppToken, User } from "../../../models/organization.models";
 import { schedule } from "node-cron";
+import { features } from "process";
+import { Feature } from "../../../models/admin.models";
 
 export class Session {
     static async addSession(req: Request, res: Response) {
@@ -31,7 +33,7 @@ export class Session {
     };
 
     static async getAllSessions(req: Request, res: Response) {
-        const ITEMS_PER_PAGE = 10;
+        const ITEMS_PER_PAGE = 100;
         try {
 
             const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
@@ -100,8 +102,11 @@ export class TermController {
             const { error, value } = createTermSchema.validate(req.body);
             if (error) return failedResponse(res, 400, `${error.details[0].message}`);
 
-            // check if term name already exist
+            // validate durations
+            const isvalidDurations = isLessThanFourMonths(value.startDate, value.endDate)
+            if(!isvalidDurations) return failedResponse(res, 400, "The start and end dates cannot exceed 4 months");
 
+            // check if term name already exist
             const termExist = await TermModel.findOne({name:value.name, organization:req.params.organizationId, sessionId:value.sessionId})
             if (termExist) return failedResponse(res, 400, "duplicate term name not allowed.")
             // validate media exist
@@ -118,7 +123,7 @@ export class TermController {
     };
 
     static async getAllTerms(req: Request, res: Response) {
-        const ITEMS_PER_PAGE = 10;
+        const ITEMS_PER_PAGE = 100;
         try {
 
             const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
@@ -205,7 +210,7 @@ export class CourseController {
     };
 
     static async getAllCourses(req: Request, res: Response) {
-        const ITEMS_PER_PAGE = 10;
+        const ITEMS_PER_PAGE = 100;
         try {
 
             const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
@@ -295,7 +300,7 @@ export class SubUnitCourseController {
     }
 
     static async getAllUNPaidSubUnitCourses(req: Request, res: Response) {
-        const ITEMS_PER_PAGE = 10;
+        const ITEMS_PER_PAGE = 100;
         try {
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
@@ -330,9 +335,12 @@ export class SubUnitCourseController {
                 // Add other fields as needed
                 }
             }));
-                
             
-            const paystack = await initiatePaystack(metadata,(req as any).org.email, (totalAmount*100))
+            const sourcePrice = await Feature.findOne({name:"monitorsource"});
+            if (!sourcePrice) {
+                return failedResponse(res, 500, "Monitor source feature not found");
+            }
+            const paystack = await initiatePaystack(metadata, (req as any).org.email, (totalAmount * sourcePrice.basePrice));
             return successResponse(res, 200, "Success", paystack)
 
         }catch (error: any) {
@@ -342,7 +350,7 @@ export class SubUnitCourseController {
     }
 
     static async getAllPaidSubUnitCourses(req: Request, res: Response) {
-        const ITEMS_PER_PAGE = 10;
+        const ITEMS_PER_PAGE = 100;
         try {
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
@@ -452,7 +460,7 @@ export class ClassScheduleController {
 
 
     static async getAllClassSchedules(req: Request, res: Response) {
-        const ITEMS_PER_PAGE = 10;
+        const ITEMS_PER_PAGE = 100;
         try {
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
@@ -674,7 +682,7 @@ export class AttendanceController {
     }
 
     static async getAllAttendances(req: Request, res: Response) {
-        const ITEMS_PER_PAGE = 10;
+        const ITEMS_PER_PAGE = 100;
         try {
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
@@ -691,7 +699,7 @@ export class AttendanceController {
         }
     };
     static async getSingleUserAttendances(req: Request, res: Response) {
-        const ITEMS_PER_PAGE = 10;
+        const ITEMS_PER_PAGE = 100;
         try {
             const {userId} = req.params;
             console.log(userId, "sbdbfbdv")

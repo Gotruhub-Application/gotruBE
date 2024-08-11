@@ -5,6 +5,7 @@ import bcrypt from "bcrypt"
 // Create Mongoose schemas for Feature and Subscription
 const FeatureSchema: Schema<Ifeature> = new Schema<Ifeature>({
     name: { type: String, required: true,  unique: true},
+    basePrice: { type:Number },
 }, { timestamps: true });
 
 const SubscriptionSchema: Schema<Isubscription> = new Schema<Isubscription>({

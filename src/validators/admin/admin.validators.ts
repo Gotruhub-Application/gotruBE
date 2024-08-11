@@ -17,6 +17,11 @@ const objectIdValidator =Joi.extend((Joi)=>({
 
 export const FeatureValidator=Joi.object({
     name: Joi.string().required(),
+    basePrice: Joi.when('name',{
+      is:"monitorsource",
+      then:Joi.number().required(),
+      otherwise:Joi.number().allow('')
+    })
   })
 
 export const SubscriptionValidator=Joi.object({
