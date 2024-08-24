@@ -183,7 +183,7 @@ export class SubscriptionPlanController {
     static async DeleteSinglePlan(req:Request, res:Response) {
         try {
             const planId:any= req.params.id
-            const subPlan = await Subscription.findOneAndDelete(planId)
+            const subPlan = await Subscription.findByIdAndDelete(planId)
             if (!subPlan){
                 return failedResponse(res, 404, `Plan with id ${planId} not found`);
             }
