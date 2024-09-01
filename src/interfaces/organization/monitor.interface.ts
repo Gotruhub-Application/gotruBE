@@ -10,6 +10,7 @@ export interface ISession extends Document {
 export interface ICourse extends Document {
   name: string;
   courseCode: string;
+  unit?: Schema.Types.ObjectId;
   organization: IOrganization['_id'];
 }
 

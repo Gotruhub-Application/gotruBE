@@ -13,7 +13,8 @@ const sessionSchema: Schema<ISession> = new Schema<ISession>({
 const courseSchema: Schema<ICourse> = new Schema<ICourse>({
   name: { type: String, required: true },
   courseCode: { type: String, required: true },
-  organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true }
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+  unit: { type: Schema.Types.ObjectId, ref: 'Unit', required: true },
 }, { timestamps: true });
 
 const termSchema: Schema<ITerm> = new Schema<ITerm>({

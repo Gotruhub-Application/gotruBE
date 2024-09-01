@@ -1,5 +1,5 @@
 import { Media } from "../models/media.models";
-import { AppToken, Organization, Plan, Product, SignInOutRecordModel, SubUnit, SubaccountModel, Unit, User, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../models/organization.models";
+import { AppToken, Order, Organization, Plan, Product, SignInOutRecordModel, SubUnit, SubaccountModel, Unit, User, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../models/organization.models";
 import { Feature, Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
@@ -1051,6 +1051,84 @@ export class UserSummary {
       return res.status(500).json({ success: false, message: "Internal server error" });
     }
   };
+
+  static async orgzTradeSummary(req: Request, res: Response) {
+
+    try {
+        // Find all users associated with the organization
+        const users = await User.find({ organization: req.params.organizationId }).select('_id');
+
+        // Extract user IDs from the retrieved users
+        const userIds = users.map(user => user._id);
+
+        const organizationId = new mongoose.Types.ObjectId(req.params.organizationId);
+
+        // Aggregate cash sales for the organization
+        const orderCashSale = await Order.aggregate([
+            { $match: { organization: organizationId, paymentMode: "cash" } },
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+        ]);
+
+        console.log(orderCashSale, organizationId, "xxxxxxx");
+
+        // Aggregate QR (wallet) sales for the organization
+        const orderQrSale = await Order.aggregate([
+            { $match: { organization: organizationId, paymentMode: "wallet" } },
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+        ]);
+
+        // Find all wallets associated with the users
+        const wallets = await WalletModel.find({ user: { $in: userIds } });
+
+        // Extract wallet IDs from the retrieved wallets
+        const walletIds = wallets.map(wallet => wallet._id);
+
+        // Aggregate total transactions (both credits and debits)
+        const totalTransactions = await WalletTransactionModel.aggregate([
+            { $match: { wallet: { $in: walletIds } } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+
+        // Aggregate total debits
+        const totalDebits = await WalletTransactionModel.aggregate([
+            { $match: { wallet: { $in: walletIds }, type: "debit" } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+
+        // Aggregate total credits
+        const totalCredits = await WalletTransactionModel.aggregate([
+            { $match: { wallet: { $in: walletIds }, type: "credit" } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+
+        // Aggregate total completed withdrawals
+        const totalWithdrawals = await WithdrawalRequest.aggregate([
+            { $match: { wallet: { $in: walletIds }, status: "completed" } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+
+        // Calculate total available balance in all wallets
+        const totalBalance = wallets.reduce((acc, wallet) => acc + wallet.balance, 0);
+
+        // Prepare the response object
+        const response = {
+            balance: totalBalance,
+            totalTransactions: totalTransactions[0]?.total || 0,
+            totalDebits: totalDebits[0]?.total || 0,
+            totalCredits: totalCredits[0]?.total || 0,
+            totalWithdrawals: totalWithdrawals[0]?.total || 0,
+            cashSales: orderCashSale[0]?.total || 0,
+            orderQrSale: orderQrSale[0]?.total || 0
+        };
+
+        return res.status(200).json({ success: true, data: response });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+
 
   static async getUserAttendanceSummary(req: Request, res: Response) {
     try {
