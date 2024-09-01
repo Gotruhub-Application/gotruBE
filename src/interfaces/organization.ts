@@ -32,6 +32,8 @@ export interface IOrganization extends Document {
   isVerified:boolean,
   startLocation: { lat: string; long: string };
   endLocation: { lat: string; long: string };
+  logo?: Schema.Types.ObjectId;
+  motto:string,
 }
 
 

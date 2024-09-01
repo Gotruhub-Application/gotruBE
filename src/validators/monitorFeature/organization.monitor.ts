@@ -36,6 +36,7 @@ export const createSessionSchema = Joi.object({
   export const createCourseSchema = Joi.object({
     name: Joi.string().required(),
     courseCode: Joi.string().allow(""),
+    unit: objectIdValidator.objectId().required(),
     
   });
   

@@ -4,7 +4,7 @@ import { isLessThanFourMonths, writeErrosToLogs } from "../../../support/helpers
 import { UpdateLocationSchema, attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createLocationSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema } from "../../../validators/monitorFeature/organization.monitor";
 import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel } from "../../../models/organziation/monitorFeature.models";
 import { logger } from "../../../logger";
-import { AppToken, User } from "../../../models/organization.models";
+import { AppToken, Unit, User } from "../../../models/organization.models";
 import { schedule } from "node-cron";
 import { features } from "process";
 import { Feature } from "../../../models/admin.models";
@@ -196,6 +196,9 @@ export class CourseController {
 
             const courseExist = await CourseModel.findOne({name:value.name, organization:req.params.organizationId, courseCode:value.courseCode})
             if (courseExist) return failedResponse(res, 400, "duplicate course name not allowed.")
+
+            const unit = await Unit.findOne({_id:value.unit, organization:req.params.organizationId})
+            if (!unit) return failedResponse(res, 400, "Unit not found")
             // validate media exist
 
             // save category
@@ -212,20 +215,33 @@ export class CourseController {
     static async getAllCourses(req: Request, res: Response) {
         const ITEMS_PER_PAGE = 100;
         try {
-
+            const { courseCode, unit } = req.query;
             const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
-            const skip = (page - 1) * ITEMS_PER_PAGE; //
-            const courseExist = await CourseModel.find({organization:req.params.organizationId})
-            .skip(skip)
-            .limit(ITEMS_PER_PAGE);
-
-            return successResponse(res, 200, "Success", courseExist)
-
-        }catch(error:any){
+            const skip = (page - 1) * ITEMS_PER_PAGE; 
+            
+            // Initialize the filter object with the organization ID
+            const filter: any = {};
+            filter.organization = req.params.organizationId;
+    
+            // Add filtering conditions if they exist in the query parameters
+            if (courseCode) filter.courseCode = courseCode;
+            if (unit) filter.unit = unit; // Correctly use the 'unit' field
+    
+            // Fetch courses based on filters, pagination, and limit
+            const courseExist = await CourseModel.find({ ...filter })
+                .skip(skip)
+                .limit(ITEMS_PER_PAGE);
+    
+            // Return a success response with the fetched courses
+            return successResponse(res, 200, "Success", courseExist);
+    
+        } catch (error: any) {
+            // Log the error and return a failure response
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
         }
     };
+    
 
     static async getSingleCourse(req: Request, res: Response) {
         try {
@@ -467,13 +483,15 @@ export class ClassScheduleController {
 
             logger.info(req.params.organizationId)
             const classSchedules = await ClassScheduleModel.find({ organization:req.params.organizationId, subUnit:req.params.subUnitId })
+            .populate("location")
                 .skip(skip)
                 .limit(ITEMS_PER_PAGE);
             const returnPayload = classSchedules.map(schedule => ({
                 _id: schedule._id,
                 day: schedule.day,
                 course: schedule.course?.course?.name,
-                code: schedule.course?.course?.courseCode
+                code: schedule.course?.course?.courseCode,
+                location:schedule.location
             }));
             console.log("helllll")
             return successResponse(res, 200, "Success", returnPayload);
@@ -486,7 +504,7 @@ export class ClassScheduleController {
 
     static async getSingleClassSchedule(req: Request, res: Response) {
         try {
-            const classSchedule = await ClassScheduleModel.findOne({ _id: req.params.id, organization: req.params.organizationId });
+            const classSchedule = await ClassScheduleModel.findOne({ _id: req.params.id, organization: req.params.organizationId }).populate("location");
             if (!classSchedule) return failedResponse(res, 404, "Class schedule does not exist");
 
             return successResponse(res, 200, "Success", classSchedule );

@@ -149,6 +149,16 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
     type:String,
     default:""
   },
+  logo: {
+    type: Schema.Types.ObjectId,
+    ref:"Media",
+    required:false
+  },
+  motto: {
+    type: String,
+    default: "",
+    required: false
+  },
 }, {
   timestamps: true,
 });
