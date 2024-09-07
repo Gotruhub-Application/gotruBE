@@ -494,6 +494,7 @@ export class ContractPlan {
           nameOfEstablishment: 1,
           email: 1,
           phone: 1,
+          isActive:1,
           createdAt: 1,
         }).exec();
     
