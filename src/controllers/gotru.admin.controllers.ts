@@ -478,7 +478,7 @@ export class ContractPlan {
         const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
         const startOfThisYear = new Date(now.getFullYear(), 0, 1);
     
-        const { filter, activeStatus } = req.query;
+        const { filter, activeStatus, bizType } = req.query;
     
         let matchCondition: any = {};
     
@@ -488,8 +488,10 @@ export class ContractPlan {
           matchCondition.createdAt = { $gte: startOfLastMonth, $lt: endOfLastMonth };
         } else if (filter === 'thisYear') {
           matchCondition.createdAt = { $gte: startOfThisYear };
+        }if (bizType) {
+          matchCondition.bizType = bizType;
         }
-    
+        
         const organizations = await Organization.find(matchCondition, {
           nameOfEstablishment: 1,
           email: 1,

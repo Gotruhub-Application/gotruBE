@@ -483,7 +483,7 @@ export class ClassScheduleController {
 
             logger.info(req.params.organizationId)
             const classSchedules = await ClassScheduleModel.find({ organization:req.params.organizationId, subUnit:req.params.subUnitId })
-            .populate("location")
+            .populate("location locationId")
                 .skip(skip)
                 .limit(ITEMS_PER_PAGE);
             const returnPayload = classSchedules.map(schedule => ({
@@ -491,9 +491,9 @@ export class ClassScheduleController {
                 day: schedule.day,
                 course: schedule.course?.course?.name,
                 code: schedule.course?.course?.courseCode,
-                location:schedule.location
+                location:schedule.locationId ? schedule.locationId.name : null
             }));
-            console.log("helllll")
+
             return successResponse(res, 200, "Success", returnPayload);
 
         } catch (error: any) {
@@ -504,7 +504,7 @@ export class ClassScheduleController {
 
     static async getSingleClassSchedule(req: Request, res: Response) {
         try {
-            const classSchedule = await ClassScheduleModel.findOne({ _id: req.params.id, organization: req.params.organizationId }).populate("location");
+            const classSchedule = await ClassScheduleModel.findOne({ _id: req.params.id, organization: req.params.organizationId }).populate("location locationId");
             if (!classSchedule) return failedResponse(res, 404, "Class schedule does not exist");
 
             return successResponse(res, 200, "Success", classSchedule );
