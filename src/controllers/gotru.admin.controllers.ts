@@ -426,49 +426,115 @@ export class ContractPlan {
       }
     };
 
+    // static async getOrganizations(req: Request, res: Response) {
+    //   try {
+    //     // Get the current date and time
+    //     const now = new Date();
+  
+    //     // Calculate the start of this month
+    //     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+    //     // Calculate the start of last month
+    //     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    //     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  
+    //     // Calculate the start of this year
+    //     const startOfThisYear = new Date(now.getFullYear(), 0, 1);
+  
+    //     // Extract query parameters to determine the filter
+    //     const { filter } = req.query;
+  
+    //     let matchCondition = {};
+  
+    //     if (filter === 'thisMonth') {
+    //       matchCondition = { createdAt: { $gte: startOfThisMonth } };
+    //     } else if (filter === 'lastMonth') {
+    //       matchCondition = { createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth } };
+    //     } else if (filter === 'thisYear') {
+    //       matchCondition = { createdAt: { $gte: startOfThisYear } };
+    //     }
+  
+    //     // Query the database with the match condition and project only the required fields
+    //     const organizations = await Organization.find(matchCondition, {
+    //       nameOfEstablishment: 1,
+    //       email: 1,
+    //       phone: 1,
+    //       isActive: 1,
+    //       createdAt: 1,
+    //     }).exec();
+  
+    //     return successResponse(res, 200, 'Success', organizations);
+    //   } catch (error: any) {
+    //     writeErrosToLogs(error);
+    //     return failedResponse(res, 500, error.message);
+    //   }
+    // };
+
     static async getOrganizations(req: Request, res: Response) {
       try {
-        // Get the current date and time
         const now = new Date();
-  
-        // Calculate the start of this month
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  
-        // Calculate the start of last month
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-  
-        // Calculate the start of this year
         const startOfThisYear = new Date(now.getFullYear(), 0, 1);
-  
-        // Extract query parameters to determine the filter
-        const { filter } = req.query;
-  
-        let matchCondition = {};
-  
+    
+        const { filter, activeStatus } = req.query;
+    
+        let matchCondition: any = {};
+    
         if (filter === 'thisMonth') {
-          matchCondition = { createdAt: { $gte: startOfThisMonth } };
+          matchCondition.createdAt = { $gte: startOfThisMonth };
         } else if (filter === 'lastMonth') {
-          matchCondition = { createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth } };
+          matchCondition.createdAt = { $gte: startOfLastMonth, $lt: endOfLastMonth };
         } else if (filter === 'thisYear') {
-          matchCondition = { createdAt: { $gte: startOfThisYear } };
+          matchCondition.createdAt = { $gte: startOfThisYear };
         }
-  
-        // Query the database with the match condition and project only the required fields
+    
         const organizations = await Organization.find(matchCondition, {
           nameOfEstablishment: 1,
           email: 1,
           phone: 1,
-          isActive: 1,
           createdAt: 1,
         }).exec();
-  
-        return successResponse(res, 200, 'Success', organizations);
+    
+        const organizationsWithActiveStatus = await Promise.all(
+          organizations.map(async (org) => {
+            const hasActiveSubPlan = await org.hasActiveSubPlan();
+    
+            if (activeStatus === 'active' && !hasActiveSubPlan) {
+              return null;
+            }
+            if (activeStatus === 'inactive' && hasActiveSubPlan) {
+              return null;
+            }
+    
+            const lastActivePlan = await Plan.findOne({
+              Organization: org._id,
+              paidStatus:true
+            }).sort({ updatedAt: -1 }).exec();
+    
+            const firstPlan = await Plan.findOne({
+              Organization: org._id,
+              paidStatus: true,
+            }).sort({ createdAt: 1 }).exec();
+    
+            return {
+              ...org.toObject(),
+              hasActiveSubPlan,
+              lastActive: lastActivePlan ? lastActivePlan.updatedAt : "No Plan",
+              firstPlan: firstPlan ? firstPlan.createdAt : "No Plan",
+            };
+          })
+        );
+    
+        const filteredOrganizations = organizationsWithActiveStatus.filter(org => org !== null);
+    
+        return successResponse(res, 200, 'Success', filteredOrganizations);
       } catch (error: any) {
         writeErrosToLogs(error);
         return failedResponse(res, 500, error.message);
       }
-    };
+    }
     
 
     static async getSubscriptionRevenue(req: Request, res: Response) {
