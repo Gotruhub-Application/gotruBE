@@ -5,8 +5,8 @@ export interface Ifeature extends Document {
     basePrice: number,
 }
 export interface Isubscription extends Document {
-    name:string,
-    feature: [{type:Schema.Types.ObjectId}],
+    name: string,
+    feature: [{ type: Schema.Types.ObjectId }],
     duration: string,
     planValidity: number,
     amount: Decimal128,
@@ -18,4 +18,9 @@ export interface IAdminUser extends Document {
     fullname: string;
     password: string;
     isAdmin?: boolean;
-  }
+}
+
+export interface IAnnouncement extends Document {
+    title: string;
+    content: string;
+}

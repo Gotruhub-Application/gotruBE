@@ -145,6 +145,10 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
     required:false,
     default:false
   },
+  isActive:{
+    type:Boolean,
+    default:true
+  },
   fcmToken:{
     type:String,
     default:""

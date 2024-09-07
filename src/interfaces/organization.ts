@@ -30,6 +30,7 @@ export interface IOrganization extends Document {
   agency:string,
   fcmToken:string,
   isVerified:boolean,
+  isActive:boolean,
   startLocation: { lat: string; long: string };
   endLocation: { lat: string; long: string };
   logo?: Schema.Types.ObjectId;
