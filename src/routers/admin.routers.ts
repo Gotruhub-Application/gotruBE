@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { AdminSummary, ContractPlan, FeaturesController, SubscriptionPlanController } from "../controllers/gotru.admin.controllers"
+import { AdminSummary, ContractPlan, FeaturesController, ManageAccounts, ManageAnnouncements, SubscriptionPlanController } from "../controllers/gotru.admin.controllers"
 import { paystackWebhook } from "../controllers/auth/general.controllers"
 import { IsAuthenticatedGotruAdmin } from "../support/middleware"
 
@@ -37,3 +37,12 @@ adminRouter
 .get("/organizations/users-summary/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getOrgUserSummary)
 .get("/organizations/active-plans/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getOrgActiveSubSummary)
 .get("/organizations/feature-matric/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.organFeatureUsageMetric)
+
+.patch("/organizations/deactivate-acccount/:id",IsAuthenticatedGotruAdmin, ManageAccounts.deactivateOrganizationAccount)
+
+// manage global announcement
+.post("/announcements",IsAuthenticatedGotruAdmin, ManageAnnouncements.createAnnouncement )
+.get("/announcements",IsAuthenticatedGotruAdmin, ManageAnnouncements.getAllAnnouncements )
+.get("/announcements/:id",IsAuthenticatedGotruAdmin, ManageAnnouncements.getAnnouncementById )
+.patch("/announcements/:id",IsAuthenticatedGotruAdmin, ManageAnnouncements.updateAnnouncement )
+.delete("/announcements/:id",IsAuthenticatedGotruAdmin, ManageAnnouncements.deleteAnnouncement )

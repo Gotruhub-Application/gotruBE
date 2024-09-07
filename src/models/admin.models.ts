@@ -1,5 +1,5 @@
 import { Schema, model, Document, Model } from 'mongoose';
-import { IAdminUser, Ifeature, Isubscription } from '../interfaces/admin.interface';
+import { IAdminUser, IAnnouncement, Ifeature, Isubscription } from '../interfaces/admin.interface';
 import bcrypt from "bcrypt"
 
 // Create Mongoose schemas for Feature and Subscription
@@ -62,10 +62,17 @@ SubscriptionSchema.pre('findOne', function (next) {
     next();
   });
 
+
+
+// Define the schema for Announcement
+const announcementSchema: Schema<IAnnouncement> = new Schema<IAnnouncement>({
+  title: { type: String, required: true }, // Changed 'name' to 'title' to match the interface
+  content: { type: String, required: true }, // Added 'content' field to match the interface
+})
   
   // Export the Admin User model
 export const AdminUser:Model<IAdminUser> = model<IAdminUser>('AdminUser', AdminUserSchema);
-
+export const Announcement:Model<IAnnouncement> = model<IAnnouncement>('Announcement', announcementSchema);
 // Create models for Feature and Subscription
 const Subscription: Model<Isubscription> = model<Isubscription>('Subscription', SubscriptionSchema);
 const Feature: Model<Ifeature> = model<Ifeature>('Feature', FeatureSchema);

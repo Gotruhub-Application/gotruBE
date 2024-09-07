@@ -1,11 +1,12 @@
 import { logger } from "../logger"; 
 import { failedResponse, successResponse } from "../support/http";
-import { Feature, Subscription } from "../models/admin.models";
+import { Announcement, Feature, Subscription } from "../models/admin.models";
 import { Request, Response, NextFunction } from "express";
-import { ContractpurchasePlanValidator, FeatureValidator, SubscriptionValidator, UpdateSubscriptionValidator } from "../validators/admin/admin.validators";
+import { ContractpurchasePlanValidator, FeatureValidator, SubscriptionValidator, UpdateSubscriptionValidator, createAnnouncementSchema, updateAnnouncementSchema } from "../validators/admin/admin.validators";
 import { Organization, Plan, User } from "../models/organization.models";
 import { writeErrosToLogs } from "../support/helpers";
 import mongoose from "mongoose";
+import { myEmitter } from "../events/eventEmitter";
 
 
 export class FeaturesController {
@@ -425,48 +426,117 @@ export class ContractPlan {
       }
     };
 
+    // static async getOrganizations(req: Request, res: Response) {
+    //   try {
+    //     // Get the current date and time
+    //     const now = new Date();
+  
+    //     // Calculate the start of this month
+    //     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+    //     // Calculate the start of last month
+    //     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    //     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  
+    //     // Calculate the start of this year
+    //     const startOfThisYear = new Date(now.getFullYear(), 0, 1);
+  
+    //     // Extract query parameters to determine the filter
+    //     const { filter } = req.query;
+  
+    //     let matchCondition = {};
+  
+    //     if (filter === 'thisMonth') {
+    //       matchCondition = { createdAt: { $gte: startOfThisMonth } };
+    //     } else if (filter === 'lastMonth') {
+    //       matchCondition = { createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth } };
+    //     } else if (filter === 'thisYear') {
+    //       matchCondition = { createdAt: { $gte: startOfThisYear } };
+    //     }
+  
+    //     // Query the database with the match condition and project only the required fields
+    //     const organizations = await Organization.find(matchCondition, {
+    //       nameOfEstablishment: 1,
+    //       email: 1,
+    //       phone: 1,
+    //       isActive: 1,
+    //       createdAt: 1,
+    //     }).exec();
+  
+    //     return successResponse(res, 200, 'Success', organizations);
+    //   } catch (error: any) {
+    //     writeErrosToLogs(error);
+    //     return failedResponse(res, 500, error.message);
+    //   }
+    // };
+
     static async getOrganizations(req: Request, res: Response) {
       try {
-        // Get the current date and time
         const now = new Date();
-  
-        // Calculate the start of this month
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  
-        // Calculate the start of last month
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-  
-        // Calculate the start of this year
         const startOfThisYear = new Date(now.getFullYear(), 0, 1);
-  
-        // Extract query parameters to determine the filter
-        const { filter } = req.query;
-  
-        let matchCondition = {};
-  
+    
+        const { filter, activeStatus } = req.query;
+    
+        let matchCondition: any = {};
+    
         if (filter === 'thisMonth') {
-          matchCondition = { createdAt: { $gte: startOfThisMonth } };
+          matchCondition.createdAt = { $gte: startOfThisMonth };
         } else if (filter === 'lastMonth') {
-          matchCondition = { createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth } };
+          matchCondition.createdAt = { $gte: startOfLastMonth, $lt: endOfLastMonth };
         } else if (filter === 'thisYear') {
-          matchCondition = { createdAt: { $gte: startOfThisYear } };
+          matchCondition.createdAt = { $gte: startOfThisYear };
         }
-  
-        // Query the database with the match condition and project only the required fields
+    
         const organizations = await Organization.find(matchCondition, {
           nameOfEstablishment: 1,
           email: 1,
           phone: 1,
+          isActive:1,
           createdAt: 1,
         }).exec();
-  
-        return successResponse(res, 200, 'Success', organizations);
+    
+        const organizationsWithActiveStatus = await Promise.all(
+          organizations.map(async (org) => {
+            const hasActiveSubPlan = await org.hasActiveSubPlan();
+    
+            if (activeStatus === 'active' && !hasActiveSubPlan) {
+              return null;
+            }
+            if (activeStatus === 'inactive' && hasActiveSubPlan) {
+              return null;
+            }
+    
+            const lastActivePlan = await Plan.findOne({
+              Organization: org._id,
+              paidStatus:true
+            }).sort({ updatedAt: -1 }).exec();
+    
+            const firstPlan = await Plan.findOne({
+              Organization: org._id,
+              paidStatus: true,
+            }).sort({ createdAt: 1 }).exec();
+    
+            return {
+              ...org.toObject(),
+              hasActiveSubPlan,
+              lastActive: lastActivePlan ? lastActivePlan.updatedAt : "No Plan",
+              firstPlan: firstPlan ? firstPlan.createdAt : "No Plan",
+            };
+          })
+        );
+    
+        const filteredOrganizations = organizationsWithActiveStatus.filter(org => org !== null);
+    
+        return successResponse(res, 200, 'Success', filteredOrganizations);
       } catch (error: any) {
         writeErrosToLogs(error);
         return failedResponse(res, 500, error.message);
       }
-    };
+    }
+    
 
     static async getSubscriptionRevenue(req: Request, res: Response) {
       try {
@@ -674,3 +744,133 @@ export class ContractPlan {
     };
 
   }
+
+  export class ManageAccounts{
+
+    static async deactivateOrganizationAccount(req: Request, res: Response) {
+      try {
+        let { status } = req.query;
+        const { id } = req.params;
+    
+        // Ensure the status query parameter is provided
+        if (!status) {
+          return failedResponse(res, 400, "Status should be 'true' or 'false'");
+        }
+    
+        // Convert the status parameter to a boolean
+        const isActive = (status as string).toLowerCase() === "true";
+    
+        // Update the organization's status using the provided query parameter
+        const organization = await Organization.findOneAndUpdate(
+          { _id: id },  // Assuming you have the organization ID in the request parameters
+          { isActive: isActive },  // Update the isActive field
+          { new: true }  // Return the updated document
+        );
+    
+        // Check if the organization exists
+        if (!organization) {
+          return failedResponse(res, 404, "Organization not found");
+        }
+    
+        return successResponse(res, 200, "Organization status updated successfully", organization);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  };
+
+
+export class ManageAnnouncements {
+  // Create a new announcement
+  static async createAnnouncement(req: Request, res: Response) {
+    try {
+      const { error, value } = createAnnouncementSchema.validate(req.body);
+      if (error) {
+        return failedResponse(res, 400, error.details[0].message);
+      }
+
+      const newAnnouncement = await Announcement.create(value);
+      value.createAt = new Date();
+      myEmitter.emitCustomEvent(value) // send an event out 
+
+      return successResponse(res, 201, "Announcement created successfully", newAnnouncement);
+    } catch (error: any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+    }
+  }
+
+  // Get all announcements
+  static async getAllAnnouncements(req: Request, res: Response) {
+    try {
+      const announcements = await Announcement.find();
+
+      return successResponse(res, 200, "Announcements fetched successfully", announcements);
+    } catch (error: any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+    }
+  }
+
+  // Get a single announcement by ID
+  static async getAnnouncementById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const announcement = await Announcement.findById(id);
+
+      if (!announcement) {
+        return failedResponse(res, 404, "Announcement not found");
+      }
+
+      return successResponse(res, 200, "Announcement fetched successfully", announcement);
+    } catch (error: any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+    }
+  };
+
+  // Update an announcement by ID
+  static async updateAnnouncement(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { error, value } = updateAnnouncementSchema.validate(req.body);
+      if (error) {
+        return failedResponse(res, 400, error.details[0].message);
+      }
+      
+
+      const updatedAnnouncement = await Announcement.findByIdAndUpdate(
+        id,
+        value,
+        { new: true } // Return the updated document and validate the update against the model schema
+      );
+
+      if (!updatedAnnouncement) {
+        return failedResponse(res, 404, "Announcement not found");
+      }
+
+      return successResponse(res, 200, "Announcement updated successfully", updatedAnnouncement);
+    } catch (error: any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+    }
+  }
+
+  // Delete an announcement by ID
+  static async deleteAnnouncement(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const deletedAnnouncement = await Announcement.findByIdAndDelete(id);
+
+      if (!deletedAnnouncement) {
+        return failedResponse(res, 404, "Announcement not found");
+      }
+
+      return successResponse(res, 200, "Announcement deleted successfully");
+    } catch (error: any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+    }
+  }
+}

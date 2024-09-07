@@ -145,6 +145,10 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
     required:false,
     default:false
   },
+  isActive:{
+    type:Boolean,
+    default:true
+  },
   fcmToken:{
     type:String,
     default:""
@@ -161,7 +165,18 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   },
 }, {
   timestamps: true,
-});
+})
+
+// Add hasActiveSubPlan method to the schema
+OrganizationSchema.methods.hasActiveSubPlan = async function(): Promise<boolean> {
+  const activePlans = await Plan.find({
+    Organization: this._id,
+    quantityLeft: { $gt: 0 },
+    paidStatus:true
+  }).limit(1).exec();
+
+  return activePlans.length > 0;
+};
 
 const TokenSchema:Schema<Itoken> = new Schema<Itoken>({
   email: {

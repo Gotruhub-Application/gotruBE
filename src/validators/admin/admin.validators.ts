@@ -47,3 +47,12 @@ export const ContractpurchasePlanValidator = Joi.object({
   subscriptionType: objectIdValidator.objectId().required(),
   organizationId:objectIdValidator.objectId().required(),
 }).options({ abortEarly: false });
+
+export const createAnnouncementSchema = Joi.object({
+  title: Joi.string().required().messages({}),
+  content: Joi.string().required().messages({}),
+});
+export const updateAnnouncementSchema = Joi.object({
+  title: Joi.string().allow(""),
+  content: Joi.string().allow("")
+});

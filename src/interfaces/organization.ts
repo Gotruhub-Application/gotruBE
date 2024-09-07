@@ -30,10 +30,12 @@ export interface IOrganization extends Document {
   agency:string,
   fcmToken:string,
   isVerified:boolean,
+  isActive:boolean,
   startLocation: { lat: string; long: string };
   endLocation: { lat: string; long: string };
   logo?: Schema.Types.ObjectId;
   motto:string,
+  hasActiveSubPlan(): Promise<boolean>;
 }
 
 
@@ -70,6 +72,8 @@ export interface IPlan extends Document{
   isContract:boolean;
   created_at?: Date;
   expires_at: Date;
+  updatedAt:Date;
+  createdAt:Date;
 };
 
 export interface IappToken extends Document{
@@ -81,6 +85,7 @@ export interface IappToken extends Document{
   expired:boolean;
   created_at?: Date;
   expires_at: Date;
+  
 };
 
 
