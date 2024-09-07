@@ -38,11 +38,11 @@ adminRouter
 .get("/organizations/active-plans/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getOrgActiveSubSummary)
 .get("/organizations/feature-matric/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.organFeatureUsageMetric)
 
-.patch("/organizations/deactivate-acccount/:id",IsAuthenticatedGotruAdmin, ManageAccounts.deactivateOrganizationAccount)
+.put("/organizations/deactivate-acccount/:id",IsAuthenticatedGotruAdmin, ManageAccounts.deactivateOrganizationAccount)
 
 // manage global announcement
 .post("/announcements",IsAuthenticatedGotruAdmin, ManageAnnouncements.createAnnouncement )
 .get("/announcements",IsAuthenticatedGotruAdmin, ManageAnnouncements.getAllAnnouncements )
 .get("/announcements/:id",IsAuthenticatedGotruAdmin, ManageAnnouncements.getAnnouncementById )
-.patch("/announcements/:id",IsAuthenticatedGotruAdmin, ManageAnnouncements.updateAnnouncement )
+.put("/announcements/:id",IsAuthenticatedGotruAdmin, ManageAnnouncements.updateAnnouncement )
 .delete("/announcements/:id",IsAuthenticatedGotruAdmin, ManageAnnouncements.deleteAnnouncement )
