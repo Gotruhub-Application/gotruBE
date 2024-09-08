@@ -119,7 +119,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
 
     if (!isOrganization.isActive) {
-      return failedResponse(res, 401, 'Account is not active, please contact Gothrubub support.')
+      return failedResponse(res, 401, 'Account is not active, please contact Gothrub support.')
     }
 
     const isValidPassword = await bcrypt.compare(value.password, isOrganization.password);
