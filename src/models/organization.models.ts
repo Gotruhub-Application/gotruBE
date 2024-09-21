@@ -4,6 +4,7 @@ import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOu
 import { CompareCoordinate, CreateNotificationParams } from '../interfaces/general.interface';
 import { createNotification, isUserLocationInRange } from '../support/helpers';
 import { sendNotif } from '../support/firebaseNotification';
+import { Notification } from './general.models';
 
 const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
   phone: {
@@ -540,8 +541,14 @@ SignInOutRecordSchema.pre("save", async function (next) {
           type: `gotrupass`,
         };
       
-      const token = "egKQbjIqTiapi7MMvQXU77:APA91bEb0rDg882auDKv7CBNJ2YhQrH1JpKZr81vYGxMeN_E3g7VKfU3BJ2yWXOVQv5J0m9Pl06mcLP8S1ba3MOg7apQEu_I9vMK9u7ANGM1MFkbvDTMdVSNmJcfxT-DjIu6JhMQn2bo"
-      await sendNotif(orgnz.fcmToken, `suspicious_${record.actionType}`, `New suspicious ${record.actionType} at ${record.coordinate.lat}, ${record.coordinate.long}`, notifyPayload)
+      // const token = "egKQbjIqTiapi7MMvQXU77:APA91bEb0rDg882auDKv7CBNJ2YhQrH1JpKZr81vYGxMeN_E3g7VKfU3BJ2yWXOVQv5J0m9Pl06mcLP8S1ba3MOg7apQEu_I9vMK9u7ANGM1MFkbvDTMdVSNmJcfxT-DjIu6JhMQn2bo"
+      // await sendNotif(orgnz.fcmToken, `suspicious_${record.actionType}`, `New suspicious ${record.actionType} at ${record.coordinate.lat}, ${record.coordinate.long}`, notifyPayload)
+      await Notification.create({
+        owner: record.organization.toString(),
+        title: `suspicious_${record.actionType}`,
+        type: `gotrupass`,
+        message: `New suspicious ${record.actionType} at ${record.coordinate.lat}, ${record.coordinate.long}`
+      })
       }
     } catch (error:any) {
       return next(error);

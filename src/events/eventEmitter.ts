@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
 import { Organization } from '../models/organization.models';
 import { sendTemplateMail } from '../support/helpers';
+import { sendNotif } from '../support/firebaseNotification';
+import { Notification } from '../models/general.models';
 
 // Define the custom emitter class
 class MyEmitter extends EventEmitter {
@@ -27,6 +29,16 @@ myEmitter.on('announcement', async (data: object) => {
           "templates/announcementEmailTemplate.html",
           { name: organization.nameOfEstablishment, ...data }
         );
+
+        // create notification
+        await Notification.create({
+          owner: organization._id,
+          organization: organization._id,
+          title: "New Announcement",
+          type: "announcement",
+          message: JSON.stringify(data),
+          read: false,
+        })
       })
     );
 

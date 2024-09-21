@@ -1128,66 +1128,174 @@ export class UserSummary {
     }
 };
 
+static async getUserAttendanceSummary(req: Request, res: Response) {
+  try {
+    const { memberId, termId } = req.params;
 
-
-  static async getUserAttendanceSummary(req: Request, res: Response) {
-    try {
-      const { memberId, termId} = req.params; // Assuming memberId is passed in params
-      
-      // Fetch all attendance records for the user
-      const attendances = await AttendanceModel.find({ user: memberId, term:termId })
-        .populate({
-          path: 'classScheduleId',
-          select: 'course',
-          populate: {
-            path: 'course',
-            model: 'Course'
+    const attendanceSummary = await AttendanceModel.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(memberId),
+          term: new mongoose.Types.ObjectId(termId)
+        }
+      },
+      {
+        $lookup: {
+          from: 'classschedules',
+          localField: 'classScheduleId',
+          foreignField: '_id',
+          as: 'classSchedule'
+        }
+      },
+      {
+        $unwind: {
+          path: '$classSchedule',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'subunitcourses',
+          localField: 'classSchedule.course',
+          foreignField: '_id',
+          as: 'subUnitCourse'
+        }
+      },
+      {
+        $unwind: {
+          path: '$subUnitCourse',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'courses',
+          localField: 'subUnitCourse.course',
+          foreignField: '_id',
+          as: 'course'
+        }
+      },
+      {
+        $unwind: {
+          path: '$course',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: { $ifNull: ['$course._id', null] },
+          courseName: { $first: { $ifNull: ['$course.courseCode', 'Unknown Course'] } },
+          attendedSessions: {
+            $sum: { $cond: [{ $eq: ['$attendanceType', 'signin'] }, 1, 0] }
+          },
+          rate: {
+            $sum: {
+              $cond: [
+                { $eq: ['$attendanceType', 'signin'] },
+                {
+                  $switch: {
+                    branches: [
+                      { case: { $eq: ['$remark', 'early'] }, then: 100 },
+                      { case: { $eq: ['$remark', 'late'] }, then: 50 }
+                    ],
+                    default: 0
+                  }
+                },
+                0
+              ]
+            }
           }
-        })
-        .populate('classScheduleId.course')
-        .exec();
-
-      // Group by course and compute attendance metrics
-      const attendanceSummary: any = {};
-  
-      attendances.forEach(attendance => {
-        const courseId = attendance.classScheduleId.course._id.toString();
-        if (!attendanceSummary[courseId]) {
-          attendanceSummary[courseId] = {
-            courseName: attendance.classScheduleId.course.course.courseCode,
-
-            attendedSessions: 0,
-            rate: 0
-          };
         }
-        
-        if (attendance.attendanceType === 'signin') {
-          attendanceSummary[courseId].rate += attendance.remark === "early" ? 100 : attendance.remark === "late" ? 50 : 0
-          attendanceSummary[courseId].attendedSessions += 1;
+      },
+      {
+        $project: {
+          _id: 0,
+          courseId: { $ifNull: ['$_id', 'unknown'] },
+          courseName: 1,
+          attendedSessions: 1,
+          rate: 1,
+          attendanceRate: {
+            $cond: [
+              { $gt: ['$attendedSessions', 0] },
+              { $divide: ['$rate', '$attendedSessions'] },
+              0
+            ]
+          }
         }
-      });
-  
-      // Transform the data into a response format
-      const response = Object.keys(attendanceSummary).map(courseId => {
-        const data = attendanceSummary[courseId];
-        console.log(data, "asnfdsbdfsdfvb")
-        return {
-          courseId,
-          courseName: data.courseName,
-          rate: data.rate,
-          attendedSessions: data.attendedSessions,
-          attendanceRate: data.attendedSessions > 0 ? (data.rate / data.attendedSessions): 0
-        };
-      })
-      // .filter(item => item.attendanceRate > 100); // Filter if needed
-  
-      return successResponse(res, 200, "Success", response);
-  
-    } catch (error: any) {
-      writeErrosToLogs(error);
-      return failedResponse(res, 500, error.message);
-    }
+      },
+      {
+        $match: {
+          courseId: { $ne: 'unknown' }
+        }
+      }
+    ]);
+
+    return successResponse(res, 200, "Success", attendanceSummary);
+  } catch (error: any) {
+    writeErrosToLogs(error);
+    return failedResponse(res, 500, error.message);
   }
+}
+
+
+  // static async getUserAttendanceSummary(req: Request, res: Response) {
+  //   try {
+  //     const { memberId, termId} = req.params; // Assuming memberId is passed in params
+      
+  //     // Fetch all attendance records for the user
+  //     const attendances = await AttendanceModel.find({ user: memberId, term:termId })
+  //       .populate({
+  //         path: 'classScheduleId',
+  //         select: 'course',
+  //         populate: {
+  //           path: 'course',
+  //           model: 'Course'
+  //         }
+  //       })
+  //       .populate('classScheduleId.course')
+  //       .exec();
+
+  //     // Group by course and compute attendance metrics
+  //     const attendanceSummary: any = {};
+  
+  //     attendances.forEach(attendance => {
+  //       const courseId = attendance.classScheduleId.course._id.toString();
+  //       if (!attendanceSummary[courseId]) {
+  //         attendanceSummary[courseId] = {
+  //           courseName: attendance.classScheduleId.course.course.courseCode,
+
+  //           attendedSessions: 0,
+  //           rate: 0
+  //         };
+  //       }
+        
+  //       if (attendance.attendanceType === 'signin') {
+  //         attendanceSummary[courseId].rate += attendance.remark === "early" ? 100 : attendance.remark === "late" ? 50 : 0
+  //         attendanceSummary[courseId].attendedSessions += 1;
+  //       }
+  //     });
+  
+  //     // Transform the data into a response format
+  //     const response = Object.keys(attendanceSummary).map(courseId => {
+  //       const data = attendanceSummary[courseId];
+  //       console.log(data, "asnfdsbdfsdfvb")
+  //       return {
+  //         courseId,
+  //         courseName: data.courseName,
+  //         rate: data.rate,
+  //         attendedSessions: data.attendedSessions,
+  //         attendanceRate: data.attendedSessions > 0 ? (data.rate / data.attendedSessions): 0
+  //       };
+  //     })
+  //     // .filter(item => item.attendanceRate > 100); // Filter if needed
+  
+  //     return successResponse(res, 200, "Success", response);
+  
+  //   } catch (error: any) {
+  //     writeErrosToLogs(error);
+  //     return failedResponse(res, 500, error.message);
+  //   }
+  // }
   
   
 }

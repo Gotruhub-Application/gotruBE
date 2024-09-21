@@ -37,6 +37,7 @@ adminRouter
 .get("/organizations/users-summary/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getOrgUserSummary)
 .get("/organizations/active-plans/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getOrgActiveSubSummary)
 .get("/organizations/feature-matric/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.organFeatureUsageMetric)
+.get("/summary/subscription-summary", IsAuthenticatedGotruAdmin, AdminSummary.subscriptionSummary)
 
 .put("/organizations/deactivate-acccount/:id",IsAuthenticatedGotruAdmin, ManageAccounts.deactivateOrganizationAccount)
 
