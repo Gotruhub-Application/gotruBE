@@ -35,8 +35,8 @@ export class SignInOutRecordHistory {
             }
 
             // Validate other
-            const other = await Media.findById(value.other);
-            if (!other) return failedResponse(res, 404, `Invalid media ID for others.`);
+            // const other = await Media.findById(value.other);
+            // if (!other) return failedResponse(res, 404, `Invalid media ID for others.`);
 
             // Create the main record
             const history = await SignInOutRecordModel.create({ ...value, organization: organizationId });
@@ -65,7 +65,7 @@ export class SignInOutRecordHistory {
                 await SignInOutRecordModel.create(recordsToCreate);
             }
 
-            return successResponse(res, 200, "History created successfully.", { history });
+            return successResponse(res, 200, "Success.", { history });
         } catch (error: any) {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
@@ -79,7 +79,8 @@ export class ScanChildQrCode {
             const student = await User.findById(req.params.id).populate("passToken");
             if (!student) {
                 return failedResponse(res, 404, "Student not found");
-            }
+            };
+            let children;
 
             const token = await AppToken.findById(student.passToken)
             if (!token) {
@@ -99,8 +100,15 @@ export class ScanChildQrCode {
                     match: { expired: false } // Only populate children whose token has not expired
                 }
             });
+            if (guardians) {
+                // Filter out children without passToken or with expired passToken
+                children = guardians.children.filter((child: any) => {
+                  return child.passToken && 
+                         !child.passToken.expired
+                });
+            }
             // await sendNotif("dxacpPtkwFpUUESfMlFdfB:APA91bHvDxRwXetjz6P2mtIQNR23SoEBJ9iI5l5zTjiCNcA-QSVZiHCCObQKEtMDUf_tytkJcsn1WKb80adF_jKBlJjhDJhskWS3Z933fdOAq4QhTcyRfS2vGWzrdSA3Ru7uaJVBSx--")
-            return successResponse(res, 200, "Success",{student, guardians});
+            return successResponse(res, 200, "Success",{student, children, guardians});
         } catch (error: any) {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);

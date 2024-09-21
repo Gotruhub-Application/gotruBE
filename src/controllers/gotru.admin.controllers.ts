@@ -745,6 +745,65 @@ export class ContractPlan {
   
     };
 
+    static async subscriptionSummary(req: Request, res: Response) {
+      try {
+        // const { organizationId } = req.params;
+    
+        // if (!mongoose.Types.ObjectId.isValid(organizationId)) {
+        //   return failedResponse(res, 400, 'Invalid organization ID');
+        // }
+    
+        const result = await Plan.aggregate([
+          // {
+          //   $match: {
+          //     Organization: new mongoose.Types.ObjectId(organizationId),
+          //   }
+          // },
+          {
+            $lookup: {
+              from: 'subscriptions',
+              localField: 'subscriptionType',
+              foreignField: '_id',
+              as: 'subscription'
+            }
+          },
+          {
+            $unwind: '$subscription'
+          },
+          {
+            $group: {
+              _id: '$subscription._id',
+              subscriptionName: { $first: '$subscription.name' },
+              totalAmount: { $sum: { $ifNull: ['$amount', 0] } },
+              planCount: { $sum: 1 }
+            }
+          },
+          {
+            $project: {
+              _id: 0,
+              subscriptionId: '$_id',
+              subscriptionName: 1,
+              totalAmount: 1,
+              planCount: 1
+            }
+          }
+        ]);
+    
+        const totalAmount = result.reduce((acc, item) => acc + item.totalAmount, 0);
+        const totalPlans = result.reduce((acc, item) => acc + item.planCount, 0);
+    
+        result.forEach(item => {
+          item.percentageAmount = (item.totalAmount / totalAmount) * 100;
+          item.percentagePlans = (item.planCount / totalPlans) * 100;
+        });
+    
+        return successResponse(res, 200, "Success", { result, totalAmount, totalPlans });
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+      }
+    }
+
   }
 
   export class ManageAccounts{
