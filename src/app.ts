@@ -17,6 +17,7 @@ import "./routers/monitorFeature/users.monitor"
 import "./routers/resulltfeature/resultfeature.routes"
 import { adminAuthRouter } from "./routers/auth/admin";
 import { generalRoute } from "./routers/general.route";
+import NotificationSettingsRoutes from "./routers/notificationSettingRoutes";
 
 
 const app:Application = express();
@@ -48,6 +49,8 @@ app.use("/",passFeatureUserRouter);
 app.use("/trade",tradeOrganizationRouter)
 app.use("/",adminAuthRouter)
 app.use("/",generalRoute)
+app.use("/",NotificationSettingsRoutes)
+
 
 app.get("/", (req: Request, res: Response) => {
     res.send({message:"welcome to express and typescript"});
