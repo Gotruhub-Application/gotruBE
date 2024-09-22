@@ -691,7 +691,60 @@ export class ContractPlan {
       }
     };
 
-    static async organFeatureUsageMetric (req:Request, res:Response){
+    // static async organFeatureUsageMetric (req:Request, res:Response){
+    //   try {
+    //     const { organizationId } = req.params;
+    
+    //     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
+    //       return failedResponse(res, 400, 'Invalid organization ID');
+    //     }
+    
+    //     const result = await Plan.aggregate([
+    //       {
+    //         $match: {
+    //           Organization: new mongoose.Types.ObjectId(organizationId),
+    //         }
+    //       },
+    //       {
+    //         $lookup: {
+    //           from: 'subscriptions', // The name of the Subscription collection
+    //           localField: 'subscriptionType',
+    //           foreignField: '_id',
+    //           as: 'subscription'
+    //         }
+    //       },
+    //       {
+    //         $unwind: '$subscription'
+    //       },
+    //       {
+    //         $group: {
+    //           _id: { $toLower: '$subscription.name' }, // Convert subscription name to lowercase
+    //           planCount: { $sum: 1 } // Count the number of plans
+    //         }
+    //       },
+    //       {
+    //         $project: {
+    //           _id: 0,
+    //           subscriptionName: '$_id',
+    //           planCount: 1
+    //         }
+    //       }
+    //     ]);
+
+    //     const total = result.reduce((acc, item) => acc + item.planCount, 0);
+
+    //     result.forEach(item => {
+    //       item.percentage = (item.planCount/total) * 100
+    //     });
+    
+    //     return successResponse(res, 200, "Success", {result, total});
+    //   } catch (error: any) {
+    //     writeErrosToLogs(error);
+    //     return failedResponse(res, 500, error.message);
+    //   }
+  
+    // };
+    static async organFeatureUsageMetric(req: Request, res: Response) {
       try {
         const { organizationId } = req.params;
     
@@ -707,7 +760,7 @@ export class ContractPlan {
           },
           {
             $lookup: {
-              from: 'subscriptions', // The name of the Subscription collection
+              from: 'subscriptions',
               localField: 'subscriptionType',
               foreignField: '_id',
               as: 'subscription'
@@ -717,33 +770,69 @@ export class ContractPlan {
             $unwind: '$subscription'
           },
           {
+            $lookup: {
+              from: 'features',
+              localField: 'subscription.feature',
+              foreignField: '_id',
+              as: 'features'
+            }
+          },
+          {
+            $unwind: '$features'
+          },
+          {
             $group: {
-              _id: { $toLower: '$subscription.name' }, // Convert subscription name to lowercase
-              planCount: { $sum: 1 } // Count the number of plans
+              _id: {
+                subscriptionName: { $toLower: '$subscription.name' },
+                featureName: '$features.name'
+              },
+              planCount: { $sum: 1 }
+            }
+          },
+          {
+            $group: {
+              _id: '$_id.subscriptionName',
+              features: {
+                $push: {
+                  name: '$_id.featureName',
+                  count: '$planCount'
+                }
+              },
+              totalPlans: { $sum: '$planCount' }
             }
           },
           {
             $project: {
               _id: 0,
               subscriptionName: '$_id',
-              planCount: 1
+              features: 1,
+              totalPlans: 1
             }
           }
         ]);
-
-        const total = result.reduce((acc, item) => acc + item.planCount, 0);
-
-        result.forEach(item => {
-          item.percentage = (item.planCount/total) * 100
+    
+        const grandTotal = result.reduce((acc, item) => acc + item.totalPlans, 0);
+    
+        interface SubscriptionResult {
+          subscriptionName: string;
+          features: Array<{ name: string; count: number; percentage?: number }>;
+          totalPlans: number;
+          percentage?: number;
+        }
+    
+        result.forEach((subscription: SubscriptionResult) => {
+          subscription.percentage = (subscription.totalPlans / grandTotal) * 100;
+          subscription.features.forEach((feature: { name: string; count: number; percentage?: number }) => {
+            feature.percentage = (feature.count / subscription.totalPlans) * 100;
+          });
         });
     
-        return successResponse(res, 200, "Success", {result, total});
+        return successResponse(res, 200, "Success", { result, grandTotal });
       } catch (error: any) {
         writeErrosToLogs(error);
         return failedResponse(res, 500, error.message);
       }
-  
-    };
+    }
 
     static async subscriptionSummary(req: Request, res: Response) {
       try {
