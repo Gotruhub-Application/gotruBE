@@ -544,6 +544,7 @@ export class ContractPlan {
       try {
         const now = new Date();
         const { filter } = req.query;
+        const organizationId = req.params.organizationId
   
         let startDate;
   
@@ -569,7 +570,7 @@ export class ContractPlan {
           {
             $match: {
               createdAt: { $gte: startDate },
-              // Organization:organizationId
+              Organization:new mongoose.Types.ObjectId(organizationId), 
             }
           },
           {

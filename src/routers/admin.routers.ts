@@ -33,7 +33,7 @@ adminRouter
 // summary
 .get("/summary", IsAuthenticatedGotruAdmin, AdminSummary.summary)
 .get("/organizations", IsAuthenticatedGotruAdmin, AdminSummary.getOrganizations)
-.get("/graph", IsAuthenticatedGotruAdmin, AdminSummary.getSubscriptionRevenue)
+.get("/graph/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getSubscriptionRevenue)
 .get("/organizations/users-summary/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getOrgUserSummary)
 .get("/organizations/active-plans/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getOrgActiveSubSummary)
 .get("/organizations/feature-matric/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.organFeatureUsageMetric)
