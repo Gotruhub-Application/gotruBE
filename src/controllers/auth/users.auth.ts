@@ -61,7 +61,7 @@ export class CompleteOnboarding {
             if (error) {
                 return failedResponse(res, 400, `${error.details[0].message}`);
             }
-            const userExist = await CompleteOnboarding.getUserByEmail(value.email)
+            const userExist = await CompleteOnboarding.getUserByEmail(value.email.trim())
             if (!userExist) return failedResponse(res, 404, "Email does not exist.");
 
             const userPassword: string | undefined = userExist.password;
@@ -70,7 +70,7 @@ export class CompleteOnboarding {
 
             const correctPassword = await bcrypt.compare(value.password, userPassword);
             if (!correctPassword) {
-                return failedResponse(res, 400, "Incorrect password");
+                return failedResponse(res, 400, "Incorrect credentials");
             }
             if (value.fcmToken){
                 userExist.fcmToken = value.fcmToken

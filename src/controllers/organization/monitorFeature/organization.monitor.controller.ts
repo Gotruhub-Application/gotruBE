@@ -491,7 +491,10 @@ export class ClassScheduleController {
                 day: schedule.day,
                 course: schedule.course?.course?.name,
                 code: schedule.course?.course?.courseCode,
-                location:schedule.locationId ? schedule.locationId.name : null
+                location:schedule.locationId ? schedule.locationId.name : null,
+                startTime:schedule.startTime,
+                endTime:schedule.endTime,
+
             }));
 
             return successResponse(res, 200, "Success", returnPayload);
