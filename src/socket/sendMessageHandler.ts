@@ -22,7 +22,7 @@ export async function handleAdminSendParentMessage(socket: any, message: any) {
         // send notification
         const notifyPayload = {
             type: `pass_authorization`,
-            ...value
+            customPayload: value.customPayload
 
         };
         
@@ -51,7 +51,7 @@ export async function handleParentSendAdminApproveDecline(socket: any, message: 
         
         const notifyPayload = {
             type: `pass_authorization`,
-            ...value
+            customPayload: value.customPayload
 
         };
         try {

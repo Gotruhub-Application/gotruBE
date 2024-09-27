@@ -3,7 +3,14 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface BlackListedTokenDocument extends Document {
   token: string
+};
+
+export interface IPassNotificationData extends Document {
+  data: Record<string, any>; // Using Record<string, any> instead of object for better type safety
+  createdAt: Date;
+  updatedAt: Date;
 }
+
 
 export interface INotification extends Document {
   owner: string;

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Notification } from '../models/general.models'; 
+import { Notification, PassNotificationData } from '../models/general.models'; 
 import { writeErrosToLogs } from '../support/helpers';
 import {failedResponse, successResponse } from "../support/http";
 
@@ -73,4 +73,74 @@ export class NotificationController {
         }
     };
     
+}
+
+
+export class PassNotificationDataController {
+    // Create method
+    static async createPassNotificationData(req: Request, res: Response) {
+        try {
+            const { data } = req.body;
+            const newPassNotificationData = new PassNotificationData({ data });
+            const savedData = await newPassNotificationData.save();
+            return successResponse(res, 201, "PassNotificationData created successfully.", savedData);
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, `Error creating PassNotificationData: ${error.message}`);
+        }
+    }
+
+    // GetById method
+    static async getPassNotificationDataById(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const passNotificationData = await PassNotificationData.findById(id);
+            if (!passNotificationData) {
+                return failedResponse(res, 404, "PassNotificationData not found.");
+            }
+            return successResponse(res, 200, "PassNotificationData retrieved successfully.", passNotificationData);
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, `Error fetching PassNotificationData: ${error.message}`);
+        }
+    }
+    static async deletePassNotificationDataById(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const passNotificationData = await PassNotificationData.findByIdAndDelete(id);
+            if (!passNotificationData) {
+                return failedResponse(res, 404, "PassNotificationData not found.");
+            }
+            return successResponse(res, 200, "PassNotificationData deleted successfully.", passNotificationData);
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, `Error fetching PassNotificationData: ${error.message}`);
+        }
+    }
+
+    // // Get all PassNotificationData with pagination
+    // static async getAllPassNotificationData(req: Request, res: Response) {
+    //     try {
+    //         const { page = 1, limit = 10 } = req.query;
+    //         const pageNumber = Number(page);
+    //         const limitNumber = Number(limit);
+
+    //         const passNotificationData = await PassNotificationData.find()
+    //             .limit(limitNumber)
+    //             .skip((pageNumber - 1) * limitNumber)
+    //             .exec();
+
+    //         const count = await PassNotificationData.countDocuments();
+
+    //         return successResponse(res, 200, "PassNotificationData retrieved successfully.", {
+    //             passNotificationData,
+    //             totalPages: Math.ceil(count / limitNumber),
+    //             currentPage: pageNumber,
+    //             totalItems: count
+    //         });
+    //     } catch (error: any) {
+    //         writeErrosToLogs(error);
+    //         return failedResponse(res, 500, "An error occurred while retrieving PassNotificationData.");
+    //     }
+    // }
 }

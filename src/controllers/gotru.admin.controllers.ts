@@ -220,44 +220,104 @@ export class ContractPlan {
       }
   
     };
-    static async getAllOrgPlans (req:Request, res:Response){
-        const ITEMS_PER_PAGE = 10;
-        try {
+    static async getAllOrgPlans(req: Request, res: Response) {
+      const ITEMS_PER_PAGE = 20;
+      try {
           const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
           const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
   
-          const plans = await Plan.find({ Organization: req.params.organizationId, paidStatus: true }).populate("subscriptionType")
-                                    .skip(skip)
-                                    .limit(ITEMS_PER_PAGE); // Limit the number of items per page
+          const [plans, totalCount] = await Promise.all([
+              Plan.find({ Organization: req.params.organizationId, paidStatus: true })
+                  .populate("subscriptionType")
+                  .skip(skip)
+                  .limit(ITEMS_PER_PAGE), // Limit the number of items per page
+              Plan.countDocuments({ Organization: req.params.organizationId, paidStatus: true })
+          ]);
+  
+          const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  
+          return successResponse(res, 200, "Success", {
+              plans,
+              pagination: {
+                  currentPage: page,
+                  totalPages,
+                  totalItems: totalCount,
+                  itemsPerPage: ITEMS_PER_PAGE
+              }
+          });
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
+      }
+  }
+    // static async getAllOrgPlans (req:Request, res:Response){
+    //     const ITEMS_PER_PAGE = 10;
+    //     try {
+    //       const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
+    //       const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
+  
+    //       const plans = await Plan.find({ Organization: req.params.organizationId, paidStatus: true }).populate("subscriptionType")
+    //                                 .skip(skip)
+    //                                 .limit(ITEMS_PER_PAGE); // Limit the number of items per page
                                     
   
-          return successResponse(res, 200, "Success", { plans });
-      } catch (error: any) {
-          writeErrosToLogs(error);
-          return failedResponse(res, 500, error.message);
-      }
+    //       return successResponse(res, 200, "Success", { plans });
+    //   } catch (error: any) {
+    //       writeErrosToLogs(error);
+    //       return failedResponse(res, 500, error.message);
+    //   }
   
-    };
-
-    static async getAllContractPlans (req:Request, res:Response){
-        const ITEMS_PER_PAGE = 10;
-        try {
+    // };
+    static async getAllContractPlans(req: Request, res: Response) {
+      const ITEMS_PER_PAGE = 20;
+      try {
           const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
           const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
   
-          const plans = await Plan.find({ paidStatus: true }).populate("subscriptionType")
-            .populate("Organization")
-            .skip(skip)
-            .limit(ITEMS_PER_PAGE); // Limit the number of items per page
-            
+          const [plans, totalCount] = await Promise.all([
+              Plan.find({ paidStatus: true })
+                  .populate("subscriptionType")
+                  .populate("Organization")
+                  .skip(skip)
+                  .limit(ITEMS_PER_PAGE), // Limit the number of items per page
+              Plan.countDocuments({ paidStatus: true })
+          ]);
   
-          return successResponse(res, 200, "Success", plans );
+          const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  
+          return successResponse(res, 200, "Success", {
+              plans,
+              pagination: {
+                  currentPage: page,
+                  totalPages,
+                  totalItems: totalCount,
+                  itemsPerPage: ITEMS_PER_PAGE
+              }
+          });
       } catch (error: any) {
           writeErrosToLogs(error);
           return failedResponse(res, 500, error.message);
       }
+  }
+    // static async getAllContractPlans (req:Request, res:Response){
+    //     const ITEMS_PER_PAGE = 10;
+    //     try {
+    //       const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
+    //       const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
   
-    };
+    //       const plans = await Plan.find({ paidStatus: true }).populate("subscriptionType")
+    //         .populate("Organization")
+    //         .skip(skip)
+    //         .limit(ITEMS_PER_PAGE); // Limit the number of items per page
+            
+  
+    //       return successResponse(res, 200, "Success", plans );
+    //   } catch (error: any) {
+    //       writeErrosToLogs(error);
+    //       return failedResponse(res, 500, error.message);
+    //   }
+  
+    // };
   
     static async getOrgPlanById (req:Request, res:Response){
   
