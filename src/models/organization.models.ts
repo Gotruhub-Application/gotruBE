@@ -611,7 +611,7 @@ productSchema.pre('find', function () {
 
 
 const OrderSchema: Schema<IOrder> = new Schema<IOrder>({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
   attendant: { type: Schema.Types.ObjectId, ref: 'User' },
   items: [{
