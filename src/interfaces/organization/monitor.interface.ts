@@ -64,6 +64,7 @@ export interface IAttendance extends Document {
   location: { lat: string; long: string };
   attendanceType: 'signin' | 'signout';
   remark: string;
+  score: string;
   isValid: boolean;
   user: Iuser['_id'];
   classScheduleId: IClassSchedule['_id'];
@@ -82,7 +83,7 @@ export interface IAttendanceGrading extends Document {
 
 export interface IthreadholdValue extends Document {
   organization: Types.ObjectId;
-  name: 'excellent' | 'passs' | 'fail';
+  name: 'excellent' | 'pass' | 'fail';
   type: 'monitorEnd' | 'monitorSource';
   minVal: number;
   maxVal: number;

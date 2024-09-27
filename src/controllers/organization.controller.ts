@@ -1136,76 +1136,68 @@ static async getUserAttendanceSummary(req: Request, res: Response) {
       {
         $match: {
           user: new mongoose.Types.ObjectId(memberId),
-          term: new mongoose.Types.ObjectId(termId)
-        }
+          term: new mongoose.Types.ObjectId(termId),
+        },
       },
       {
         $lookup: {
           from: 'classschedules',
           localField: 'classScheduleId',
           foreignField: '_id',
-          as: 'classSchedule'
-        }
+          as: 'classSchedule',
+        },
       },
       {
         $unwind: {
           path: '$classSchedule',
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
           from: 'subunitcourses',
           localField: 'classSchedule.course',
           foreignField: '_id',
-          as: 'subUnitCourse'
-        }
+          as: 'subUnitCourse',
+        },
       },
       {
         $unwind: {
           path: '$subUnitCourse',
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
           from: 'courses',
           localField: 'subUnitCourse.course',
           foreignField: '_id',
-          as: 'course'
-        }
+          as: 'course',
+        },
       },
       {
         $unwind: {
           path: '$course',
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $group: {
           _id: { $ifNull: ['$course._id', null] },
           courseName: { $first: { $ifNull: ['$course.courseCode', 'Unknown Course'] } },
-          attendedSessions: {
-            $sum: { $cond: [{ $eq: ['$attendanceType', 'signin'] }, 1, 0] }
-          },
-          rate: {
+          totalScore: {
             $sum: {
               $cond: [
                 { $eq: ['$attendanceType', 'signin'] },
-                {
-                  $switch: {
-                    branches: [
-                      { case: { $eq: ['$remark', 'early'] }, then: 100 },
-                      { case: { $eq: ['$remark', 'late'] }, then: 50 }
-                    ],
-                    default: 0
-                  }
-                },
-                0
-              ]
-            }
-          }
-        }
+                { $toDouble: { $ifNull: ['$score', '0'] } },
+                0,
+              ],
+            },
+          },
+          attendedSessions: {
+            $sum: { $cond: [{ $eq: ['$attendanceType', 'signin'] }, 1, 0] },
+          },
+        },
       },
       {
         $project: {
@@ -1213,29 +1205,249 @@ static async getUserAttendanceSummary(req: Request, res: Response) {
           courseId: { $ifNull: ['$_id', 'unknown'] },
           courseName: 1,
           attendedSessions: 1,
-          rate: 1,
+          totalScore: 1,
           attendanceRate: {
             $cond: [
               { $gt: ['$attendedSessions', 0] },
-              { $divide: ['$rate', '$attendedSessions'] },
-              0
-            ]
-          }
-        }
+              { $multiply: [{ $divide: ['$totalScore', { $multiply: ['$attendedSessions', 100] }] }, 100] },
+              0,
+            ],
+          },
+        },
       },
       {
         $match: {
-          courseId: { $ne: 'unknown' }
-        }
-      }
+          courseId: { $ne: 'unknown' },
+        },
+      },
     ]);
 
-    return successResponse(res, 200, "Success", attendanceSummary);
+    return successResponse(res, 200, 'Success', attendanceSummary);
   } catch (error: any) {
     writeErrosToLogs(error);
     return failedResponse(res, 500, error.message);
   }
 }
+
+
+// static async getUserAttendanceSummary(req: Request, res: Response) {
+//   try {
+//     const { memberId, termId } = req.params;
+
+//     const attendanceSummary = await AttendanceModel.aggregate([
+//       {
+//         $match: {
+//           user: new mongoose.Types.ObjectId(memberId),
+//           term: new mongoose.Types.ObjectId(termId)
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: 'classschedules',
+//           localField: 'classScheduleId',
+//           foreignField: '_id',
+//           as: 'classSchedule'
+//         }
+//       },
+//       {
+//         $unwind: {
+//           path: '$classSchedule',
+//           preserveNullAndEmptyArrays: true
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: 'subunitcourses',
+//           localField: 'classSchedule.course',
+//           foreignField: '_id',
+//           as: 'subUnitCourse'
+//         }
+//       },
+//       {
+//         $unwind: {
+//           path: '$subUnitCourse',
+//           preserveNullAndEmptyArrays: true
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: 'courses',
+//           localField: 'subUnitCourse.course',
+//           foreignField: '_id',
+//           as: 'course'
+//         }
+//       },
+//       {
+//         $unwind: {
+//           path: '$course',
+//           preserveNullAndEmptyArrays: true
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: { $ifNull: ['$course._id', null] },
+//           courseName: { $first: { $ifNull: ['$course.courseCode', 'Unknown Course'] } },
+//           attendedSessions: {
+//             $sum: { $cond: [{ $eq: ['$attendanceType', 'signin'] }, 1, 0] }
+//           },
+//           rate: {
+//             $sum: {
+//               $cond: [
+//                 { $eq: ['$attendanceType', 'signin'] },
+//                 {
+//                   $switch: {
+//                     branches: [
+//                       { case: { $eq: ['$remark', 'early'] }, then: '$score' },
+//                       { case: { $eq: ['$remark', 'late'] }, then: '$score' },
+//                       { case: { $eq: ['$remark', 'absent'] }, then: '$score' }
+//                     ],
+//                     default: 0
+//                   }
+//                 },
+//                 0
+//               ]
+//             }
+//           }
+//         }
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           courseId: { $ifNull: ['$_id', 'unknown'] },
+//           courseName: 1,
+//           attendedSessions: 1,
+//           rate: 1,
+//           attendanceRate: {
+//             $cond: [
+//               { $gt: ['$attendedSessions', 0] },
+//               { $divide: ['$rate', '$attendedSessions'] },
+//               0
+//             ]
+//           }
+//         }
+//       },
+//       {
+//         $match: {
+//           courseId: { $ne: 'unknown' }
+//         }
+//       }
+//     ]);
+
+//     return successResponse(res, 200, "Success", attendanceSummary);
+//   } catch (error: any) {
+//     writeErrosToLogs(error);
+//     return failedResponse(res, 500, error.message);
+//   }
+// }
+
+// static async getUserAttendanceSummary(req: Request, res: Response) {
+//   try {
+//     const { memberId, termId } = req.params;
+
+//     const attendanceSummary = await AttendanceModel.aggregate([
+//       {
+//         $match: {
+//           user: new mongoose.Types.ObjectId(memberId),
+//           term: new mongoose.Types.ObjectId(termId)
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: 'classschedules',
+//           localField: 'classScheduleId',
+//           foreignField: '_id',
+//           as: 'classSchedule'
+//         }
+//       },
+//       {
+//         $unwind: {
+//           path: '$classSchedule',
+//           preserveNullAndEmptyArrays: true
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: 'subunitcourses',
+//           localField: 'classSchedule.course',
+//           foreignField: '_id',
+//           as: 'subUnitCourse'
+//         }
+//       },
+//       {
+//         $unwind: {
+//           path: '$subUnitCourse',
+//           preserveNullAndEmptyArrays: true
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: 'courses',
+//           localField: 'subUnitCourse.course',
+//           foreignField: '_id',
+//           as: 'course'
+//         }
+//       },
+//       {
+//         $unwind: {
+//           path: '$course',
+//           preserveNullAndEmptyArrays: true
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: { $ifNull: ['$course._id', null] },
+//           courseName: { $first: { $ifNull: ['$course.courseCode', 'Unknown Course'] } },
+//           attendedSessions: {
+//             $sum: { $cond: [{ $eq: ['$attendanceType', 'signin'] }, 1, 0] }
+//           },
+//           rate: {
+//             $sum: {
+//               $cond: [
+//                 { $eq: ['$attendanceType', 'signin'] },
+//                 {
+//                   $switch: {
+//                     branches: [
+//                       { case: { $eq: ['$remark', 'early'] }, then: 100 },
+//                       { case: { $eq: ['$remark', 'late'] }, then: 50 }
+//                     ],
+//                     default: 0
+//                   }
+//                 },
+//                 0
+//               ]
+//             }
+//           }
+//         }
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           courseId: { $ifNull: ['$_id', 'unknown'] },
+//           courseName: 1,
+//           attendedSessions: 1,
+//           rate: 1,
+//           attendanceRate: {
+//             $cond: [
+//               { $gt: ['$attendedSessions', 0] },
+//               { $divide: ['$rate', '$attendedSessions'] },
+//               0
+//             ]
+//           }
+//         }
+//       },
+//       {
+//         $match: {
+//           courseId: { $ne: 'unknown' }
+//         }
+//       }
+//     ]);
+
+//     return successResponse(res, 200, "Success", attendanceSummary);
+//   } catch (error: any) {
+//     writeErrosToLogs(error);
+//     return failedResponse(res, 500, error.message);
+//   }
+// }
 
 
   // static async getUserAttendanceSummary(req: Request, res: Response) {
