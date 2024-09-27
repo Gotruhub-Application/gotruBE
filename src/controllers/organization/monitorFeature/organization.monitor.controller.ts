@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, initiatePaystack, successResponse } from "../../../support/http"; 
 import { isLessThanFourMonths, writeErrosToLogs } from "../../../support/helpers";
-import { UpdateLocationSchema, attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createLocationSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema } from "../../../validators/monitorFeature/organization.monitor";
-import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel } from "../../../models/organziation/monitorFeature.models";
+import { UpdateLocationSchema, attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createLocationSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, threadholdValueValidator, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema, updateThreadholdValueValidator } from "../../../validators/monitorFeature/organization.monitor";
+import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel, ThreadholdValue } from "../../../models/organziation/monitorFeature.models";
 import { logger } from "../../../logger";
 import { AppToken, Unit, User } from "../../../models/organization.models";
 import { schedule } from "node-cron";
@@ -679,7 +679,7 @@ export class AttendanceController {
                     return failedResponse(res, 400, "Your monitor end subscription has expired token has expired");
                 };
 
-                if(user?.subUnit != schedule?.subUnit) return failedResponse(res, 400, "You cannot take attendance in another sub-unit."); 
+                // if(user?.subUnit != schedule?.subUnit) return failedResponse(res, 400, "You cannot take attendance in another sub-unit."); 
             }
             // else if(role === "staff"){
             //     if(!schedule?.coordinators.includes(userId) ) return failedResponse(res, 400, "You are not this course's coordinator."); 
@@ -855,6 +855,90 @@ export class AttendanceGradingController {
           return failedResponse(res, 404, 'Attendance grading not found');
         }
         return successResponse(res, 200, 'Attendance grading deleted successfully', grading);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  }
+
+
+  
+export class ThreadholdValueController {
+    // Create new threadhold value
+    static async createThreadholdValue(req: Request, res: Response) {
+      try {
+        const { error, value } = threadholdValueValidator.validate(req.body);
+        if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+  
+        // check if threadhold value exists
+        const valueExist = await ThreadholdValue.findOne({
+          organization: req.params.organizationId,
+          name: value.name,
+          type: value.type
+        });
+        if (valueExist) return failedResponse(res, 400, `Threadhold value with name '${value.name}' and type '${value.type}' already exists. Duplicate not allowed.`);
+  
+        value.organization = req.params.organizationId;
+        const threadholdValue = new ThreadholdValue(value);
+        await threadholdValue.save();
+        return successResponse(res, 201, 'Threadhold value created successfully', threadholdValue);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  
+    // Get all threadhold values
+    static async getAllThreadholdValues(req: Request, res: Response) {
+      try {
+        const values = await ThreadholdValue.find({ organization: req.params.organizationId });
+        return successResponse(res, 200, 'Threadhold values fetched successfully', values);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  
+    // Get a specific threadhold value
+    static async getSingleThreadholdValue(req: Request, res: Response) {
+      try {
+        const { id } = req.params;
+        const value = await ThreadholdValue.findById(id);
+        if (!value) {
+          return failedResponse(res, 404, 'Threadhold value not found');
+        }
+        return successResponse(res, 200, 'Threadhold value fetched successfully', value);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  
+    // Update threadhold value
+    static async updateThreadholdValue(req: Request, res: Response) {
+      try {
+        const { id } = req.params;
+        const { error, value } = updateThreadholdValueValidator.validate(req.body);
+        if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+  
+        const updatedValue = await ThreadholdValue.findByIdAndUpdate(id, value, { new: true });
+  
+        if (!updatedValue) {
+          return failedResponse(res, 404, 'Threadhold value not found');
+        }
+  
+        return successResponse(res, 200, 'Threadhold value updated successfully', updatedValue);
+      } catch (error: any) {
+        return failedResponse(res, 500, error.message);
+      }
+    }
+  
+    // Delete threadhold value
+    static async deleteThreadholdValue(req: Request, res: Response) {
+      try {
+        const { id } = req.params;
+        const value = await ThreadholdValue.findByIdAndDelete(id);
+        if (!value) {
+          return failedResponse(res, 404, 'Threadhold value not found');
+        }
+        return successResponse(res, 200, 'Threadhold value deleted successfully', value);
       } catch (error: any) {
         return failedResponse(res, 500, error.message);
       }
