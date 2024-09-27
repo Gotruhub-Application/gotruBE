@@ -289,7 +289,7 @@ export class OrgUsers {
   };
 
   static async getUsers(req: Request, res: Response, next: NextFunction) {
-    const ITEMS_PER_PAGE = 10;
+    const ITEMS_PER_PAGE = 100;
     try {
       const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
       const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
