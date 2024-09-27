@@ -1,6 +1,7 @@
 // sendMessageHandler.ts
 import { io } from "../index";
 import { logger } from "../logger";
+import { PassNotificationData } from "../models/general.models";
 import { User } from "../models/organization.models";
 import { EVENTS } from "../socket"; 
 import { sendNotif } from "../support/firebaseNotification";
@@ -16,13 +17,19 @@ export async function handleAdminSendParentMessage(socket: any, message: any) {
         
         io.to(socket.user._id).emit(EVENTS.SERVER.ERROR, handleError(400,error.message));
     }else{
+        const newPassNotificationData = new PassNotificationData({ data:value });
+        const savedData = await newPassNotificationData.save();
+
+        value.notificationId = savedData._id;
         io.to(message.parentId).emit(EVENTS.CLIENT.RECIEVE_SIGN_IN_OUT_MESSAGE_FROM_ADMIN, { value });
         io.to(socket.user._id).emit(EVENTS.SERVER.SUCCESS, handleSuccess(200));
+
+        
 
         // send notification
         const notifyPayload = {
             type: `pass_authorization`,
-            customPayload: value.customPayload
+            customPayload: savedData._id
 
         };
         
