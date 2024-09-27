@@ -455,7 +455,8 @@ export class OrderController {
     // Get all orders for the admin with pagination
     static async getAllOrders(req: Request, res: Response) {
         try {
-            const { organizationId:organization} = req.params
+            let { organizationId:organization} = req.params
+            const {organzId} = req.query
             const { page = 1, limit = 10 } = req.query;
 
             // if (role !== 'admin') {
@@ -479,7 +480,36 @@ export class OrderController {
             writeErrosToLogs(error);
             return failedResponse(res, 500, "An error occurred while retrieving the orders.");
         }
-    }
+    };
+    static async getAllOrdersMobile(req: Request, res: Response) {
+        try {
+            let { organizationId:organization} = req.query
+            const {organzId} = req.query
+            const { page = 1, limit = 10 } = req.query;
+
+            // if (role !== 'admin') {
+            //     return failedResponse(res, 403, "Unauthorized access.");
+            // }
+
+            const orders = await Order.find({organization})
+                .limit(Number(limit))
+                .skip((Number(page) - 1) * Number(limit))
+                .exec();
+
+            const count = await Order.countDocuments({organization});
+
+            return successResponse(res, 200, "Orders retrieved successfully.", {
+                orders,
+                totalPages: Math.ceil(count / Number(limit)),
+                currentPage: Number(page),
+                totalOrders: count
+            });
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, "An error occurred while retrieving the orders.");
+        }
+    };
+
 
     // Get order by ID for the requesting user
     static async getUserOrderById(req: Request, res: Response) {

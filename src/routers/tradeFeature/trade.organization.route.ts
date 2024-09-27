@@ -49,6 +49,6 @@ tradeOrganizationRouter
 
 // 
 .get('/mobile-section/child/:child_id/orders',IsAuthenticatedUser, OrderController.getUserOrders)
-.get('/mobile-section/admin/orders', IsAuthenticatedStaff,OrderController.getAllOrders)
+.get('/mobile-section/admin/orders', IsAuthenticatedStaff,OrderController.getAllOrdersMobile)
 .get('/mobile-section/child/:child_id/orders/:orderId',IsAuthenticatedUser, OrderController.getUserOrderById)
 
