@@ -1,5 +1,5 @@
 import { Schema, Document, Model, model } from 'mongoose';
-import { ISession, ICourse, ITerm,IAttendance,IClassSchedule, ISubUnitCourse, IAttendanceGrading, Ilocation } from '../../interfaces/organization/monitor.interface';
+import { ISession, ICourse, ITerm,IAttendance,IClassSchedule, ISubUnitCourse, IAttendanceGrading, Ilocation, IthreadholdValue } from '../../interfaces/organization/monitor.interface';
 import { ConvertDateTimeToNumber, createNotification, generateQrcode, isUserLocationInRange, writeErrosToLogs } from '../../support/helpers';
 import { CompareCoordinate, CreateNotificationParams } from '../../interfaces/general.interface';
 import { sendNotif } from '../../support/firebaseNotification';
@@ -230,9 +230,22 @@ attendanceSchema.pre("save", async function (next) {
 const AttendanceGradingSchema: Schema<IAttendanceGrading> = new Schema<IAttendanceGrading>(
   {
     organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+    type: { type: String, enum: ['monitorEnd', 'monitorSource'], default:"monitorEnd"},
     name: { type: String, enum: ['early', 'late', 'absent'], required: true },
     time:{ type: Number, required: true, max: 60 },
     value: { type: Number, required: true, max: 100 },
+  },
+  {
+    timestamps: true,
+  }
+);
+const threadholdValueSchema: Schema<IthreadholdValue> = new Schema<IthreadholdValue>(
+  {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+    type: { type: String, enum: ['monitorEnd', 'monitorSource'], default:"monitorEnd"},
+    name: { type: String, enum: ['excellent', 'pass', 'fail'], required: true },
+    maxVal:{ type: Number, required: true, max: 100, min:0 },
+    minVal: { type: Number, required: true, min: 0, max:100},
   },
   {
     timestamps: true,
@@ -250,4 +263,5 @@ export const SubUnitCourseModel: Model<ISubUnitCourse> = model<ISubUnitCourse>('
 export const ClassScheduleModel: Model<IClassSchedule> = model<IClassSchedule>('ClassSchedule', classScheduleSchema);
 export const AttendanceModel: Model<IAttendance> = model<IAttendance>('Attendance', attendanceSchema);
 export const AttendanceGrading:Model<IAttendanceGrading> = model<IAttendanceGrading>('AttendanceGrading', AttendanceGradingSchema);
+export const ThreadholdValue:Model<IthreadholdValue> = model<IthreadholdValue>('ThreadholdValue', threadholdValueSchema);
 export const LocationModel: Model<Ilocation>= model<Ilocation>("Location", locationSchema);

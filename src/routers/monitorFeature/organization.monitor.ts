@@ -1,4 +1,4 @@
-import { AttendanceController, AttendanceGradingController, ClassScheduleController, CourseController, Location, Session, SubUnitCourseController, TermController } from "../../controllers/organization/monitorFeature/organization.monitor.controller";
+import { AttendanceController, AttendanceGradingController, ClassScheduleController, CourseController, Location, Session, SubUnitCourseController, TermController, ThreadholdValueController } from "../../controllers/organization/monitorFeature/organization.monitor.controller";
 import { IsAuthenticatedOrganization, IsAuthenticatedUser } from "../../support/middleware";
 import { organizationRouter } from "../organization.router";
 
@@ -48,6 +48,11 @@ organizationRouter
 .put('/attendance-grading/:id', IsAuthenticatedOrganization, AttendanceGradingController.updateAttendanceGrading)
 .delete('/attendance-grading/:id', IsAuthenticatedOrganization, AttendanceGradingController.deleteAttendanceGrading)
 
+.post('/threadhold-value', IsAuthenticatedOrganization, ThreadholdValueController.createThreadholdValue)
+.get('/threadhold-values', IsAuthenticatedOrganization, ThreadholdValueController.getAllThreadholdValues)
+.get('/threadhold-value/:id', IsAuthenticatedOrganization, ThreadholdValueController.getSingleThreadholdValue)
+.put('/threadhold-value/:id', IsAuthenticatedOrganization, ThreadholdValueController.updateThreadholdValue)
+.delete('/threadhold-value/:id', IsAuthenticatedOrganization, ThreadholdValueController.deleteThreadholdValue)
 
 .post("/locations", IsAuthenticatedOrganization, Location.createLocation)
 .get("/locations", IsAuthenticatedOrganization, Location.getLocations)

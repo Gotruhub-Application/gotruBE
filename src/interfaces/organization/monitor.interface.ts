@@ -73,8 +73,19 @@ export interface IAttendance extends Document {
 export interface IAttendanceGrading extends Document {
   organization: Types.ObjectId;
   name: 'early' | 'late' | 'absent';
+  type: 'monitorEnd' | 'monitorSource';
   value: number;
   time: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IthreadholdValue extends Document {
+  organization: Types.ObjectId;
+  name: 'excellent' | 'passs' | 'fail';
+  type: 'monitorEnd' | 'monitorSource';
+  minVal: number;
+  maxVal: number;
   createdAt: Date;
   updatedAt: Date;
 }

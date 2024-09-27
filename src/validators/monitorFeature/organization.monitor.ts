@@ -151,12 +151,30 @@ export const updateAttendanceSchema = Joi.object({
 
 export const attendanceGradingValidationSchema = Joi.object({
   name: Joi.string().valid('early', 'late', 'absent').required(),
+  type: Joi.string().valid('monitorEnd', 'monitorSource').allow(""),
   value: Joi.number().max(100).min(0).required(),
   time: Joi.number().max(60).min(0).required(),
 });
 
 export const attendanceGradingUpdateValidationSchema = Joi.object({
+  type: Joi.string().valid('monitorEnd', 'monitorSource').allow(""),
   name: Joi.string().valid('early', 'late', 'absent').allow(""),
   value: Joi.number().max(100).min(0).allow(""),
   time: Joi.number().max(60).min(0).allow(""),
+});
+
+export const threadholdValueValidator = Joi.object({
+  name: Joi.string().valid('excellent', 'pass', 'fail').required(),
+  type: Joi.string().valid('monitorEnd', 'monitorSource').required(),
+  maxVal: Joi.number().max(100).min(0).required(),
+  minVal: Joi.number().max(100).min(0).required(),
+
+});
+
+export const updateThreadholdValueValidator = Joi.object({
+  name: Joi.string().valid('excellent', 'pass', 'fail').optional(),
+  type: Joi.string().valid('monitorEnd', 'monitorSource').optional(),
+  maxVal: Joi.number().max(100).min(0).optional(),
+  minVal: Joi.number().max(100).min(0).optional(),
+
 });
