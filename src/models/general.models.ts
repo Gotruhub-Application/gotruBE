@@ -1,5 +1,5 @@
 import {Schema, Model, model } from 'mongoose';
-import { BlackListedTokenDocument, INotification } from "../interfaces/general.interface";
+import { BlackListedTokenDocument, INotification, IPassNotificationData } from "../interfaces/general.interface";
 
 
 const BlackListTokenSchema :Schema<BlackListedTokenDocument> = new Schema<BlackListedTokenDocument>({
@@ -9,6 +9,15 @@ const BlackListTokenSchema :Schema<BlackListedTokenDocument> = new Schema<BlackL
     },
 
 },{timestamps:true})
+
+const passNotificationDataSchema: Schema<IPassNotificationData> = new Schema<IPassNotificationData>({
+  data: {
+    type: Schema.Types.Mixed,
+    required: true
+  }
+}, { timestamps: true });
+
+
 
 const notificationSchema: Schema<INotification> = new Schema<INotification>({
   owner: String,
@@ -21,5 +30,9 @@ const notificationSchema: Schema<INotification> = new Schema<INotification>({
   read: { type: Boolean, default: false },
 }, { timestamps: true });
 
+
+
 export const Notification: Model<INotification> = model<INotification>('Notification', notificationSchema);
 export const BlackListedToken: Model<BlackListedTokenDocument> = model<BlackListedTokenDocument>('BlackListedToken', BlackListTokenSchema);
+export const PassNotificationData: Model<IPassNotificationData> = model<IPassNotificationData>('PassNotificationData', passNotificationDataSchema);
+
