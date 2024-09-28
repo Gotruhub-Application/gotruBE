@@ -609,7 +609,7 @@ export class OrderController {
             case "assignee":
               const orderPick = await OrderPickup.findOne({ subunit: orderUser.subUnit });
               if (!orderPick) {
-                return failedResponse(res, 404, "Order pick not found.");
+                return failedResponse(res, 404, "Order pickup not found for the subunit.");
               }
             //   if (orderPick.assignee.toString() !== updatingUser._id.toString()) {
             //     return failedResponse(res, 403, "Unauthorized access.");
