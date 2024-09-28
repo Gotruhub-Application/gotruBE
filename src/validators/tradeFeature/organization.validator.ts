@@ -62,10 +62,10 @@ export const payloadSchema = Joi.object({
     then: Joi.string().length(4).required(),
     otherwise:Joi.optional().allow("")
   }),
-  deliveryDate: Joi.when('paymentMode',{
-    is:"wallet",
-    then: Joi.date().optional(),
-    otherwise:Joi.disallow()
+  deliveryDate: Joi.when('paymentMode', {
+    is: "wallet",
+    then: Joi.date().iso().optional(),
+    otherwise: Joi.optional()
   }),
   paymentMode:Joi.string().valid("wallet","cash").required()
 });

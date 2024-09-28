@@ -371,6 +371,7 @@ export class CartController {
                     status: 'completed',
                     organization,
                     paymentMode: value.paymentMode,
+                    deliveryDate: value.deliveryDate
                     // walletTransaction: walletTransaction[0]._id
                 });
                 await newOrder.save({ session });
