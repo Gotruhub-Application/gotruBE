@@ -71,3 +71,6 @@ organizationRouter
 
 .get('/mobile-section/attendance-summary/:memberId/:termId', IsAuthenticatedUser, UserSummary.getUserAttendanceSummary)
 
+// summary staff
+.get("/my-orgnz-summary/subunit-summary/:subUnitId/:organizationId", OrgSummary.getSingleSubUnitSummary)
+

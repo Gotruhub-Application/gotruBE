@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, successResponse } from "../../../support/http"; 
 import { createNotification, writeErrosToLogs } from "../../../support/helpers";
-import { createCategorySchema, createProductSchema, payloadSchema, updateOrderStatusSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
-import { Category, Order, Product, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../../../models/organization.models";
+import { createCategorySchema, createProductSchema, orderPickupSchema, payloadSchema, updateOrderStatusSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
+import { Category, Order, OrderPickup, Product, User, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../../../models/organization.models";
 import { Media } from "../../../models/media.models";
 import mongoose from 'mongoose';
 import bcrypt from "bcrypt"
@@ -562,8 +562,7 @@ export class OrderController {
 
             const { error, value } = updateOrderStatusSchema.validate(req.body);
             if (error) return failedResponse(res, 400, `${error.details[0].message}`);
-
-            
+        
             const order = await Order.findOne({_id:orderId, organization:organization});
 
             if (!order) {
@@ -578,7 +577,81 @@ export class OrderController {
             writeErrosToLogs(error);
             return failedResponse(res, 500, "An error occurred while updating the order status.");
         }
-    }
+    };
+
+    static async newUpdateOrderStatus(req: Request, res: Response) {
+        try {
+          const { organizationId: organization } = req.params;
+          const { orderId } = req.params;
+          const { error, value } = updateOrderStatusSchema.validate(req.body);
+    
+          if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+    
+          const order = await Order.findOne({ _id: orderId, organization: organization });
+    
+          if (!order) {
+            return failedResponse(res, 404, "Order not found.");
+          }
+    
+          const orderUser = await User.findById(order.user).populate('guardians');
+          if (!orderUser) {
+            return failedResponse(res, 404, "Order user not found.");
+          }
+    
+        //   const updatingUser = await User.findById(value.updatedBy);
+        //   if (!updatingUser) {
+        //     return failedResponse(res, 404, "Updating user not found.");
+        //   }
+    
+          let collectedBy;
+    
+          switch (value.authorizedAccounts) {
+            case "assignee":
+              const orderPick = await OrderPickup.findOne({ subunit: orderUser.subUnit });
+              if (!orderPick) {
+                return failedResponse(res, 404, "Order pick not found.");
+              }
+            //   if (orderPick.assignee.toString() !== updatingUser._id.toString()) {
+            //     return failedResponse(res, 403, "Unauthorized access.");
+            //   }
+              collectedBy = orderPick.assignee;
+              break;
+    
+            case "guardian":
+            //   if (!orderUser.guardians || orderUser.guardians.toString() !== updatingUser._id.toString()) {
+            //     return failedResponse(res, 403, "Unauthorized access.");
+            //   }
+              collectedBy = orderUser.guardians;
+              break;
+    
+            case "member":
+            //   if (orderUser._id.toString() !== updatingUser._id.toString()) {
+            //     return failedResponse(res, 403, "Unauthorized access.");
+            //   }
+              collectedBy = orderUser._id;
+              break;
+    
+            default:
+              return failedResponse(res, 400, "Invalid authorized account type.");
+          }
+    
+          order.status = value.status;
+          order.collectedBy = collectedBy;
+          
+
+          if (value.status === "delivered"){
+            value.deliveredOn = new Date();
+            order.deliveredOn = value.deliveredOn;
+          }
+    
+          await order.save();
+    
+          return successResponse(res, 200, "Order status updated successfully.", order);
+        } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, `An error occurred while updating the order status: ${error.message}`);
+        }
+      }
 
     // Delete order by the admin
     static async deleteOrder(req: Request, res: Response) {
@@ -597,5 +670,173 @@ export class OrderController {
             writeErrosToLogs(error);
             return failedResponse(res, 500, "An error occurred while deleting the order.");
         }
+    };
+    static async getOrdersByUnitOrSubunit(req: Request, res: Response) {
+        try {
+        let { organizationId} = req.query
+          const { unitId, subunitId, page = 1, limit = 10, today } = req.query;
+          
+          // Convert page and limit to numbers
+          const pageNum = Number(page);
+          const limitNum = Number(limit);
+    
+          // Base query for users
+          let userQuery: any = { organization: organizationId };
+    
+          if (unitId) {
+            userQuery.piviotUnit = unitId;
+          }
+    
+          if (subunitId) {
+            userQuery.subUnit = subunitId;
+          }
+    
+          // Find all users in the specified unit or subunit
+          const users = await User.find(userQuery).select('_id');
+          const userIds = users.map(user => user._id);
+    
+          // Base query for orders
+          let orderQuery: any = {
+            organization: organizationId,
+            user: { $in: userIds }
+          };
+    
+          // If 'today' is true, add date filter
+          if (today === 'true') {
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+    
+            const endOfDay = new Date();
+            endOfDay.setHours(23, 59, 59, 999);
+    
+            orderQuery.createdAt = {
+              $gte: startOfDay,
+              $lte: endOfDay
+            };
+          }
+    
+          // Execute the query
+          const orders = await Order.find(orderQuery)
+            .populate('user', 'fullName regNum')
+            .populate('items.product')
+            .populate('attendant')
+            .limit(limitNum)
+            .skip((pageNum - 1) * limitNum)
+            .exec();
+    
+          // Count total documents
+          const count = await Order.countDocuments(orderQuery);
+    
+          return successResponse(res, 200, "Orders retrieved successfully.", {
+            orders,
+            totalPages: Math.ceil(count / limitNum),
+            currentPage: pageNum,
+            totalOrders: count
+          });
+        } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, `An error occurred while retrieving the orders: ${error.message}`);
+        }
+      }
+};
+
+
+export class OrderPickupController {
+    // Create method
+    static async createOrderPickup(req: Request, res: Response) {
+      try {
+        let { organizationId:organization} = req.query
+        const { error, value } = orderPickupSchema.validate(req.body);
+        if (error) {
+          return failedResponse(res, 400, `Validation error: ${error.details[0].message}`);
+        }
+
+        value.organization = organization;
+  
+        const newOrderPickup = new OrderPickup(value);
+        const savedOrderPickup = await newOrderPickup.save();
+  
+  
+        return successResponse(res, 201, "OrderPickup created successfully.", savedOrderPickup);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, `Error creating OrderPickup: ${error.message}`);
+      }
     }
-}
+  
+    // GetById method
+    static async getOrderPickupById(req: Request, res: Response) {
+      try {
+        
+        const { id } = req.params;
+        const orderPickup = await OrderPickup.findById(id);
+        if (!orderPickup) {
+          return failedResponse(res, 404, "OrderPickup not found.");
+        }
+        return successResponse(res, 200, "OrderPickup retrieved successfully.", orderPickup);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, `Error fetching OrderPickup: ${error.message}`);
+      }
+    }
+  
+    // Update method
+    static async updateOrderPickup(req: Request, res: Response) {
+      try {
+        const { id } = req.params;
+        const { error, value } = orderPickupSchema.validate(req.body);
+        if (error) {
+          return failedResponse(res, 400, `Validation error: ${error.details[0].message}`);
+        }
+  
+        const updatedOrderPickup = await OrderPickup.findByIdAndUpdate(id, value, { new: true });
+        if (!updatedOrderPickup) {
+          return failedResponse(res, 404, "OrderPickup not found.");
+        }
+        return successResponse(res, 200, "OrderPickup updated successfully.", updatedOrderPickup);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, `Error updating OrderPickup: ${error.message}`);
+      }
+    }
+  
+    // Delete method
+    static async deleteOrderPickupById(req: Request, res: Response) {
+      try {
+        const { id } = req.params;
+        const orderPickup = await OrderPickup.findByIdAndDelete(id);
+        if (!orderPickup) {
+          return failedResponse(res, 404, "OrderPickup not found.");
+        }
+        return successResponse(res, 200, "OrderPickup deleted successfully.", orderPickup);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, `Error deleting OrderPickup: ${error.message}`);
+      }
+    }
+  
+    // Get all method
+    static async getAllOrderPickups(req: Request, res: Response) {
+      try {
+        let { organizationId:organization} = req.query
+        const orderPickups = await OrderPickup.find({organization});
+        return successResponse(res, 200, "OrderPickups retrieved successfully.", orderPickups);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, `Error fetching OrderPickups: ${error.message}`);
+      }
+    }
+
+    // get pickup by assignee id
+    static async getAllOrderPickupsByAsigneeId(req: Request, res: Response) {
+        try {
+          let { organizationId:organization} = req.query
+          const { assigneeId} = req.params;
+          const orderPickups = await OrderPickup.find({organization, assignee:assigneeId});
+          return successResponse(res, 200, "OrderPickups retrieved successfully.", orderPickups);
+        } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, `Error fetching OrderPickups: ${error.message}`);
+        }
+      }
+  }

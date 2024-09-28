@@ -66,5 +66,13 @@ export const payloadSchema = Joi.object({
 });
 
 export const updateOrderStatusSchema = Joi.object({
-  status: Joi.string().valid("rejected","completed","pending","delivered").required()
+  status: Joi.string().valid("delivered", "not_delivered").required(),
+  authorizedAccounts: Joi.string().valid("assignee", "guardian", "member").required(),
+  // deliveredOn:Joi.date().required()
+});
+
+export const orderPickupSchema = Joi.object({
+  assignee: Joi.string().required(),
+  unit: Joi.string().required(),
+  subunit: Joi.string().required()
 });

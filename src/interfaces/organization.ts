@@ -201,9 +201,18 @@ export interface IOrder extends Document {
   totalAmount: number;
   paymentMode: string;
   status: string;
+  collectedBy:Schema.Types.ObjectId;
   // walletTransaction: Schema.Types.ObjectId;
+  deliveryDate?: Date;
+  deliveredOn?: Date;
   createdAt: Date;
   updatedAt: Date;
+}
+export interface IOrderPickup extends Document {
+  assignee: Schema.Types.ObjectId;
+  unit: Schema.Types.ObjectId;
+  subunit: Schema.Types.ObjectId;
+  organization: Schema.Types.ObjectId;
 }
 
 // export interface PassSuspiciousActivities extends Document {
