@@ -846,11 +846,13 @@ export class OrgSummary {
     try {
       const { organizationId, subUnitId } = req.params;
 
-        const subUnit = await SubUnit.findById(subUnitId).select('_id name');
+        const subUnit = await SubUnit.findById(subUnitId).select('_id name unit');
         const totalStudents = await User.countDocuments({ organization: organizationId, role: "student", subUnit: subUnitId });
         const totalAssignments = await SubUnitCourseModel.countDocuments({ subUnit: subUnitId, paid:true });
+        const unit =  await Unit.findById(subUnit?.unit,)
 
         const data = {
+          unit: unit?.name,
             name: subUnit?.name,
             id: subUnitId,
             totalStudents,

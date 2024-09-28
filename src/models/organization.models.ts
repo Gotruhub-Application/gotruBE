@@ -1,6 +1,6 @@
 import mongoose, {Schema, Model, model, Query} from 'mongoose';
 import bcrypt from "bcrypt"
-import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord, ICategory,IProduct, ISubaccount, IWallet, IWalletTransaction, IWithdrawalRequest, IOrder} from '../interfaces/organization';
+import { IOrganization,Itoken,IUnit,ISubUnit, Iuser, IPlan, IappToken, ISignInOutRecord, ICategory,IProduct, ISubaccount, IWallet, IWalletTransaction, IWithdrawalRequest, IOrder, IOrderPickup} from '../interfaces/organization';
 import { CompareCoordinate, CreateNotificationParams } from '../interfaces/general.interface';
 import { createNotification, isUserLocationInRange } from '../support/helpers';
 import { sendNotif } from '../support/firebaseNotification';
@@ -619,9 +619,17 @@ const OrderSchema: Schema<IOrder> = new Schema<IOrder>({
     quantity: { type: Number, required: true },
   }],
   totalAmount: { type: Number, required: true },
-  status: { type: String, enum: ['pending', 'completed', 'delivered',"rejected"], default: 'pending' },
+  status: { type: String, enum: ['pending', 'completed', 'delivered',"not_delivered","rejected"], default: 'not_delivered' },
   // walletTransaction: { type: Schema.Types.ObjectId, ref: 'WalletTransaction', required: true },
+  collectedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   paymentMode: { type: String, enum: ['wallet', 'cash'], default: 'wallet' },
+
+  deliveryDate:{
+    type:Date
+  },
+  deliveredOn:{
+    type:Date
+  },
 }, { timestamps: true });
 
 OrderSchema.pre('find', function () {
@@ -639,6 +647,33 @@ OrderSchema.pre('findOne', function () {
   .populate('attendant')
 
 });
+
+
+const OrderPickupSchema: Schema<IOrderPickup> = new Schema<IOrderPickup>({
+  assignee: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  unit: { type: Schema.Types.ObjectId, ref: 'Unit', required: true },
+  subunit: { type: Schema.Types.ObjectId, ref: 'SubUnit', required: true },
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+}, { timestamps: true });
+
+// Pre-find middleware to populate references
+OrderPickupSchema.pre('find', function() {
+  this
+    .populate('assignee')
+    .populate('unit')
+    .populate('subunit')
+    .populate('organization');
+});
+
+// Pre-findOne middleware to populate references
+OrderPickupSchema.pre('findOne', function() {
+  this
+    .populate('assignee')
+    .populate('unit')
+    .populate('subunit')
+    .populate('organization');
+});
+
 
 const SubaccountSchema: Schema<ISubaccount> = new Schema<ISubaccount>({
   business_name: {
@@ -691,6 +726,7 @@ const SubaccountSchema: Schema<ISubaccount> = new Schema<ISubaccount>({
   timestamps: true,
 });
 
+export const OrderPickup: Model<IOrderPickup> = model<IOrderPickup>('OrderPickup', OrderPickupSchema);
 export const Order:Model<IOrder> = model<IOrder>('Order', OrderSchema);
 export const WithdrawalRequest: Model<IWithdrawalRequest> = model<IWithdrawalRequest>('WithdrawalRequest', withdrawalRequestSchema);
 export const SubaccountModel = model<ISubaccount>('Subaccount', SubaccountSchema);
