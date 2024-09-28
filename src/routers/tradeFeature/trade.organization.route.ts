@@ -68,6 +68,8 @@ tradeOrganizationRouter
 
 
 // user's copy
+.put('/mobile-section/admin/orders/:orderId',IsAuthenticatedStaff, OrderController.newUpdateOrderStatus)
+
 .get("/mobile-section/order-pickups", IsAuthenticatedStaff, OrderPickupController.getAllOrderPickups)
 .get("/mobile-section/order-pickups/:assigneeId", IsAuthenticatedStaff, OrderPickupController.getAllOrderPickupsByAsigneeId)
 .get("/mobile-section/order-pickups/:id", IsAuthenticatedStaff, OrderPickupController.getOrderPickupById)
