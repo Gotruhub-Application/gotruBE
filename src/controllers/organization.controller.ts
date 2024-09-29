@@ -767,31 +767,63 @@ export class OrgSummary {
     }
 
   };
-
   static async getAllPassHistory(req: Request, res: Response) {
-      const ITEMS_PER_PAGE = 10;
-      try {
-          const page = parseInt(req.query.page as string) || 1;
-          const skip = (page - 1) * ITEMS_PER_PAGE; 
-          const history = await SignInOutRecordModel.find({
-              organization:req.params.organizationId
-          })
-          .populate("user")
-          .populate("other")
-          .populate("authorizationType")
-          .populate("approvalBy")
-          .sort({ createdAt: -1 }) // Sort by the most recent
-          .skip(skip)
-          .limit(ITEMS_PER_PAGE); // Limit the number of items per page
+    const ITEMS_PER_PAGE = 100;
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const skip = (page - 1) * ITEMS_PER_PAGE;
+  
+      const filter = { organization: req.params.organizationId };
+  
+      const totalCount = await SignInOutRecordModel.countDocuments(filter);
+      const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  
+      const history = await SignInOutRecordModel.find(filter)
+        .populate("user")
+        .populate("other")
+        .populate("authorizationType")
+        .populate("approvalBy")
+        .sort({ createdAt: -1 }) // Sort by the most recent first
+        .skip(skip)
+        .limit(ITEMS_PER_PAGE);
+  
+      return successResponse(res, 200, "Success", {
+        history,
+        currentPage: page,
+        totalPages,
+        totalCount,
+        itemsPerPage: ITEMS_PER_PAGE
+      });
+    } catch (error: any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+    }
+  }
+
+  // static async getAllPassHistory(req: Request, res: Response) {
+  //     const ITEMS_PER_PAGE = 100;
+  //     try {
+  //         const page = parseInt(req.query.page as string) || 1;
+  //         const skip = (page - 1) * ITEMS_PER_PAGE; 
+  //         const history = await SignInOutRecordModel.find({
+  //             organization:req.params.organizationId
+  //         })
+  //         .populate("user")
+  //         .populate("other")
+  //         .populate("authorizationType")
+  //         .populate("approvalBy")
+  //         .sort({ createdAt: -1 }) // Sort by the most recent
+  //         .skip(skip)
+  //         .limit(ITEMS_PER_PAGE); // Limit the number of items per page
 
 
 
-          return successResponse(res, 200, "Success", history);
-      } catch (error: any) {
-          writeErrosToLogs(error);
-          return failedResponse(res, 500, error.message);
-      }
-  };
+  //         return successResponse(res, 200, "Success", history);
+  //     } catch (error: any) {
+  //         writeErrosToLogs(error);
+  //         return failedResponse(res, 500, error.message);
+  //     }
+  // };
   static async getUnitSummary (req:Request, res:Response){
     try {
       const {organizationId, unitId} = req.params;
