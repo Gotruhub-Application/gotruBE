@@ -119,41 +119,82 @@ export class Products {
             return failedResponse(res, 500, error.message);
         }
     };
+    // static async getAllProducts(req: Request, res: Response) {
+    //     const ITEMS_PER_PAGE = 50;
+    //     try {
+    //         const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
+    //         const filterByCategory = req.query.category;
+    //         const filterByInstock = req.query.inStock === 'true'; // Convert string to boolean
+    //         const filterByproductName = req.query.name;
+
+    //         const skip = (page - 1) * ITEMS_PER_PAGE;
+    
+    //         // Construct the filter object based on query parameters
+    //         const filter: any = { uploadedBy: req.params.organizationId };
+    //         if (filterByproductName) {
+    //             filter.productName = { $regex: new RegExp(req.query.name as string, 'i') };
+    //         }
+    //         if (filterByCategory) {
+    //             filter.category = filterByCategory;
+    //         }
+    //         if (filterByInstock) {
+    //             filter.quantity = { $gt: 0 }; // Products with quantity greater than 0
+    //         }
+    
+    //         // Query products based on the constructed filter
+    //         console.log(filter,"abvsd")
+    //         const products = await Product.find(filter)
+    //             .skip(skip)
+    //             .limit(ITEMS_PER_PAGE);
+    
+    //         return successResponse(res, 200, "Success", { products });
+    
+    //     } catch (error: any) {
+    //         writeErrosToLogs(error);
+    //         return failedResponse(res, 500, error.message);
+    //     }
+    // };
     static async getAllProducts(req: Request, res: Response) {
         const ITEMS_PER_PAGE = 50;
         try {
-            const page = parseInt(req.query.page as string) || 1; // Get the page number from query parameters, default to 1
-            const filterByCategory = req.query.category;
-            const filterByInstock = req.query.inStock === 'true'; // Convert string to boolean
-            const filterByproductName = req.query.name;
-
-            const skip = (page - 1) * ITEMS_PER_PAGE;
-    
-            // Construct the filter object based on query parameters
-            const filter: any = { uploadedBy: req.params.organizationId };
-            if (filterByproductName) {
-                filter.productName = { $regex: new RegExp(req.query.name as string, 'i') };
-            }
-            if (filterByCategory) {
-                filter.category = filterByCategory;
-            }
-            if (filterByInstock) {
-                filter.quantity = { $gt: 0 }; // Products with quantity greater than 0
-            }
-    
-            // Query products based on the constructed filter
-            console.log(filter,"abvsd")
-            const products = await Product.find(filter)
-                .skip(skip)
-                .limit(ITEMS_PER_PAGE);
-    
-            return successResponse(res, 200, "Success", { products });
-    
+          const page = parseInt(req.query.page as string) || 1;
+          const filterByCategory = req.query.category;
+          const filterByInstock = req.query.inStock === 'true';
+          const filterByproductName = req.query.name;
+      
+          const skip = (page - 1) * ITEMS_PER_PAGE;
+      
+          const filter: any = { uploadedBy: req.params.organizationId };
+          if (filterByproductName) {
+            filter.productName = { $regex: new RegExp(req.query.name as string, 'i') };
+          }
+          if (filterByCategory) {
+            filter.category = filterByCategory;
+          }
+          if (filterByInstock) {
+            filter.quantity = { $gt: 0 };
+          }
+      
+          const totalCount = await Product.countDocuments(filter);
+          const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+      
+          const products = await Product.find(filter)
+            .skip(skip)
+            .limit(ITEMS_PER_PAGE);
+      
+          return successResponse(res, 200, "Success", {
+            products,
+            currentPage: page,
+            totalPages,
+            totalCount,
+            itemsPerPage: ITEMS_PER_PAGE
+          });
+      
         } catch (error: any) {
-            writeErrosToLogs(error);
-            return failedResponse(res, 500, error.message);
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
         }
-    };
+      }
     
     static async getSingleProduct(req: Request, res: Response) {
         try {
