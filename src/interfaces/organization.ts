@@ -27,6 +27,7 @@ export interface IOrganization extends Document {
   opLicenceImage?: Schema.Types.ObjectId;
   referalCode?: string;
   nameOfEstablishment?: string;
+  nameOfProprietor?: string;
   agency:string,
   fcmToken:string,
   isVerified:boolean,
