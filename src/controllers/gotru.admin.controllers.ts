@@ -604,7 +604,7 @@ export class ContractPlan {
       try {
         const now = new Date();
         const { filter } = req.query;
-        const organizationId = req.params.organizationId
+        //const organizationId = req.params.organizationId
   
         let startDate;
   
@@ -630,7 +630,7 @@ export class ContractPlan {
           {
             $match: {
               createdAt: { $gte: startDate },
-              Organization:new mongoose.Types.ObjectId(organizationId), 
+              //Organization:new mongoose.Types.ObjectId(organizationId), 
             }
           },
           {
@@ -689,23 +689,61 @@ export class ContractPlan {
       }
     };
 
-    static async getOrgUserSummary (req:Request, res:Response){
-      try {
-        const {organizationId} = req.params;
-        const organization = await Organization.findById(organizationId)
-        const totalStudents = await User.countDocuments({organization:organizationId, role:"student"});
-        const totalGuardian = await User.countDocuments({organization:organizationId, role:"guardian"});
-        const totalStaffs = await User.countDocuments({organization:organizationId, role:"staff"});
+    // static async getOrgUserSummary (req:Request, res:Response){
+    //   try {
+    //     const {organizationId} = req.params;
+    //     const organization = await Organization.findById(organizationId)
+    //     const totalStudents = await User.countDocuments({organization:organizationId, role:"student"});
+    //     const totalGuardian = await User.countDocuments({organization:organizationId, role:"guardian"});
+    //     const totalStaffs = await User.countDocuments({organization:organizationId, role:"staff"});
+    //     const plans = await Plan.find({
+    //       Organization: organizationId,
+    //       quantityLeft: { $gt: 0 },
+    //       paidStatus: true
+    //     })
+    //     const totalSubcription = plans.reduce((accumulator, currentValue) => accumulator+)
 
-        return successResponse(res, 200, "Success", {totalStudents,totalGuardian,totalStaffs, organization})
+    //     return successResponse(res, 200, "Success", {totalStudents,totalGuardian,totalStaffs, organization})
   
-      } catch (error:any) {
-        writeErrosToLogs(error)
-        return failedResponse(res,500, error.message)
+    //   } catch (error:any) {
+    //     writeErrosToLogs(error)
+    //     return failedResponse(res,500, error.message)
         
-      }
+    //   }
   
-    };
+    // };
+    static async getOrgUserSummary(req: Request, res: Response) {
+      try {
+        const { organizationId } = req.params;
+        const organization = await Organization.findById(organizationId);
+        const totalStudents = await User.countDocuments({ organization: organizationId, role: "student" });
+        const totalGuardian = await User.countDocuments({ organization: organizationId, role: "guardian" });
+        const totalStaffs = await User.countDocuments({ organization: organizationId, role: "staff" });
+    
+        const plans = await Plan.find({
+          Organization: organizationId,
+          paidStatus: true
+        });
+    
+        const totalSubscription = plans.reduce((accumulator, currentPlan) => 
+          accumulator + (currentPlan.amount || 0), 0);
+    
+        const totalActiveSubscription = plans.reduce((accumulator, currentPlan) => 
+          currentPlan.quantityLeft > 0 ? accumulator + (currentPlan.amount || 0) : accumulator, 0);
+    
+        return successResponse(res, 200, "Success", {
+          totalStudents,
+          totalGuardian,
+          totalStaffs,
+          totalSubscription,
+          totalActiveSubscription,
+          organization
+        });
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+      }
+    }
 
     static async getOrgActiveSubSummary(req: Request, res: Response) {
       try {

@@ -77,6 +77,10 @@ const OrganizationSchema: Schema<IOrganization> = new Schema<IOrganization>({
     type: String,
     required: false
   },
+  nameOfProprietor: {
+    type: String,
+    default: ""
+  },
   bizType: {
     type: String,
     default: "",
