@@ -1,5 +1,5 @@
 import { AttendanceController, ClassScheduleController, CourseController, Session, SubUnitCourseController, TermController } from "../../controllers/organization/monitorFeature/organization.monitor.controller";
-import { IsAuthenticatedUser } from "../../support/middleware";
+import { IsAuthenticatedStaff, IsAuthenticatedUser } from "../../support/middleware";
 import {organizationRouter} from "../organization.router";
 
 organizationRouter
@@ -14,7 +14,9 @@ organizationRouter
 
 .get("/mobile-section/schedule/:subUnitId", IsAuthenticatedUser, ClassScheduleController.getAllClassSchedules)
 .get("/mobile-section/schedule/single/:id", IsAuthenticatedUser, ClassScheduleController.getSingleClassSchedule)
+.get("/mobile-section/schedule/assignee/:coordinatorId", IsAuthenticatedStaff, ClassScheduleController.getSingleAssigneeClassSchedules)
 
 .get("/mobile-section/attendance/schedule/:classScheduleId", IsAuthenticatedUser, AttendanceController.getAllAttendances)
 .get("/mobile-section/attendance/schedule/user/:userId", IsAuthenticatedUser, AttendanceController.getSingleUserAttendances)
 .get("/mobile-section/attendance/:id", IsAuthenticatedUser, AttendanceController.getSingleAttendance)
+.put("/mobile-section/attendance/:id/flag", IsAuthenticatedStaff, AttendanceController.updateSingleAttendance)

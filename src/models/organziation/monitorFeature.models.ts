@@ -127,6 +127,7 @@ const attendanceSchema: Schema<IAttendance> = new Schema<IAttendance>({
   remark: { type: String },
   score: { type: String },
   isValid: { type: Boolean, default: true },
+  flag: { type: Boolean, default: false },
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   classScheduleId: { type: Schema.Types.ObjectId, ref: 'ClassSchedule', required: true },
   scanned_time: { type: Number }

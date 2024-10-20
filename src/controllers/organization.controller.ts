@@ -911,6 +911,7 @@ export class OrgSummary {
           // Fetch attendance records for the specified date
           const attendanceRecords = await AttendanceModel.find({
               user: { $in: studentIds },
+              flag:false
               // createdAt: {
               //     $gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
               //     $lt: new Date(new Date(date).setHours(23, 59, 59, 999))
@@ -1171,6 +1172,7 @@ static async getUserAttendanceSummary(req: Request, res: Response) {
         $match: {
           user: new mongoose.Types.ObjectId(memberId),
           term: new mongoose.Types.ObjectId(termId),
+          flag:false
         },
       },
       {

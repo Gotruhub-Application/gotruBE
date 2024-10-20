@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, initiatePaystack, successResponse } from "../../../support/http"; 
 import { isLessThanFourMonths, writeErrosToLogs } from "../../../support/helpers";
-import { UpdateLocationSchema, attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createLocationSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, threadholdValueValidator, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema, updateThreadholdValueValidator } from "../../../validators/monitorFeature/organization.monitor";
+import { UpdateLocationSchema, attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createLocationSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, flagAttendanceSchema, threadholdValueValidator, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema, updateThreadholdValueValidator } from "../../../validators/monitorFeature/organization.monitor";
 import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel, ThreadholdValue } from "../../../models/organziation/monitorFeature.models";
 import { logger } from "../../../logger";
 import { AppToken, Unit, User } from "../../../models/organization.models";
 import { schedule } from "node-cron";
 import { features } from "process";
 import { Feature } from "../../../models/admin.models";
+import mongoose from 'mongoose';
 
 export class Session {
     static async addSession(req: Request, res: Response) {
@@ -503,7 +504,47 @@ export class ClassScheduleController {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
         }
-    }
+    };
+
+    static async getSingleAssigneeClassSchedules(req: Request, res: Response) {
+        const ITEMS_PER_PAGE = 100;
+        try {
+
+            const page = parseInt(req.query.page as string) || 1;
+            const skip = (page - 1) * ITEMS_PER_PAGE;
+            const coordinatorId = req.params.coordinatorId; // Assuming this is passed in the request params
+            logger.info(`Fetching schedules for organization: ${req.params.organizationId}, subUnit: ${req.params.subUnitId}, coordinator: ${coordinatorId}`);
+            // Convert coordinatorId to ObjectId
+            let coordinatorObjectId: mongoose.Types.ObjectId;
+            try {
+                coordinatorObjectId = new mongoose.Types.ObjectId(coordinatorId);
+            } catch (error) {
+                return failedResponse(res, 400, "Invalid Coordinator ID format");
+            }
+            const classSchedules = await ClassScheduleModel.find({
+                organization: req.params.organizationId,
+                coordinators: coordinatorObjectId // Filter by coordinator
+            })
+            .populate("location locationId course")
+            .skip(skip)
+            .limit(ITEMS_PER_PAGE);
+
+            const returnPayload = classSchedules.map(schedule => ({
+                _id: schedule._id,
+                day: schedule.day,
+                course: schedule.course?.name,
+                code: schedule.course?.courseCode,
+                location: schedule.locationId?.name || null,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+            }));
+
+            return successResponse(res, 200, "Success", returnPayload);
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
+    };
 
     static async getSingleClassSchedule(req: Request, res: Response) {
         try {
@@ -752,21 +793,24 @@ export class AttendanceController {
         }
     }
 
-    // static async updateSingleAttendance(req: Request, res: Response) {
-    //     try {
-    //         const { error, value } = updateAttendanceSchema.validate(req.body);
-    //         if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+    static async updateSingleAttendance(req: Request, res: Response) {
+        try {
+            const { error, value } = flagAttendanceSchema.validate(req.body);
+            if (error) return failedResponse(res, 400, `${error.details[0].message}`);
 
-    //         const attendance = await AttendanceModel.findOneAndUpdate({ _id: req.params.id, organization: req.params.organizationId }, value, { new: true });
-    //         if (!attendance) return failedResponse(res, 404, "Attendance does not exist");
+            const attendance = await AttendanceModel.findById(req.params.id);
+            
+            // const attendance = await AttendanceModel.findOneAndUpdate({ _id: req.params.id, organization: req.params.organizationId }, value, { new: true });
+            if (!attendance) return failedResponse(res, 404, "Attendance does not exist");
+            attendance.flag = value.flag;
+            attendance.save()
+            return successResponse(res, 200, "Success", { attendance });
 
-    //         return successResponse(res, 200, "Success", { attendance });
-
-    //     } catch (error: any) {
-    //         writeErrosToLogs(error);
-    //         return failedResponse(res, 500, error.message);
-    //     }
-    // }
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
+    }
 
     static async deleteSingleAttendance(req: Request, res: Response) {
         try {
@@ -844,7 +888,7 @@ export class AttendanceGradingController {
       } catch (error: any) {
         return failedResponse(res, 500, error.message);
       }
-    }
+    };
   
     // Delete attendance grading
     static async deleteAttendanceGrading(req: Request, res: Response) {
