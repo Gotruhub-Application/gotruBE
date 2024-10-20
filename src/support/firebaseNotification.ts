@@ -7,6 +7,7 @@ admin.initializeApp({
 
 export const sendNotif = async (token: string, title: string = "New message", body: string = "Welcome to gotruhub", payload: { [key: string]: any } = {}) => {
   try {
+
     if (!token || typeof token !== 'string') {
       throw new Error('Invalid FCM token provided');
     }

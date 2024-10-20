@@ -10,6 +10,7 @@ import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
 import { AttendanceModel, SubUnitCourseModel } from "../models/organziation/monitorFeature.models";
 import mongoose from "mongoose";
+import { sendNotif } from "../support/firebaseNotification";
 
 export class OrganizatioinUnits {
     static async getUnits (req:Request, res:Response, next:NextFunction){
@@ -575,6 +576,7 @@ export class AppAccessTokens {
 
         const tokenPromises = [];
         const emailPromises = [];
+        const pushNotificationPromises = [];
         let allGeneratedTokens: { [key: string]: string[] } = {};
 
         for (const userObj of value.users) {
@@ -600,8 +602,18 @@ export class AppAccessTokens {
                 emailPromises.push(
                     sendTemplateMail(email, "Application Access Token", "templates/appAccessToken.html", { token: tokens, fullname: user.fullName })
                 );
+            };
+            if (user?.fcmToken) {
+              const notifyPayload = { type: `appToken`, tokens };
+              
+              try {
+                await sendNotif(user.fcmToken,  `New app access token(s).`,`You have received ${tokens.length} new access token(s)`, notifyPayload);
+              } catch (error: any) {
+                writeErrosToLogs(error);
+              }
             }
-        }
+        };
+        
 
         await Promise.all(emailPromises);
 
@@ -767,13 +779,35 @@ export class OrgSummary {
     }
 
   };
+  
   static async getAllPassHistory(req: Request, res: Response) {
     const ITEMS_PER_PAGE = 100;
     try {
       const page = parseInt(req.query.page as string) || 1;
       const skip = (page - 1) * ITEMS_PER_PAGE;
+      // Extract filter parameters from query
+      const { unit, subunit, startDate, endDate, today } = req.query;
   
-      const filter = { organization: req.params.organizationId };
+      const filter:any = { organization: req.params.organizationId };
+      if (today === 'true') {
+        // Filter for today's records
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        filter.createdAt = { $gte: startOfDay, $lt: endOfDay };
+      };
+      if (startDate && endDate) {
+        filter.createdAt = {
+          $gte: new Date(startDate as string),
+          $lte: new Date(endDate as string)
+        };
+      };
+      if (unit){
+        filter.piviotUnit = unit
+      };
+      if (subunit){
+        filter.subUnit = subunit
+      };
   
       const totalCount = await SignInOutRecordModel.countDocuments(filter);
       const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -783,6 +817,7 @@ export class OrgSummary {
         .populate("other")
         .populate("authorizationType")
         .populate("approvalBy")
+        .populate("scannedBy")
         .sort({ createdAt: -1 }) // Sort by the most recent first
         .skip(skip)
         .limit(ITEMS_PER_PAGE);

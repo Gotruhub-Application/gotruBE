@@ -1,7 +1,7 @@
 import { logger } from "../logger"; 
 import { failedResponse, successResponse } from "../support/http";
 import { Announcement, Feature, Subscription } from "../models/admin.models";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, query } from "express";
 import { ContractpurchasePlanValidator, FeatureValidator, SubscriptionValidator, UpdateSubscriptionValidator, createAnnouncementSchema, updateAnnouncementSchema } from "../validators/admin/admin.validators";
 import { Organization, Plan, User } from "../models/organization.models";
 import { writeErrosToLogs } from "../support/helpers";
@@ -368,6 +368,21 @@ export class ContractPlan {
       }
   
     };
+
+    static async terminatePlan (req:Request, res:Response){
+      try {
+  
+        const plan = await Plan.findByIdAndUpdate(req.params.id, {paidStatus:false})
+        if (!plan) return failedResponse (res, 404, "Plan not found")
+  
+        return successResponse(res,200, "Plan terminated Successfully");
+  
+      } catch (error:any) {
+        writeErrosToLogs(error)
+        return failedResponse (res, 500, `${error.details[0].message}`)
+      }
+  
+    };
   
     static async buyPlan (req:Request, res:Response){
       try {
@@ -593,6 +608,18 @@ export class ContractPlan {
         const filteredOrganizations = organizationsWithActiveStatus.filter(org => org !== null);
     
         return successResponse(res, 200, 'Success', filteredOrganizations);
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+      }
+    };
+    static async deleteOrganization(req: Request, res: Response) {
+      try {
+        const id =req.params.organizationId;
+        const org = await Organization.findByIdAndDelete(id);
+        if (!org) return failedResponse(res, 404, "Organization not found."); 
+
+        return successResponse(res, 200, 'Delete successful');
       } catch (error: any) {
         writeErrosToLogs(error);
         return failedResponse(res, 500, error.message);
