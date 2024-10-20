@@ -743,28 +743,81 @@ export class AttendanceController {
         }
     }
 
+    // static async getAllAttendances(req: Request, res: Response) {
+    //     const ITEMS_PER_PAGE = 100;
+    //     try {
+    //         const page = parseInt(req.query.page as string) || 1;
+    //         const skip = (page - 1) * ITEMS_PER_PAGE;
+    //         const { flag, isValid, startDate, endDate } = req.query;
+
+    //         const filter:any = { organization: req.params.organizationId,classScheduleId:req.params.classScheduleId  };
+    //         if (startDate && endDate) {
+    //             filter.createdAt = {
+    //               $gte: new Date(startDate as string),
+    //               $lte: new Date(endDate as string)
+    //             };
+    //           };
+    //         if(flag){
+    //             filter.flag = (flag.toLower() == true)
+    //         };
+    //         if(isValid){
+    //             filter.isValid = (isValid.toLower() == true)
+    //         }
+    //         const attendances = await AttendanceModel.find(filter)
+    //             .skip(skip)
+    //             .sort({ createdAt: -1 })
+    //             .limit(ITEMS_PER_PAGE);
+
+    //         return successResponse(res, 200, "Success", attendances );
+
+    //     } catch (error: any) {
+    //         writeErrosToLogs(error);
+    //         return failedResponse(res, 500, error.message);
+    //     }
+    // };
     static async getAllAttendances(req: Request, res: Response) {
         const ITEMS_PER_PAGE = 100;
         try {
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
-            const attendances = await AttendanceModel.find({ organization: req.params.organizationId, classScheduleId:req.params.classScheduleId })
+            const { flag, isValid, startDate, endDate } = req.query;
+    
+            const filter: any = {
+                organization: req.params.organizationId,
+                classScheduleId: req.params.classScheduleId
+            };
+    
+            if (startDate && endDate) {
+                filter.createdAt = {
+                    $gte: new Date(startDate as string),
+                    $lte: new Date(endDate as string)
+                };
+            }
+    
+            if (flag !== undefined) {
+                filter.flag = flag.toString().toLowerCase() === 'true';
+            }
+    
+            if (isValid !== undefined) {
+                filter.isValid = isValid.toString().toLowerCase() === 'true';
+            }
+    
+            const attendances = await AttendanceModel.find(filter)
                 .skip(skip)
                 .sort({ createdAt: -1 })
                 .limit(ITEMS_PER_PAGE);
-
-            return successResponse(res, 200, "Success", attendances );
-
+    
+            return successResponse(res, 200, "Success", attendances);
         } catch (error: any) {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
         }
-    };
+    }
     static async getSingleUserAttendances(req: Request, res: Response) {
         const ITEMS_PER_PAGE = 100;
         try {
             const {userId} = req.params;
-            console.log(userId, "sbdbfbdv")
+
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
             const attendances = await AttendanceModel.find({ organization: req.params.organizationId, user:userId })
