@@ -71,7 +71,7 @@ export const payloadSchema = Joi.object({
 });
 
 export const updateOrderStatusSchema = Joi.object({
-  status: Joi.string().valid("delivered", "not_delivered").required(),
+  status: Joi.string().valid("delivered", "not_delivered", "paid").required(),
   authorizedAccounts: Joi.string().valid("assignee", "guardian", "member").required(),
   // deliveredOn:Joi.date().required()
 });

@@ -29,10 +29,12 @@ adminRouter
 .get("/contract-plan/pending/:organizationId", IsAuthenticatedGotruAdmin, ContractPlan.OrgPendingPlans)
 .get("/contract-plan/pay/:organizationId", IsAuthenticatedGotruAdmin, ContractPlan.buyPlan)
 .delete("/contract-plan/:id", IsAuthenticatedGotruAdmin, ContractPlan.removePlan)
+.put("/contract-plan/terminate/:id", IsAuthenticatedGotruAdmin, ContractPlan.terminatePlan)
 
 // summary
 .get("/summary", IsAuthenticatedGotruAdmin, AdminSummary.summary)
 .get("/organizations", IsAuthenticatedGotruAdmin, AdminSummary.getOrganizations)
+.delete("/organizations/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.deleteOrganization)
 .get("/graph", IsAuthenticatedGotruAdmin, AdminSummary.getSubscriptionRevenue)
 .get("/organizations/users-summary/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getOrgUserSummary)
 .get("/organizations/active-plans/:organizationId", IsAuthenticatedGotruAdmin, AdminSummary.getOrgActiveSubSummary)

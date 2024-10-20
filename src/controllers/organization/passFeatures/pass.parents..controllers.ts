@@ -57,6 +57,7 @@ export class ParentManageRelatedAccounts {
             .populate("other")
             .populate("authorizationType")
             .populate("approvalBy")
+            .populate("scannedBy")
             .skip(skip)
             .limit(ITEMS_PER_PAGE); // Limit the number of items per page
 

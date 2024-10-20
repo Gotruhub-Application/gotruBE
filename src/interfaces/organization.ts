@@ -169,6 +169,8 @@ export interface ISignInOutRecord extends Document {
   scannedBy:Schema.Types.ObjectId,
   scannedUser:Schema.Types.ObjectId,
   scanned:boolean,
+  piviotUnit?: {type:Schema.Types.ObjectId},
+  subUnit?: {type:Schema.Types.ObjectId},
   createdAt:Date,
   updatedAt:Date
 }

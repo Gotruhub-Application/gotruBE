@@ -66,6 +66,7 @@ export interface IAttendance extends Document {
   remark: string;
   score: string;
   isValid: boolean;
+  flag: boolean;
   user: Iuser['_id'];
   classScheduleId: IClassSchedule['_id'];
   scanned_time:number;

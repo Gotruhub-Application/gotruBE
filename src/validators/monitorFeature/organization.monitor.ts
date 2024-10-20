@@ -149,6 +149,10 @@ export const updateAttendanceSchema = Joi.object({
     classScheduleId: objectIdValidator.objectId().allow('')
 }).min(1);
 
+export const flagAttendanceSchema = Joi.object({
+  flag:Joi.boolean()
+});
+
 export const attendanceGradingValidationSchema = Joi.object({
   name: Joi.string().valid('early', 'late', 'absent').required(),
   type: Joi.string().valid('monitorEnd', 'monitorSource').allow(""),
