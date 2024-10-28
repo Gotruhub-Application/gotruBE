@@ -7,6 +7,7 @@ import { Organization, Plan, User } from "../models/organization.models";
 import { writeErrosToLogs } from "../support/helpers";
 import mongoose from "mongoose";
 import { myEmitter } from "../events/eventEmitter";
+import { SubUnitCourseModel } from "../models/organziation/monitorFeature.models";
 
 
 export class FeaturesController {
@@ -414,6 +415,23 @@ export class ContractPlan {
             }
           }
         ]);
+
+        const monitorSource = await SubUnitCourseModel.aggregate([
+          {
+            $match: {
+              paid: true
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalAmount: { $sum: "$amount" }
+            }
+          }
+        ]);
+  
+        const monitorSourceTotalPaid = monitorSource.length > 0 ? monitorSource[0].totalAmount : 0;
+  
   
         const totalAmountContract = await Plan.aggregate([
           {
@@ -461,6 +479,7 @@ export class ContractPlan {
   
         // Initialize the response object
         const response = {
+          monitorSourceTotalPaid,
           totalRevenue: 0,
           totalAmountBasicPlan: 0,
           totalAmountComboPlan: 0,

@@ -522,7 +522,7 @@ export class ClassScheduleController {
                 return failedResponse(res, 400, "Invalid Coordinator ID format");
             }
             const classSchedules = await ClassScheduleModel.find({
-                organization: req.params.organizationId,
+                // organization: req.params.organizationId,
                 coordinators: coordinatorObjectId // Filter by coordinator
             })
             .populate("location locationId course")
