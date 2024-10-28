@@ -40,7 +40,8 @@ const subUnitCourseSchema: Schema<ISubUnitCourse> = new Schema<ISubUnitCourse>({
   subUnit: { type: Schema.Types.ObjectId, ref: 'SubUnit', required: true },
   term: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
   expired: { type: Boolean, default: false },
-  paid: { type: Boolean, default: false }
+  paid: { type: Boolean, default: false },
+  amount: { type: Number, default: 100 }
 }, { timestamps: true });
 
 subUnitCourseSchema.pre("find", function () {

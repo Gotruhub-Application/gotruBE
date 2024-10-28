@@ -32,6 +32,7 @@ export interface ISubUnitCourse extends Document {
   term: ITerm['_id'];
   expired: boolean;
   paid: boolean;
+  amount:number;
 }
 export interface Ilocation extends Document {
   name:string
