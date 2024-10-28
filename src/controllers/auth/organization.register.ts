@@ -110,7 +110,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return failedResponse(res, 400, `${error.details[0].message}`);
     }
 
-    const isOrganization = await Organization.findOne({ email: value.email }).select("+password").lean();
+    const isOrganization = await Organization.findOne({ email: value.email })
+    .populate("logo")
+    .select("+password").lean();
     if (!isOrganization) {
       return failedResponse(res, 404, "Email does not exist.");
     }

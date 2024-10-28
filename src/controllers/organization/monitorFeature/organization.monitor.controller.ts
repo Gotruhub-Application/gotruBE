@@ -806,8 +806,10 @@ export class AttendanceController {
                 .skip(skip)
                 .sort({ createdAt: -1 })
                 .limit(ITEMS_PER_PAGE);
+            
+            const classSchedule = await ClassScheduleModel.findById(req.params.classScheduleId);
     
-            return successResponse(res, 200, "Success", attendances);
+            return successResponse(res, 200, "Success", {attendances, classSchedule});
         } catch (error: any) {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
