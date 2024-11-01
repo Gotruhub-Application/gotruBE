@@ -37,7 +37,7 @@ export async function handleAdminSendParentMessage(socket: any, message: any) {
             const user = await User.findById(message.parentId).select("fcmToken");
             
             if (user?.fcmToken) {
-                await sendNotif(user.fcmToken, `Pass authorization`, `Your action is required`, notifyPayload);
+                await sendNotif(user.fcmToken, `Pass authorization`, `Your consent is required`, notifyPayload);
             }; 
         } catch (err) {
             
@@ -65,7 +65,7 @@ export async function handleParentSendAdminApproveDecline(socket: any, message: 
             const user = await User.findById(message.adminSenderId).select("fcmToken");
             
             if (user?.fcmToken) {
-              await sendNotif(user.fcmToken, `Pass authorization`, `Your action is required`, notifyPayload);
+              await sendNotif(user.fcmToken, `Pass authorization`, `Your consent is required`, notifyPayload);
             }
           } catch (err) {
             
