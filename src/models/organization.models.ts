@@ -570,7 +570,7 @@ SignInOutRecordSchema.pre("save", async function (next) {
         }
         if (guardian?.fcmToken) {
           try {
-            await sendNotif(guardian.fcmToken, `${orgnz?.nameOfEstablishment}`, `Your child ${user?.fullName} just ${message} school at ${this.createdAt}\n Scanned Locations: ${record.coordinate.lat}, ${record.coordinate.long}`, { type: `gotrupass` });
+            await sendNotif(guardian.fcmToken, `${orgnz?.nameOfEstablishment}`, `Your child ${user?.fullName} just ${message} school on ${this.createdAt}\n Scanned location: ${record.coordinate.lat}, ${record.coordinate.long}`, { type: `gotrupass` });
           } catch (error: any) {
             writeErrosToLogs(error);
           };
@@ -580,7 +580,7 @@ SignInOutRecordSchema.pre("save", async function (next) {
           owner: this.guardians,
           title: `${orgnz?.nameOfEstablishment}`,
           type: `gotrupass`,
-          message: `Your child ${user?.fullName} just ${message} school at ${this.createdAt}\n Scanned Locations: ${record.coordinate.lat}, ${record.coordinate.long}`
+          message: `Your child ${user?.fullName} just ${message} school on ${this.createdAt}\n Scanned location: ${record.coordinate.lat}, ${record.coordinate.long}`
         });
       }
     } catch (error: any) {
