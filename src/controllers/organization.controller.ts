@@ -8,9 +8,10 @@ import { SubUnitValidator, UnpdatesubaccountJoiSchema, orgUpdateUserValidator, o
 import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
 import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
-import { AttendanceModel, SubUnitCourseModel } from "../models/organziation/monitorFeature.models";
+import { AttendanceModel, ClassScheduleModel, SubUnitCourseModel } from "../models/organziation/monitorFeature.models";
 import mongoose from "mongoose";
 import { sendNotif } from "../support/firebaseNotification";
+import { getSubunitAttendanceSummaryByUserId } from "./organization/monitorFeature/monitorFuncs";
 
 export class OrganizatioinUnits {
     static async getUnits (req:Request, res:Response, next:NextFunction){
@@ -1201,13 +1202,14 @@ export class UserSummary {
 static async getUserAttendanceSummary(req: Request, res: Response) {
   try {
     const { memberId, termId } = req.params;
+    console.log("LHjckvdvdvdfvfd")
 
     const attendanceSummary = await AttendanceModel.aggregate([
       {
         $match: {
           user: new mongoose.Types.ObjectId(memberId),
           term: new mongoose.Types.ObjectId(termId),
-          flag:false
+          // flag:false
         },
       },
       {
@@ -1294,6 +1296,94 @@ static async getUserAttendanceSummary(req: Request, res: Response) {
     ]);
 
     return successResponse(res, 200, 'Success', attendanceSummary);
+  } catch (error: any) {
+    writeErrosToLogs(error);
+    return failedResponse(res, 500, error.message);
+  }
+};
+
+
+static async getUserAttendanceSummaryBySubunit(req: Request, res: Response) {
+  interface AttendanceSummary {
+    courseId: string;
+    courseName: string;
+    attendedSessions: number;
+    totalScore: number;
+    attendanceRate: number;
+  }
+  
+  interface UserAttendanceSummary {
+    userId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    courseSummaries: AttendanceSummary[];
+    overallAttendanceRate: number;
+  }
+  try {
+    const { termId, subUnitId, organizationId } = req.params;
+
+    // First, get all class schedules for this term and subunit
+    const classSchedules = await ClassScheduleModel.find({
+      term: termId,
+      subUnit: subUnitId,
+      organization: organizationId,
+      expired: { $ne: true }
+    }).select('_id');
+
+    // Get all students in the subunit
+    const members = await User.find({
+      organization: organizationId,
+      role: "student",
+      subUnit: subUnitId,
+    }).select('_id fullName email');
+
+    // Get attendance summaries for all members across all class schedules
+    const response = await Promise.all(
+      members.map(async (member) => {
+        // Get attendance for each class schedule
+        const allCourseSummaries = await Promise.all(
+          classSchedules.map(schedule => 
+            getSubunitAttendanceSummaryByUserId(
+              member._id.toString(),
+              termId,
+              schedule._id.toString()
+            )
+          )
+        );
+
+        // Flatten all course summaries into a single array
+        const courseSummaries = allCourseSummaries.flat();
+
+        // Calculate overall attendance rate
+        const overallAttendanceRate = courseSummaries.length > 0
+          ? courseSummaries.reduce((acc, course) => acc + course.attendanceRate, 0) / courseSummaries.length
+          : 0;
+
+        return {
+          userId: member._id,
+          email: member.email,
+          courseSummaries,
+          overallAttendanceRate: Number(overallAttendanceRate.toFixed(2))
+        };
+      })
+    );
+
+    // Sort by overall attendance rate in descending order
+    const sortedResponse = response.sort((a, b) => b.overallAttendanceRate - a.overallAttendanceRate);
+
+    // Calculate summary statistics
+    const summaryData = {
+      totalStudents: sortedResponse.length,
+      totalClassSchedules: classSchedules.length,
+      averageAttendanceRate: Number(
+        (sortedResponse.reduce((acc, student) => acc + student.overallAttendanceRate, 0) / 
+        sortedResponse.length || 0).toFixed(2)
+      ),
+      studentSummaries: sortedResponse
+    };
+
+    return successResponse(res, 200, 'Success', summaryData);
   } catch (error: any) {
     writeErrosToLogs(error);
     return failedResponse(res, 500, error.message);

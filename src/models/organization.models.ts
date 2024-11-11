@@ -642,6 +642,12 @@ productSchema.pre('find', function () {
   // .populate('uploadedBy')
 });
 
+const productHistorySchema =  new Schema ({
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+  product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+  description: { type: String, required: true },
+},{ timestamps: true })
+
 
 const OrderSchema: Schema<IOrder> = new Schema<IOrder>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: false },
@@ -778,3 +784,4 @@ export const SignInOutRecordModel: Model<ISignInOutRecord> = model<ISignInOutRec
 
 export const Category: Model<ICategory> = model<ICategory>('Category', categorySchema);
 export const Product: Model<IProduct> = model<IProduct>('Product', productSchema);
+export const ProductHistory = model("ProductHistory", productHistorySchema);

@@ -26,6 +26,7 @@ export class NotificationController {
             }
             const notifications = await Notification.find(query)
                 .skip(skip)
+                .sort({ createdAt: -1 })
                 .limit(ITEMS_PER_PAGE);
         
             const totalNotifications = await Notification.countDocuments(query);

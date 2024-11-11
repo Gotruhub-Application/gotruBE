@@ -9,7 +9,7 @@ import { authRouter } from "./routers/auth/organization.register";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { socket } from "./socket";
-import { scheduleTokenExpirationCheck } from "./support/helpers";
+import { classScheduleChecker, scheduleTokenExpirationCheck } from "./support/helpers";
 
 const httpServer = createServer(app);
 
@@ -32,4 +32,5 @@ httpServer.listen(PORT, () => {
     socket();
     // cron jobs
     scheduleTokenExpirationCheck()
+    classScheduleChecker()
   });

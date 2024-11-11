@@ -19,6 +19,7 @@ tradeOrganizationRouter
 .get("/products/:id",IsAuthenticatedOrganization,Products.getSingleProduct)
 .put("/products/:id",IsAuthenticatedOrganization,Products.updateSingleProduct)
 .delete("/products/:id",IsAuthenticatedOrganization,Products.deleteSingleProduct)
+.get("/products/:id/history/:organizationId",Products.getSingleProductHistory)
 
 // withdrawasl
 .get("/withdrawals", IsAuthenticatedOrganization, WithdrawalRequestController.getAllWithdrawalRequests)

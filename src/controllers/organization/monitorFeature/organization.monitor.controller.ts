@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { failedResponse, initiatePaystack, successResponse } from "../../../support/http"; 
 import { isLessThanFourMonths, writeErrosToLogs } from "../../../support/helpers";
 import { UpdateLocationSchema, attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createLocationSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, flagAttendanceSchema, threadholdValueValidator, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema, updateThreadholdValueValidator } from "../../../validators/monitorFeature/organization.monitor";
-import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel, ThreadholdValue } from "../../../models/organziation/monitorFeature.models";
+import { AttendanceGrading, AttendanceHistory, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel, ThreadholdValue } from "../../../models/organziation/monitorFeature.models";
 import { logger } from "../../../logger";
 import { AppToken, Unit, User } from "../../../models/organization.models";
 import { schedule } from "node-cron";
@@ -484,9 +484,11 @@ export class ClassScheduleController {
 
             logger.info(req.params.organizationId)
             const classSchedules = await ClassScheduleModel.find({ organization:req.params.organizationId, subUnit:req.params.subUnitId })
-            .populate("location locationId")
+            .populate("location locationId coordinators")
                 .skip(skip)
                 .limit(ITEMS_PER_PAGE);
+            
+            
             const returnPayload = classSchedules.map(schedule => ({
                 _id: schedule._id,
                 day: schedule.day,
@@ -495,6 +497,11 @@ export class ClassScheduleController {
                 location:schedule.locationId ? schedule.locationId.name : null,
                 startTime:schedule.startTime,
                 endTime:schedule.endTime,
+                coordinators: schedule.coordinators.map(user => ({
+                    _id: user._id,
+                    name: user.fullName,
+                    email: user.defaultEmail
+                }))
 
             }));
 
@@ -528,6 +535,7 @@ export class ClassScheduleController {
             .populate("location locationId course")
             .skip(skip)
             .limit(ITEMS_PER_PAGE);
+            
 
             const returnPayload = classSchedules.map(schedule => ({
                 _id: schedule._id,
@@ -822,7 +830,8 @@ export class AttendanceController {
 
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
-            const attendances = await AttendanceModel.find({ organization: req.params.organizationId, user:userId })
+            // const attendances = await AttendanceModel.find({ organization: req.params.organizationId, user:userId })
+            const attendances = await AttendanceModel.find({user:userId })
                 .skip(skip)
                 .sort({ createdAt: -1 })
                 .limit(ITEMS_PER_PAGE);
@@ -878,7 +887,24 @@ export class AttendanceController {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
         }
-    }
+    };
+
+    static async getAttendanceHistoryByClassSchedule(req: Request, res: Response) {
+        try {
+
+            const attendance = await AttendanceHistory.find({
+                classScheduleId: req.params.classScheduleId
+            })
+            .sort({ createdAt: -1 });
+
+            return successResponse(res, 200, "Success",  attendance );
+
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
+    };
+
 };
 
 
