@@ -17,6 +17,6 @@ organizationRouter
 .get("/mobile-section/schedule/assignee/:coordinatorId", IsAuthenticatedStaff, ClassScheduleController.getSingleAssigneeClassSchedules)
 
 .get("/mobile-section/attendance/schedule/:classScheduleId", IsAuthenticatedUser, AttendanceController.getAllAttendances)
-.get("/mobile-section/attendance/schedule/user/:userId", IsAuthenticatedUser, AttendanceController.getSingleUserAttendances)
+.get("/mobile-section/attendance/schedule/user/:userId",  AttendanceController.getSingleUserAttendances)
 .get("/mobile-section/attendance/:id", IsAuthenticatedUser, AttendanceController.getSingleAttendance)
 .put("/mobile-section/attendance/:id/flag", IsAuthenticatedStaff, AttendanceController.updateSingleAttendance)

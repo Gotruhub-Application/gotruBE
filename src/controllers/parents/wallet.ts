@@ -84,14 +84,15 @@ export class ParentManageWallet {
         try {
             const { organization } = (req as any).user;
             const { _id: guardianId } = (req as any).user;
+            const {transactionType} = req.query
             const { child_id } = req.params;
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.page_size as string) || 10; // Default limit to 10 transactions per page
             const skip = (page - 1) * limit;
 
             const child = await User.findOne({
-                organization,
-                guardians: guardianId,
+                // organization,
+                // guardians: guardianId,
                 _id: child_id,
             });
 
@@ -99,10 +100,16 @@ export class ParentManageWallet {
                 return failedResponse(res, 404, "Child not found");
             }
 
-            const totalCount = await WalletTransactionModel.countDocuments({ user: child_id });
+            const filter:any = {};
+            if (transactionType){
+                filter.type = transactionType
+            };
+            filter.user = child_id
+
+            const totalCount = await WalletTransactionModel.countDocuments(filter);
             const totalPages = Math.ceil(totalCount / limit);
 
-            const transactions = await WalletTransactionModel.find({ user: child_id })
+            const transactions = await WalletTransactionModel.find(filter)
                 .skip(skip)
                 .limit(limit);
 

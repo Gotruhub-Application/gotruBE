@@ -50,6 +50,7 @@ organizationRouter
 .get('/pass-summary', IsAuthenticatedOrganization, UserSummary.passSummary)
 .get('/wallet-summary/:memberId', IsAuthenticatedOrganization, UserSummary.walletInfo)
 .get('/attendance-summary/:memberId/:termId', IsAuthenticatedOrganization, UserSummary.getUserAttendanceSummary)
+.get('/attendance-summary/subunit/:subUnitId/:termId/:classScheduleId', IsAuthenticatedOrganization, UserSummary.getUserAttendanceSummaryBySubunit)
 
 
 // users copy

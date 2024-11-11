@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { failedResponse, successResponse } from "../../../support/http"; 
 import { createNotification, writeErrosToLogs } from "../../../support/helpers";
-import { createCategorySchema, createProductSchema, orderPickupSchema, payloadSchema, updateOrderStatusSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
-import { Category, Order, OrderPickup, Product, User, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../../../models/organization.models";
+import { createCategorySchema, createProductSchema, orderPickupSchema, payloadSchema, updateOrderStatusSchema, updateProductSchema, updateWithdrawalRequestSchema } from "../../../validators/tradeFeature/organization.validator";
+import { Category, Order, OrderPickup, Product, ProductHistory, User, WalletModel, WalletTransactionModel, WithdrawalRequest } from "../../../models/organization.models";
 import { Media } from "../../../models/media.models";
 import mongoose from 'mongoose';
 import bcrypt from "bcrypt"
@@ -212,13 +212,68 @@ export class Products {
 
     static async updateSingleProduct(req: Request, res: Response) {
         try {
-            const { error, value } = createProductSchema.validate(req.body);
+            const { error, value } = updateProductSchema.validate(req.body);
             if (error) return failedResponse(res, 400, `${error.details[0].message}`);
+            const originalProduct = await Product.findOne({_id:req.params.id,uploadedBy:req.params.organizationId})
 
-            const productExist = await Product.findOneAndUpdate({_id:req.params.id,uploadedBy:req.params.organizationId}, value,{new:true})
-            if (!productExist) return failedResponse(res, 404, "Product does not exist");
+            const productExists = await Product.findOneAndUpdate({_id:req.params.id,uploadedBy:req.params.organizationId}, value,{new:true})
+            if (!productExists) return failedResponse(res, 404, "Product does not exist");
+             // Generate history description by comparing fields
 
-            return successResponse(res, 200, "Success", {productExist})
+
+            // Compare each field and generate appropriate description
+            if (originalProduct?.productName !== value.productName) {
+                await ProductHistory.create({
+                  organization: req.params.organizationId,
+                  product: req.params.id,
+                  description: `Product name changed from "${originalProduct?.productName}" to "${value.productName}"`
+              });
+            }
+            if (originalProduct?.price !== value.price) {
+                await ProductHistory.create({
+                  organization: req.params.organizationId,
+                  product: req.params.id,
+                  description: `Price updated from ${originalProduct?.price} to ${value.price}`
+              });
+            }
+            if (originalProduct?.quantity !== value.quantity) {
+                console.log("Heyyyyyy")
+                await ProductHistory.create({
+                  organization: req.params.organizationId,
+                  product: req.params.id,
+                  description: `Quantity updated from ${originalProduct?.quantity} to ${value.quantity}`
+              });
+            }
+            if (originalProduct?.description !== value.description) {
+                await ProductHistory.create({
+                  organization: req.params.organizationId,
+                  product: req.params.id,
+                  description: `Description was updated`
+              });
+            }
+            if (originalProduct?.minimumQuantity !== value.minimumQuantity) {
+                await ProductHistory.create({
+                  organization: req.params.organizationId,
+                  product: req.params.id,
+                  description: `Minimum quantity changed from ${originalProduct?.minimumQuantity} to ${value.minimumQuantity}`
+              });
+            }
+            
+            // // If category changed, fetch category names for better description
+            // if (originalProduct?.category.toString() !== value.category.toString()) {
+            //     const oldCategory = await Category.findById(originalProduct?.category);
+            //     const newCategory = await Category.findById(value.category);
+            //     if (oldCategory && newCategory) {
+            //         await ProductHistory.create({
+            //           organization: req.params.organizationId,
+            //           product: req.params.id,
+            //           description: `Category changed from "${oldCategory.name}" to "${newCategory.name}"`
+            //       });
+            //     }
+            // }
+
+
+            return successResponse(res, 200, "Success", {productExists})
 
         }catch(error:any){
             writeErrosToLogs(error);
@@ -239,6 +294,78 @@ export class Products {
             return failedResponse(res, 500, error.message);
         }
     };
+
+    static async getSingleProductHistory(req: Request, res: Response) {
+      try {
+          const {
+              startDate,
+              endDate,
+              description,
+              sortOrder = 'desc',
+              page = 1,
+              limit = 100
+          } = req.query;
+  
+          // Build filter object
+          const filter: any = {
+              organization: req.params.organizationId,
+              product: req.params.id,
+          };
+  
+          // Add date range filter if provided
+          if (startDate || endDate) {
+              filter.createdAt = {};
+              if (startDate) {
+                  filter.createdAt.$gte = new Date(startDate as string);
+              }
+              if (endDate) {
+                  filter.createdAt.$lte = new Date(endDate as string);
+              }
+          }
+  
+          // Add description search if provided
+          if (description) {
+              filter.description = {
+                  $regex: description,
+                  $options: 'i'  // case-insensitive search
+              };
+          }
+  
+          // Calculate skip value for pagination
+          const skip = (Number(page) - 1) * Number(limit);
+  
+
+          // Get total count for pagination
+          const totalCount = await ProductHistory.countDocuments(filter);
+  
+          // Execute query with filters, pagination, and sorting
+          const history = await ProductHistory.find(filter)
+              .populate("organization")
+              .sort({ createdAt: -1 })
+              .skip(skip)
+              .limit(Number(limit));
+  
+          // Calculate pagination info
+          const totalPages = Math.ceil(totalCount / Number(limit));
+          const hasNextPage = Number(page) < totalPages;
+          const hasPrevPage = Number(page) > 1;
+  
+          return successResponse(res, 200, "Success", {
+              history,
+              pagination: {
+                  currentPage: Number(page),
+                  totalPages,
+                  totalItems: totalCount,
+                  hasNextPage,
+                  hasPrevPage,
+                  itemsPerPage: Number(limit)
+              }
+          });
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
+      }
+  }
 };
 
 
@@ -881,4 +1008,4 @@ export class OrderPickupController {
           return failedResponse(res, 500, `Error fetching OrderPickups: ${error.message}`);
         }
       }
-  }
+  };
