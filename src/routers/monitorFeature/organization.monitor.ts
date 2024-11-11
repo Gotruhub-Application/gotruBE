@@ -40,6 +40,7 @@ organizationRouter
 .get("/attendance/schedule/user/:userId", IsAuthenticatedOrganization, AttendanceController.getSingleUserAttendances)
 .get("/attendance/:id", IsAuthenticatedOrganization, AttendanceController.getSingleAttendance)
 .delete("/attendance/:id", IsAuthenticatedOrganization, AttendanceController.deleteSingleAttendance)
+.get("/attendance/history/:classScheduleId", IsAuthenticatedOrganization, AttendanceController.getAttendanceHistoryByClassSchedule)
 
 
 .post('/attendance-grading', IsAuthenticatedOrganization, AttendanceGradingController.createAttendanceGrading)

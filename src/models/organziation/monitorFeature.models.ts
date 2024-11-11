@@ -4,6 +4,7 @@ import { ConvertDateTimeToNumber, createNotification, generateQrcode, isUserLoca
 import { CompareCoordinate, CreateNotificationParams } from '../../interfaces/general.interface';
 import { sendNotif } from '../../support/firebaseNotification';
 import { Organization, User } from '../organization.models';
+import { timeStamp } from 'console';
 
 const sessionSchema: Schema<ISession> = new Schema<ISession>({
   name: { type: String, required: true },
@@ -124,7 +125,7 @@ const attendanceSchema: Schema<IAttendance> = new Schema<IAttendance>({
     lat: { type: String, required: true },
     long: { type: String, required: true }
   },
-  attendanceType: { type: String, enum: ['signin', 'signout'], required: true },
+  attendanceType: { type: String, enum: ['signin', 'signout'], required: false },
   remark: { type: String },
   score: { type: String },
   isValid: { type: Boolean, default: true },
@@ -166,8 +167,8 @@ attendanceSchema.pre("save", async function (next) {
         // Determine the remark based on grading criteria
         let remark = 'absent';
         let initialScore = 0;
-        const timeDiff = this.attendanceType === 'signin' 
-          ? this.scanned_time - schedule.startTime 
+        const timeDiff = this.attendanceType === 'signin'
+          ? this.scanned_time - schedule.startTime
           : schedule.endTime - this.scanned_time;
 
 
@@ -244,6 +245,15 @@ attendanceSchema.pre("save", async function (next) {
   }
   next();
 });
+
+const AttendanceHistorySchema = new Schema({
+  classScheduleId: { type: Schema.Types.ObjectId, ref: 'ClassSchedule', required: true },
+  totalAssignee: { type: Number, default: 0 },
+  totalMemberPresent: { type: Number, default: 0 },
+  totalMembers: { type: Number, default: 0 },
+  duration: { type: Number, default: 0 },
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
+}, { timestamps: true })
 
 // attendanceSchema.pre("save", async function (next) {
 //   if (this.isNew) {
@@ -355,6 +365,8 @@ export const TermModel: Model<ITerm> = model<ITerm>('Term', termSchema);
 export const SubUnitCourseModel: Model<ISubUnitCourse> = model<ISubUnitCourse>('SubUnitCourse', subUnitCourseSchema);
 export const ClassScheduleModel: Model<IClassSchedule> = model<IClassSchedule>('ClassSchedule', classScheduleSchema);
 export const AttendanceModel: Model<IAttendance> = model<IAttendance>('Attendance', attendanceSchema);
+export const AttendanceHistory = model('AttendanceHistory', AttendanceHistorySchema);
+
 export const AttendanceGrading: Model<IAttendanceGrading> = model<IAttendanceGrading>('AttendanceGrading', AttendanceGradingSchema);
 export const ThreadholdValue: Model<IthreadholdValue> = model<IthreadholdValue>('ThreadholdValue', threadholdValueSchema);
 export const LocationModel: Model<Ilocation> = model<Ilocation>("Location", locationSchema);

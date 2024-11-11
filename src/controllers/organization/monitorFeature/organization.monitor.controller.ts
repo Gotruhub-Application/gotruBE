@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { failedResponse, initiatePaystack, successResponse } from "../../../support/http"; 
 import { isLessThanFourMonths, writeErrosToLogs } from "../../../support/helpers";
 import { UpdateLocationSchema, attendanceGradingUpdateValidationSchema, attendanceGradingValidationSchema, createAttendanceSchema, createClassScheduleSchema, createCourseSchema, createLocationSchema, createSessionSchema, createSubUnitCourseSchema, createTermSchema, flagAttendanceSchema, threadholdValueValidator, updateAttendanceSchema, updateClassScheduleSchema, updateCourseSchema, updateSessionSchema, updateSubUnitCourseSchema, updateTermSchema, updateThreadholdValueValidator } from "../../../validators/monitorFeature/organization.monitor";
-import { AttendanceGrading, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel, ThreadholdValue } from "../../../models/organziation/monitorFeature.models";
+import { AttendanceGrading, AttendanceHistory, AttendanceModel, ClassScheduleModel, CourseModel, LocationModel, SessionModel, SubUnitCourseModel, TermModel, ThreadholdValue } from "../../../models/organziation/monitorFeature.models";
 import { logger } from "../../../logger";
 import { AppToken, Unit, User } from "../../../models/organization.models";
 import { schedule } from "node-cron";
@@ -887,7 +887,24 @@ export class AttendanceController {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
         }
-    }
+    };
+
+    static async getAttendanceHistoryByClassSchedule(req: Request, res: Response) {
+        try {
+
+            const attendance = await AttendanceHistory.find({
+                classScheduleId: req.params.classScheduleId
+            })
+            .sort({ createdAt: -1 });
+
+            return successResponse(res, 200, "Success",  attendance );
+
+        } catch (error: any) {
+            writeErrosToLogs(error);
+            return failedResponse(res, 500, error.message);
+        }
+    };
+
 };
 
 

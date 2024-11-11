@@ -605,6 +605,7 @@ export class OrderController {
             const orders = await Order.find({ user: child_id })
                 .limit(Number(limit))
                 .skip((Number(page) - 1) * Number(limit))
+                .sort({ createdAt: -1 })
                 .exec();
 
             const count = await Order.countDocuments({ user: child_id });
@@ -635,6 +636,7 @@ export class OrderController {
             const orders = await Order.find({organization})
                 .limit(Number(limit))
                 .skip((Number(page) - 1) * Number(limit))
+                .sort({ createdAt: -1 })
                 .exec();
 
             const count = await Order.countDocuments({organization});
@@ -662,6 +664,7 @@ export class OrderController {
 
             const orders = await Order.find({organization})
                 .limit(Number(limit))
+                .sort({ createdAt: -1 })
                 .skip((Number(page) - 1) * Number(limit))
                 .exec();
 

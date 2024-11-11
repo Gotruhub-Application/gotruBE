@@ -11,13 +11,17 @@ import cron from "node-cron";
 import { AppToken } from "../models/organization.models";
 import { Notification } from "../models/general.models";
 import { CompareCoordinate, CreateNotificationParams } from "../interfaces/general.interface";
-import { ClassScheduleModel, SubUnitCourseModel, TermModel } from "../models/organziation/monitorFeature.models";
+import { AttendanceHistory, AttendanceModel, ClassScheduleModel, SubUnitCourseModel, TermModel } from "../models/organziation/monitorFeature.models";
 import { sendNotif } from "./firebaseNotification";
 
 
 dotenv.config()
 
-
+export function getDayOfWeek() {
+  const date = new Date();
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return daysOfWeek[date.getDay()];
+}
 export const generateRandomToken = async function (): Promise<string> {
   let token: any = 0;
   let codeExists = true;
@@ -235,9 +239,11 @@ async function sendMonitorClassNotification(): Promise<void> {
   ]);
 
   for (const schdule of classSchedules) {
+    const currentDay = getDayOfWeek().toLowerCase()
+    const day = schdule.day
+    if (currentDay !== day.toLowerCase()) continue
     const startTime = schdule.startTime;
     const timeLeft = startTime - currentTime
-    console.log(startTime, "bhdsvd", currentTime, "jssdvc",timeLeft, "sjnv")
     if (timeLeft >= 0 && timeLeft <= 10) {
       // get all user belonging to that class
       const users = await User.find({
@@ -274,7 +280,104 @@ async function sendMonitorClassNotification(): Promise<void> {
     }
   }
 
+};
+
+export async function scheduleAbsentAttendanceRecord(): Promise<void> {
+  const classSchedules = await ClassScheduleModel.find({
+    // expired: false
+  }).populate([
+    'subUnit',
+    'course',
+    'organization',
+  ]);
+  const scanned_time = ConvertDateTimeToNumber()
+  for (const schdule of classSchedules) {
+
+    const currentDay = getDayOfWeek().toLowerCase()
+    const day = schdule.day
+    if (currentDay !== day.toLowerCase()) continue
+
+    if (schdule.endTime < scanned_time) {
+      const users = await User.find({
+        subUnit: schdule.subUnit._id,
+        // role: 'Monitor',
+      });
+
+      for (const user of users) {
+        // check if the user marks attendance else mark the user absent
+        const attendance = await AttendanceModel.findOne({
+          classScheduleId: schdule._id,
+          userId: user._id,
+          term: schdule.term._id,
+          organization: schdule.organization._id,
+        });
+        if (!attendance) {
+          // mark the user absent
+          await AttendanceModel.create({
+            classScheduleId: schdule._id,
+            userId: user._id,
+            absent: 'absent',
+            scanned_time: scanned_time,
+            term: schdule.term._id,
+            organization: schdule.organization._id,
+          })
+        }
+
+      };
+    }
+
+  }
+};
+
+export async function createAttendanceHistory(): Promise<void> {
+  const classSchedules = await ClassScheduleModel.find().populate([
+    'subUnit',
+    'course',
+    'organization',
+  ]);
+
+  const currentTime = ConvertDateTimeToNumber();
+
+  for (const schedule of classSchedules) {
+    const currentDay = getDayOfWeek().toLowerCase()
+    const day = schedule.day
+    if (currentDay !== day.toLowerCase()) continue
+    const totalMembers = await User.countDocuments({
+      subUnit: schedule.subUnit._id,
+    });
+    if (schedule.endTime < currentTime) {
+      let totalAssignee = 0;
+      let totalMemberPresent = 0;
+
+      const attendances = await AttendanceModel.find({
+        classScheduleId: schedule._id,
+        term: schedule.term._id,
+        organization: schedule.organization._id,
+      });
+
+      for (const attendance of attendances) {
+        const user = await User.findById(attendance.user);
+        if (user) {
+          if (user.role === "student") {
+            totalMemberPresent++;
+          } else if (user.role === "staff") {
+            totalAssignee++;
+          }
+        }
+      }
+
+      await AttendanceHistory.create({
+        classScheduleId: schedule._id,
+        totalMemberPresent,
+        totalAssignee,
+        totalMembers,
+        duration: schedule.endTime - schedule.startTime,
+        organization: schedule.organization
+      });
+    }
+  }
 }
+
 
 
 // Schedule the cron job to run at midnight every day
@@ -283,6 +386,7 @@ export function scheduleTokenExpirationCheck(): void {
     cron.schedule('0 0 * * *', async () => {
       await updateExpiredTokens();
       await updateExpiredForMonitorSource()
+      await createAttendanceHistory()
     });
     logger.info('Token expiration check scheduled.');
   } catch (error) {
@@ -294,6 +398,8 @@ export function classScheduleChecker(): void {
   try {
     cron.schedule('*/5 * * * *', async () => {
       await sendMonitorClassNotification();
+      await scheduleAbsentAttendanceRecord();
+
     })
     logger.info('Monitor class check scheduled.');
   } catch (error) {
