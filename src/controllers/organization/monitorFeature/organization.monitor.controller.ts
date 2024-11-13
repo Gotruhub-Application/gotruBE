@@ -532,22 +532,22 @@ export class ClassScheduleController {
                 // organization: req.params.organizationId,
                 coordinators: coordinatorObjectId // Filter by coordinator
             })
-            .populate("location locationId course")
+            .populate("location locationId course subUnit")
             .skip(skip)
             .limit(ITEMS_PER_PAGE);
             
 
-            const returnPayload = classSchedules.map(schedule => ({
-                _id: schedule._id,
-                day: schedule.day,
-                course: schedule.course?.name,
-                code: schedule.course?.courseCode,
-                location: schedule.locationId?.name || null,
-                startTime: schedule.startTime,
-                endTime: schedule.endTime,
-            }));
+            // const returnPayload = classSchedules.map(schedule => ({
+            //     _id: schedule._id,
+            //     day: schedule.day,
+            //     course: schedule.course?.name,
+            //     code: schedule.course?.courseCode,
+            //     location: schedule.locationId?.name || null,
+            //     startTime: schedule.startTime,
+            //     endTime: schedule.endTime,
+            // }));
 
-            return successResponse(res, 200, "Success", returnPayload);
+            return successResponse(res, 200, "Success", classSchedules);
         } catch (error: any) {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
