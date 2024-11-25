@@ -71,6 +71,8 @@ export interface IAttendance extends Document {
   user: Iuser['_id'];
   classScheduleId: IClassSchedule['_id'];
   scanned_time:number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IAttendanceGrading extends Document {

@@ -60,7 +60,8 @@ export class SignInOutRecordHistory {
                     scannedUser: value.scannedUser,
                     scanned: false,
                     organization: organizationId,
-                    other: value.other
+                    other: value.other,
+                    actionType: value.actionType
                 }));
                 await SignInOutRecordModel.create(recordsToCreate);
             }
