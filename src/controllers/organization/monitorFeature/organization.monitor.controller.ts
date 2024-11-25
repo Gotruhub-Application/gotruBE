@@ -704,6 +704,7 @@ export class Location {
 export class AttendanceController {
     static async addAttendance(req: Request, res: Response) {
         try {
+            console.log("Here...")
             const { error, value } = createAttendanceSchema.validate(req.body);
             const {role, _id:userId, organization}= (req as any).user
             if (error) return failedResponse(res, 400, `${error.details[0].message}`);
@@ -716,7 +717,7 @@ export class AttendanceController {
             // validate role
             const user = await User.findById(userId);
             if(role === "student"){
-                console.log(user?.monitorToken, "asdas")
+                console.log(user?.monitorToken, "asdas12345")
                 const token = await AppToken.findById(user?.monitorToken)
                 if (!token) {
                     return failedResponse(res, 400, "Student has no active monitor end subscription");

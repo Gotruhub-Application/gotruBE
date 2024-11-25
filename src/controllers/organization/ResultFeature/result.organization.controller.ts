@@ -7,6 +7,7 @@ import { ResultSchema } from "../../../validators/resultfeature/resultfeature.va
 import { Result } from "../../../models/organziation/resultfeature.models";
 import { TermModel } from "../../../models/organziation/monitorFeature.models";
 import { Feature, Subscription } from "../../../models/admin.models";
+import { Notification } from "../../../models/general.models";
 
 
 export class ResultController {
@@ -38,6 +39,15 @@ export class ResultController {
                 { $set: value },
                 { upsert: true }
             );
+
+            // create notification
+            const message = `Result for ${user.fullName}'s has just been uploaded at ${new Date()}`
+            await Notification.create({
+                owner: req.params.organizationId,
+                title: `New result uploads`,
+                type: `result_check`,
+                message: message
+              });
 
             return successResponse(res, 201, "Success", result);
 

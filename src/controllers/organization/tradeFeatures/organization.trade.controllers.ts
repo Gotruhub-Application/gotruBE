@@ -565,20 +565,20 @@ export class CartController {
                     await product.save({ session });
                 }
             }
-            // create sale notification to admin
-            const payload: CreateNotificationParams = {
-                owner: organization,
-                title: `Sales alert`,
-                type: `gotrutrade`,
-                message: `#${totalAmount} of stocks has just been sold out via ${value.paymentMode}`
-                };
+            // // create sale notification to admin
+            // const payload: CreateNotificationParams = {
+            //     owner: organization,
+            //     title: `Sales alert`,
+            //     type: `gotrutrade`,
+            //     message: `#${totalAmount} of stocks has just been sold out via ${value.paymentMode}`
+            //     };
             const payload2: CreateNotificationParams = {
                 owner: child_id,
                 title: `Purchase alert`,
                 type: `gotrutrade`,
                 message: `Your order was successful. Order ID ${newOrder?._id}`
                 };
-            await createNotification(payload); //admin
+            // await createNotification(payload); //admin
             await createNotification(payload2); //user
 
             await session.commitTransaction();

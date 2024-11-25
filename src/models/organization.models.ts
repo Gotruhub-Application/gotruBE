@@ -497,7 +497,7 @@ const SignInOutRecordSchema: Schema<ISignInOutRecord> = new Schema<ISignInOutRec
     lat: { type: String, required: true },
     long: { type: String, required: true }
   },
-  actionType: String,
+  actionType: { type: String, required: true },
   approvalBy: { type: Schema.Types.ObjectId, ref: 'User' },
   authorizationType: { type: String, required: true },
   scannedBy: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -558,7 +558,7 @@ SignInOutRecordSchema.pre("save", async function (next) {
           owner: record.organization.toString(),
           title: `suspicious_${this.actionType}`,
           type: `gotrupass`,
-          message: `New suspicious ${this.actionType} at ${record.coordinate.lat}, ${record.coordinate.long}`
+          message: `Suspicious ${this.actionType} by ${user?.fullName} at on ${this.createdAt} \n Scan LOcation: ${record.coordinate.lat}, ${record.coordinate.long}`
         });
       };
       if (guardian) {
@@ -670,6 +670,20 @@ const OrderSchema: Schema<IOrder> = new Schema<IOrder>({
     type: Date
   },
 }, { timestamps: true });
+OrderSchema.pre("save", async function (next) {
+  if (this.isNew && this.attendant) {
+    const user = await User.findById(this.attendant);
+    const message = `Sales by ${user?.fullName} on ${this.createdAt} of #${this.totalAmount} from stocks via ${this.paymentMode}.`
+    await Notification.create({
+      owner: this.organization.toString(),
+      title: `New trade sales`,
+      type: `gotrutrade`,
+      message: message
+    });
+
+  }
+  next();
+})
 
 OrderSchema.pre('find', function () {
   this

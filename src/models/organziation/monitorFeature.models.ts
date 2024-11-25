@@ -135,6 +135,69 @@ const attendanceSchema: Schema<IAttendance> = new Schema<IAttendance>({
   scanned_time: { type: Number }
 }, { timestamps: true });
 
+
+// Improved getCourseInfo method with error handling and comprehensive data
+const getCourseInfo = async function(schudleId:string) {
+  try {
+    // Find class schedule with essential related data
+    const schedule = await ClassScheduleModel.findById(schudleId)
+      .populate('locationId')
+      .populate('coordinators', 'name email')
+      .lean();
+
+    if (!schedule) {
+      throw new Error('Class schedule not found');
+    }
+
+    // Get course information with related data
+    const subUnitCourse = await SubUnitCourseModel.findById(schedule.course)
+      .populate({
+        path: 'course',
+        select: 'name courseCode unit',
+        populate: {
+          path: 'unit',
+          select: 'name'
+        }
+      })
+      .populate('subUnit', 'name')
+      .populate('term', 'name startDate endDate')
+      .lean();
+
+    if (!subUnitCourse) {
+      throw new Error('Course not found');
+    }
+
+    // Format and return comprehensive course information
+    return {
+      courseInfo: {
+        name: subUnitCourse.course.name,
+        courseCode: subUnitCourse.course.courseCode,
+        unit: subUnitCourse.course.unit,
+        subUnit: subUnitCourse.subUnit,
+        term: subUnitCourse.term,
+        paid: subUnitCourse.paid,
+        amount: subUnitCourse.amount,
+        expired: subUnitCourse.expired
+      },
+      scheduleInfo: {
+        day: schedule.day,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        location: schedule.locationId,
+        currentLocation: schedule.location,
+        endLocation: schedule.endlocation,
+        coordinators: schedule.coordinators,
+        expired: schedule.expired,
+        qrcode: schedule.qrcode
+      }
+    };
+  } catch (error) {
+    console.error('Error in getCourseInfo:', error);
+    throw error;
+  }
+};
+
+
 attendanceSchema.pre("find", function () {
   this
     .populate("classScheduleId")
@@ -153,8 +216,9 @@ attendanceSchema.pre("save", async function (next) {
     try {
       this.scanned_time = ConvertDateTimeToNumber(); // For testing purposes
       console.log(this.scanned_time, "this is the scan time...");
+      const _courseInfo = await getCourseInfo(this.classScheduleId)
 
-      const schedule = await ClassScheduleModel.findById(this.classScheduleId).populate('organization');
+      const schedule = await ClassScheduleModel.findById(this.classScheduleId).populate('organization course');
       const user = await User.findById(this.user);
 
       if (schedule && user) {
@@ -219,12 +283,14 @@ attendanceSchema.pre("save", async function (next) {
         if (!resp) {
           this.isValid = false;
           // Send suspicious activity notification
+          const message = `Suspicious ${this.attendanceType} scan for ${_courseInfo.courseInfo.courseCode} by ${user.fullName}-${user.role} on ${this.createdAt}. \n Scan location: at ${this.location.lat}, ${this.location.long}`
           const payload: CreateNotificationParams = {
-            owner: this.user,
+            owner: this.organization,
             title: `suspicious_${this.attendanceType}`,
             type: `gotrumonitor`,
-            message: `New suspicious ${this.attendanceType} at ${this.location.lat}, ${this.location.long}`
+            message: message
           };
+          console.log(payload, "this is the payload")
           await createNotification(payload);
 
           // Send notification to organization
@@ -232,7 +298,7 @@ attendanceSchema.pre("save", async function (next) {
           const orgnz = await Organization.findById(schedule.organization).select("fcmToken");
           if (orgnz?.fcmToken) {
             try {
-              await sendNotif(orgnz.fcmToken, `suspicious_${this.attendanceType}`, `New suspicious ${this.attendanceType} at ${this.location.lat}, ${this.location.long}`, notifyPayload);
+              await sendNotif(orgnz.fcmToken, `suspicious_${this.attendanceType}`, `${message}`, notifyPayload);
             } catch (error: any) {
               writeErrosToLogs(error);
             }
