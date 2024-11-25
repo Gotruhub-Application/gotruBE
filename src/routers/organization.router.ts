@@ -71,6 +71,7 @@ organizationRouter
 .post("/mobile-section/sign-in-out",IsAuthenticatedUser, SignInOutRecordHistory.createHistory)
 
 .get('/mobile-section/attendance-summary/:memberId/:termId', IsAuthenticatedUser, UserSummary.getUserAttendanceSummary)
+.get('/mobile-section/attendance-summary/subunit/:subUnitId/:termId/:classScheduleId', IsAuthenticatedUser, UserSummary.getUserAttendanceSummaryBySubunit)
 
 // summary staff
 .get("/my-orgnz-summary/subunit-summary/:subUnitId/:organizationId", OrgSummary.getSingleSubUnitSummary)
