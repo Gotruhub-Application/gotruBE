@@ -11,7 +11,7 @@ import cron from "node-cron";
 import { AppToken } from "../models/organization.models";
 import { Notification } from "../models/general.models";
 import { CompareCoordinate, CreateNotificationParams } from "../interfaces/general.interface";
-import { AttendanceHistory, AttendanceModel, ClassScheduleModel, SubUnitCourseModel, TermModel } from "../models/organziation/monitorFeature.models";
+import { AttendanceHistory, AttendanceModel, ClassScheduleModel, getCourseInfo, SubUnitCourseModel, TermModel } from "../models/organziation/monitorFeature.models";
 import { sendNotif } from "./firebaseNotification";
 
 
@@ -250,14 +250,14 @@ async function sendMonitorClassNotification(): Promise<void> {
         subUnit: schdule.subUnit._id,
         // role: 'Monitor',
       });
-
+      const _courseInfo = await getCourseInfo(schdule._id)
       for (const user of users) {
         // send notification to user
         const notifyPayload = {
           owner: user._id,
           title: 'Reminder',
           type: 'MonitorClass',
-          message: `Your class ${schdule.course.name} is starting in ${timeLeft} minutes`,
+          message: `Your class ${_courseInfo.courseInfo.courseCode} is starting in ${timeLeft} minutes`,
         };
 
         // Send suspicious activity notification
@@ -265,13 +265,13 @@ async function sendMonitorClassNotification(): Promise<void> {
           owner: user._id,
           title: 'Reminder',
           type: 'MonitorClass',
-          message: `Your class ${schdule.course.name} is starting in ${timeLeft} minutes`,
+          message: `Your class ${_courseInfo.courseInfo.courseCode} is starting in ${timeLeft} minutes`,
         };
         await createNotification(payload);
 
         if (user?.fcmToken) {
           try {
-            await sendNotif(user.fcmToken, `MonitorClassReminder`, `Your class ${schdule.course.name} is starting in ${timeLeft} minutes`, notifyPayload);
+            await sendNotif(user.fcmToken, `MonitorClassReminder`, `Your class ${_courseInfo.courseInfo.courseCode} is starting in ${timeLeft} minutes`, notifyPayload);
           } catch (error: any) {
             writeErrosToLogs(error);
           }

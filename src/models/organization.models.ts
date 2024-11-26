@@ -629,6 +629,25 @@ const productSchema: Schema<IProduct> = new Schema<IProduct>({
   },
 }, { timestamps: true }); // Include timestamps
 
+productSchema.pre("save", async function (next) {
+  let message;
+  if (!this.isNew) {
+    if (this.quantity < this.minimumQuantity){
+      message = `Low stock: ${this.productName} has only ${this.quantity} left. Please order more soon.`
+    }else if (this.quantity <=0){
+      message = `You have ran out of  ${this.productName}.`
+    }
+    await Notification.create({
+      owner: this.uploadedBy.toString(),
+      title: `Low stock`,
+      type: `gotrutrade`,
+      message: message
+    });
+
+  }
+  next();
+})
+
 productSchema.pre('findOne', function () {
   this
     .populate('productCoverImage')
