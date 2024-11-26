@@ -137,7 +137,7 @@ const attendanceSchema: Schema<IAttendance> = new Schema<IAttendance>({
 
 
 // Improved getCourseInfo method with error handling and comprehensive data
-const getCourseInfo = async function(schudleId:string) {
+export const getCourseInfo = async function(schudleId:string) {
   try {
     // Find class schedule with essential related data
     const schedule = await ClassScheduleModel.findById(schudleId)
