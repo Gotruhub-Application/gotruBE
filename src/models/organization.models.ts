@@ -513,6 +513,7 @@ const SignInOutRecordSchema: Schema<ISignInOutRecord> = new Schema<ISignInOutRec
     ref: "Media",
     required: false
   },
+  isValid: { type: Boolean, default: true },
   piviotUnit: { type: Schema.Types.ObjectId, ref: "Unit", required: false },
   subUnit: { type: Schema.Types.ObjectId, ref: "SubUnit", required: false },
 }, { timestamps: true });
@@ -554,6 +555,7 @@ SignInOutRecordSchema.pre("save", async function (next) {
 
         // const token = "egKQbjIqTiapi7MMvQXU77:APA91bEb0rDg882auDKv7CBNJ2YhQrH1JpKZr81vYGxMeN_E3g7VKfU3BJ2yWXOVQv5J0m9Pl06mcLP8S1ba3MOg7apQEu_I9vMK9u7ANGM1MFkbvDTMdVSNmJcfxT-DjIu6JhMQn2bo"
         // await sendNotif(orgnz.fcmToken, `suspicious_${record.actionType}`, `New suspicious ${record.actionType} at ${record.coordinate.lat}, ${record.coordinate.long}`, notifyPayload)
+        this.isValid = false;
         await Notification.create({
           owner: record.organization.toString(),
           title: `suspicious_${this.actionType}`,

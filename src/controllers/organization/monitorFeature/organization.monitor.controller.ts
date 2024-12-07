@@ -811,7 +811,7 @@ export class AttendanceController {
                 filter.isValid = isValid.toString().toLowerCase() === 'true';
             }
     
-            const attendances = await AttendanceModel.find(filter)
+            const attendances = await AttendanceModel.find(filter).populate("user")
                 .skip(skip)
                 .sort({ createdAt: -1 })
                 .limit(ITEMS_PER_PAGE);

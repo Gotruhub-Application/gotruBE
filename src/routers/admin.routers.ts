@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { AdminSummary, ContractPlan, FeaturesController, ManageAccounts, ManageAnnouncements, SubscriptionPlanController } from "../controllers/gotru.admin.controllers"
+import { AdminSummary, ContractPlan, FeaturesController, ManageAccounts, ManageAnnouncements, MonitorSourceContractPlan, SubscriptionPlanController } from "../controllers/gotru.admin.controllers"
 import { paystackWebhook } from "../controllers/auth/general.controllers"
 import { IsAuthenticatedGotruAdmin } from "../support/middleware"
 
@@ -30,7 +30,11 @@ adminRouter
 .get("/contract-plan/pay/:organizationId", IsAuthenticatedGotruAdmin, ContractPlan.buyPlan)
 .delete("/contract-plan/:id", IsAuthenticatedGotruAdmin, ContractPlan.removePlan)
 .put("/contract-plan/terminate/:id", IsAuthenticatedGotruAdmin, ContractPlan.terminatePlan)
-
+// monitor souce contract plan
+.get("/monitor-source/all/unpaid/:organizationId",  IsAuthenticatedGotruAdmin, MonitorSourceContractPlan.getAllUNPaidSubUnitCourses)
+.get("/monitor-source/all/:organizationId",  IsAuthenticatedGotruAdmin, MonitorSourceContractPlan.getAllSubUnitCourses)
+.get("/monitor-source/:id/",  IsAuthenticatedGotruAdmin, MonitorSourceContractPlan.getSingleSubUnitCourse)
+.put("/monitor-source/:id/",  IsAuthenticatedGotruAdmin, MonitorSourceContractPlan.wavePayment)
 // summary
 .get("/summary", IsAuthenticatedGotruAdmin, AdminSummary.summary)
 .get("/organizations", IsAuthenticatedGotruAdmin, AdminSummary.getOrganizations)

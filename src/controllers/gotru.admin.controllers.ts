@@ -8,6 +8,7 @@ import { writeErrosToLogs } from "../support/helpers";
 import mongoose from "mongoose";
 import { myEmitter } from "../events/eventEmitter";
 import { SubUnitCourseModel } from "../models/organziation/monitorFeature.models";
+import { updateSubUnitCourseSchema } from "../validators/monitorFeature/organization.monitor";
 
 
 export class FeaturesController {
@@ -401,6 +402,75 @@ export class ContractPlan {
     };
   
   };
+
+
+export class MonitorSourceContractPlan {
+
+  static async getAllUNPaidSubUnitCourses(req: Request, res: Response) {
+      const ITEMS_PER_PAGE = 100;
+      try {
+          const page = parseInt(req.query.page as string) || 1;
+          const skip = (page - 1) * ITEMS_PER_PAGE;
+          const subUnitCourses = await SubUnitCourseModel.find({ organization: req.params.organizationId, paid:false })
+              .skip(skip)
+              .limit(ITEMS_PER_PAGE);
+
+          return successResponse(res, 200, "Success", subUnitCourses );
+
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
+      }
+  };
+
+  static async getAllSubUnitCourses(req: Request, res: Response) {
+    const ITEMS_PER_PAGE = 100;
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const skip = (page - 1) * ITEMS_PER_PAGE;
+        const subUnitCourses = await SubUnitCourseModel.find({ organization: req.params.organizationId })
+            .skip(skip)
+            .limit(ITEMS_PER_PAGE);
+
+        return successResponse(res, 200, "Success", subUnitCourses );
+
+    } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, error.message);
+    }
+};
+
+  static async getSingleSubUnitCourse(req: Request, res: Response) {
+      try {
+          const subUnitCourse = await SubUnitCourseModel.findOne({ _id: req.params.id});
+          if (!subUnitCourse) return failedResponse(res, 404, "Sub-unit course does not exist");
+
+          return successResponse(res, 200, "Success", subUnitCourse );
+
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
+      }
+  }
+
+  static async wavePayment(req: Request, res: Response) {
+      try {
+
+        const subUnitCourse = await SubUnitCourseModel.findById(req.params.id);
+        if (!subUnitCourse) return failedResponse(res, 404, "Sub-unit course does not exist");
+        // wave payment;
+        subUnitCourse.paid = true;
+        subUnitCourse.save()
+
+        return successResponse(res, 200, "Payment waved successfully.", subUnitCourse);
+
+      } catch (error: any) {
+          writeErrosToLogs(error);
+          return failedResponse(res, 500, error.message);
+      }
+  }
+
+};
 
 
   export class AdminSummary {
