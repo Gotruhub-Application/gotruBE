@@ -45,7 +45,7 @@ organizationRouter
 .get("/my-orgnz-summary/unit/:unitId/subunit-summary",IsAuthenticatedOrganization, OrgSummary.getSubUnitSummary)
 .get("/my-orgnz-summary/subunit-summary/:subUnitId",IsAuthenticatedOrganization, OrgSummary.getSingleSubUnitSummary)
 .get("/my-orgnz-summary/unit/:unitId/attendance-summary",IsAuthenticatedOrganization, OrgSummary.getAttendanceSummary)
-.get("/my-orgnz-summary/subunit-summary/course/:subunitCourseId/:organizationId/attendance-summary", OrgSummary.getAttendanceSummaryBySubunitCourse)
+.get("/my-orgnz-summary/subunit-summary/course/:subunitCourseId/:organizationId/attendance-summary",IsAuthenticatedOrganization, OrgSummary.getAttendanceSummaryBySubunitCourse)
 
 
 // user summary
