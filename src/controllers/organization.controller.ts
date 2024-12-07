@@ -5,13 +5,15 @@ import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
 import { createPaystackSubAccount, failedResponse, initiatePaystack, successResponse } from "../support/http";
 import { SubUnitValidator, UnpdatesubaccountJoiSchema, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, subaccountJoiSchema, unitValidator, useAppTokenValidator } from "../validators/organization.validator";
-import { generateRandomPassword, generateRandomString, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
+import { createNotification, generateRandomPassword, generateRandomString, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
 import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
 import { AttendanceModel, ClassScheduleModel, SubUnitCourseModel } from "../models/organziation/monitorFeature.models";
 import mongoose from "mongoose";
 import { sendNotif } from "../support/firebaseNotification";
 import { getSubunitAttendanceSummaryByUserId } from "./organization/monitorFeature/monitorFuncs";
+import { Notification } from "../models/general.models";
+import { CreateNotificationParams } from "../interfaces/general.interface";
 
 export class OrganizatioinUnits {
     static async getUnits (req:Request, res:Response, next:NextFunction){
@@ -609,6 +611,15 @@ export class AppAccessTokens {
               
               try {
                 await sendNotif(user.fcmToken,  `New app access token(s).`,`You have received ${tokens.length} new access token(s)`, notifyPayload);
+                // create the notifcation
+                const payload: CreateNotificationParams = {
+                  owner: `${user.organization}`,
+                  title: `New app access token(s).`,
+                  type: `token`,
+                  message: `You have received ${tokens.length} new access token(s)`,
+                };
+
+                await createNotification(payload);
               } catch (error: any) {
                 writeErrosToLogs(error);
               }
