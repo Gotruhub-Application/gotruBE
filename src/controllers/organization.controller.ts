@@ -610,7 +610,7 @@ export class AppAccessTokens {
               const notifyPayload = { type: `appToken`, tokens };
               
               try {
-                await sendNotif(user.fcmToken,  `New app access token(s).`,`You have received ${tokens.length} new access token(s)`, notifyPayload);
+                
                 // create the notifcation
                 const payload: CreateNotificationParams = {
                   owner: `${user.organization}`,
@@ -618,6 +618,7 @@ export class AppAccessTokens {
                   type: `token`,
                   message: `You have received ${tokens.length} new access token(s)`,
                 };
+                await sendNotif(user.fcmToken,  `New app access token(s).`,`You have received ${tokens.length} new access token(s)`, notifyPayload);
 
                 await createNotification(payload);
               } catch (error: any) {
