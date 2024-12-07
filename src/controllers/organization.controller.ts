@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import { logger } from "../logger"; 
 import { createPaystackSubAccount, failedResponse, initiatePaystack, successResponse } from "../support/http";
 import { SubUnitValidator, UnpdatesubaccountJoiSchema, orgUpdateUserValidator, orgUserValidator, purchasePlanValidator, sendUsersTokenValidator, subaccountJoiSchema, unitValidator, useAppTokenValidator } from "../validators/organization.validator";
-import { generateRandomPassword, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
+import { generateRandomPassword, generateRandomString, sendOnboardingMail, sendTemplateMail, writeErrosToLogs } from "../support/helpers";
 import bcrypt from "bcrypt"
 import { emitUserCreationSignal } from "../support/signals";
 import { AttendanceModel, ClassScheduleModel, SubUnitCourseModel } from "../models/organziation/monitorFeature.models";
@@ -587,7 +587,7 @@ export class AppAccessTokens {
             const generatedTokens: string[] = [];
             for (let i = 0; i < userObj.quantity; i++) {
                 tokenPromises.push(
-                    AppToken.create({ token: Date.now().toString(), plan: plan._id, user: user._id }).then(token => {
+                    AppToken.create({ token: `${Date.now().toString()}${generateRandomString(3)}`, plan: plan._id, user: user._id }).then(token => {
                         generatedTokens.push(token.token);
                     })
                 );
@@ -959,8 +959,8 @@ export class OrgSummary {
           let presentCount = 0;
 
           attendanceRecords.forEach(record => {
-              if (record.remark === 'Early') earlyCount++;
-              else if (record.remark === 'Late') lateCount++;
+              if (record.remark.toLocaleLowerCase() === 'early') earlyCount++;
+              else if (record.remark.toLocaleLowerCase() === 'late') lateCount++;
               presentCount++;
           });
 
@@ -986,6 +986,56 @@ export class OrgSummary {
           writeErrosToLogs(error);
           return failedResponse(res, 500, error.message);
       }
+  };
+  static async getAttendanceSummaryBySubunitCourse (req: Request, res: Response) {
+    try {
+      const { subunitCourseId, organizationId } = req.params;
+      const subunitCourse = await SubUnitCourseModel.findById(subunitCourseId).populate("course");
+      if(!subunitCourse) return failedResponse(res, 404, "Subunit course not found.")
+      const relatedSchedules = await ClassScheduleModel.find({
+        course: subunitCourseId
+      }).populate("coordinators")
+      const days = relatedSchedules.map(course => course.day);
+      const coordinators = relatedSchedules.map(course => course.coordinators);
+      const durations = relatedSchedules.map(course => course.endTime - course.startTime);
+
+      // staff OrgSummary
+      // Fetch all students in the subunits
+      const staffs = await User.find({ organization: organizationId, role: 'staff'}).select('_id');
+      const staffIds = staffs.map(staff => staff._id);
+      // Fetch attendance records for the specified date
+      const staffsAttendanceRecords = await AttendanceModel.find({
+          user: { $in: staffIds },
+          flag:false
+          // createdAt: {
+          //     $gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
+          //     $lt: new Date(new Date(date).setHours(23, 59, 59, 999))
+          // }
+      });
+      const students = await User.find({ organization: organizationId, role: 'student'}).select('_id');
+      const studentIds = students.map(student => student._id);
+      const studentsAttendanceRecords = await AttendanceModel.find({
+          user: { $in: studentIds },
+          flag:false
+          // createdAt: {
+          //     $gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
+          //     $lt: new Date(new Date(date).setHours(23, 59, 59, 999))
+          // }
+      });
+      const resp = {
+        courseCode: subunitCourse.course.courseCode,
+        days,
+        coordinators,
+        durations,
+        staffsAttendanceRecords,
+        studentsAttendanceRecords,
+        
+      }
+      return successResponse(res, 200, "Success", resp);
+  } catch (error:any) {
+      writeErrosToLogs(error);
+      return failedResponse(res, 500, error.message);
+    }
   }
 };
 

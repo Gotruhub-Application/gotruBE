@@ -447,8 +447,11 @@ export function isUserLocationInRange(coordinates: CompareCoordinate): boolean {
   const userLat = parseFloat(userLocation.lat);
   const userLong = parseFloat(userLocation.long);
 
-  const isLatInRange = (startLat <= userLat && userLat <= endLat);
-  const isLongInRange = (startLong <= userLong && userLong <= endLong);
+  const modified_start = addMetersToCoordinate(startLat, startLong, 20, true);
+  const modified_end = addMetersToCoordinate(endLat, endLong, 20, false)
+
+  const isLatInRange = (modified_start.latitude <= userLat && userLat <= modified_end.latitude);
+  const isLongInRange = (modified_start.longitude <= userLong && userLong <= modified_end.longitude);
 
   return isLatInRange && isLongInRange;
 };
@@ -466,4 +469,39 @@ export function isLessThanFourMonths(startDate: string, endDate: string): boolea
   } else {
     return false;
   }
+}
+
+export function generateRandomString(length:number) {
+  return Math.random().toString(36).substring(2, 2 + length);
+}
+
+export function addMetersToCoordinate(lat:any, lon:any, meters:number = 20, isStart:boolean = false) {
+  // Earth's radius in meters
+  const earthRadius = 6371000; 
+
+  // Convert latitude and longitude to radians
+  const latRad = lat * (Math.PI / 180);
+  const lonRad = lon * (Math.PI / 180);
+
+  // Angular distance in radians on Earth's surface
+  const angularDistance = meters / earthRadius;
+
+  // Approximate new latitude (adding vertically)
+  let newLatRad;
+  if(!isStart) {
+    newLatRad = latRad + (angularDistance)
+  }else{
+      newLatRad = latRad - (angularDistance)
+  }
+  const newLat = newLatRad * (180 / Math.PI);
+
+  // Approximate new longitude (adding horizontally)
+  // Longitude changes depend on latitude due to Earth's curvature
+  const newLonRad = lonRad + (angularDistance / Math.cos(latRad));
+  const newLon = newLonRad * (180 / Math.PI);
+
+  return {
+    latitude: newLat,
+    longitude: newLon
+  };
 }
