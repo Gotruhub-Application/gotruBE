@@ -613,10 +613,10 @@ export class AppAccessTokens {
                 
                 // create the notifcation
                 const payload: CreateNotificationParams = {
-                  owner: `${user.organization}`,
+                  owner: `${user._id}`,
                   title: `New app access token(s).`,
                   type: `token`,
-                  message: `You have received ${tokens.length} new access token(s)`,
+                  message: `Here are your new app tokens: ${tokens}`,
                 };
                 await sendNotif(user.fcmToken,  `New app access token(s).`,`You have received ${tokens.length} new access token(s)`, notifyPayload);
 

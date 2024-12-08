@@ -244,7 +244,7 @@ async function sendMonitorClassNotification(): Promise<void> {
     if (currentDay !== day.toLowerCase()) continue
     const startTime = schdule.startTime;
     const timeLeft = startTime - currentTime
-    if (timeLeft >= 0 && timeLeft <= 10) {
+    if (timeLeft >= 5 && timeLeft <= 10) {
       // get all user belonging to that class
       const users = await User.find({
         subUnit: schdule.subUnit._id,
