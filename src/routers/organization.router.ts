@@ -64,7 +64,7 @@ organizationRouter
 .get("/subunits/:id",IsAuthenticatedUser,OrganizatioinSubUnits.getSingleSubUnit)
 
 .get("/mobile-section/users/get-users/:role",IsAuthenticatedUser, OrgUsers.getUsers)
-.get("/mobile-section/users/get-user/:id",IsAuthenticatedUser, OrgUsers.getSingleUser)
+.get("/mobile-section/users/get-user/:id", OrgUsers.getSingleUser)
 
 .post("/mobile-section/activate-feature",IsAuthenticatedNewUser,AppAccessTokens.useAppTokenForChild)
 

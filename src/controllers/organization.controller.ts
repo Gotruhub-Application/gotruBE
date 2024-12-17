@@ -335,7 +335,7 @@ export class OrgUsers {
     try {
         const user = await User.findOne({
           _id:req.params.id,
-          organization: req.params.organizationId
+          // organization: req.params.organizationId
         }).populate("signature guardians relationImage children");
         return successResponse(res,200,"Success",{user} )
 
