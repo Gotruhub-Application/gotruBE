@@ -853,7 +853,8 @@ export class OrderController {
           const limitNum = Number(limit);
     
           // Base query for users
-          let userQuery: any = { organization: organizationId };
+          // let userQuery: any = { organization: organizationId };
+          let userQuery: any = { };
     
           if (unitId) {
             userQuery.piviotUnit = unitId;
@@ -869,7 +870,7 @@ export class OrderController {
     
           // Base query for orders
           let orderQuery: any = {
-            organization: organizationId,
+            // organization: organizationId,
             user: { $in: userIds }
           };
     
