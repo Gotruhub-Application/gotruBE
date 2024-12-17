@@ -320,8 +320,8 @@ export class OrgUsers {
       }
   
       const users = await User.find(query)
-        .skip(skip)
-        .limit(ITEMS_PER_PAGE);
+        // .skip(skip)
+        // .limit(ITEMS_PER_PAGE);
   
       return successResponse(res, 200, "Success", { users });
   
