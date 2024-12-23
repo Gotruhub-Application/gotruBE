@@ -20,7 +20,7 @@ async function onUserCreated(user: Iuser) {
             for (const childId of user.children) {
                 await User.findByIdAndUpdate(childId, { $set: { guardians: user._id } });
             }
-        } else if (user.role === "student" && user.guardians) {
+        } else if (user.role === "student") {
             
   
             // Add student to the children array for guardians
