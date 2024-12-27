@@ -857,7 +857,7 @@ export class OrderController {
           
           // if not unitId or Subunit, throw error
           if (!unitId &&!subunitId) {
-            throw new Error("Please provide either unitId or subunitId");
+            return failedResponse(res, 400, `Please provide either unitId or subunitId`);
           }
           
           let userQuery: any = { };
