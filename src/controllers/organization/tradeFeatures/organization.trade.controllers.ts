@@ -854,12 +854,6 @@ export class OrderController {
     
           // Base query for users
           // let userQuery: any = { organization: organizationId };
-          
-          // if not unitId or Subunit, throw error
-          if (!unitId &&!subunitId) {
-            return failedResponse(res, 400, `Please provide unitId and  subunitId in the query params `);
-          }
-          
           let userQuery: any = { };
     
           if (unitId) {
