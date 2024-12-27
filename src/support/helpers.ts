@@ -251,6 +251,34 @@ async function sendMonitorClassNotification(): Promise<void> {
         // role: 'Monitor',
       });
       const _courseInfo = await getCourseInfo(schdule._id)
+      // send to the course cordinators
+      const cordinators = schdule.coordinators;
+      for (const cordinator of cordinators) {
+        // send notification to user
+        const notifyPayload = {
+          owner: cordinator._id,
+          title: 'Reminder',
+          type: 'MonitorClass',
+          message: `Your class ${_courseInfo.courseInfo.courseCode} is starting in ${timeLeft} minutes`,
+        };
+
+        // Send suspicious activity notification
+        const payload: CreateNotificationParams = {
+          owner: cordinator._id,
+          title: 'Reminder',
+          type: 'MonitorClass',
+          message: `Your class ${_courseInfo.courseInfo.courseCode} is starting in ${timeLeft} minutes`,
+        };
+        await createNotification(payload);
+
+        if (cordinator?.fcmToken) {
+          try {
+            await sendNotif(cordinator.fcmToken, `MonitorClassReminder`, `Your class ${_courseInfo.courseInfo.courseCode} is starting in ${timeLeft} minutes`, notifyPayload);
+          } catch (error: any) {
+            writeErrosToLogs(error);
+          }
+        }
+      };
       for (const user of users) {
         // send notification to user
         const notifyPayload = {
