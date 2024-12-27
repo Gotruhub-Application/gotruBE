@@ -135,9 +135,9 @@ export const IsAuthenticatedUser = async (req: Request, res: Response, next: Nex
         (req as any).user = decodedToken
         // check if the user has verifed their account
         const user = await User.findById(decodedToken.id)
-        if (!(req as any).user.onboardingCompleted) {
-            return failedResponse(res, 401, 'Account onbaording is not complated yet, please change password.')
-        }
+        // if (!(req as any).user.onboardingCompleted) {
+        //     return failedResponse(res, 401, 'Account onbaording is not complated yet, please change password.')
+        // }
         next();
     } catch (error: any) {
         logger.error(error.message);
@@ -162,10 +162,10 @@ export const IsAuthenticatedStaff = async (req: Request, res: Response, next: Ne
         req.params.email = decodedToken.email;
         (req as any).user = decodedToken;
 
-        // Check if the user has verified their account
-        if (!(req as any).user.onboardingCompleted) {
-            return failedResponse(res, 401, 'Account onboarding is not completed yet. Please change password.');
-        }
+        // // Check if the user has verified their account
+        // if (!(req as any).user.onboardingCompleted) {
+        //     return failedResponse(res, 401, 'Account onboarding is not completed yet. Please change password.');
+        // }
 
         // Check if the user role is 'staff' or 'admin'
         if (!((req as any).user.role === 'staff' || (req as any).user.role === 'admin')) {
