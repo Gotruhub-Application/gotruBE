@@ -843,74 +843,167 @@ export class OrderController {
             return failedResponse(res, 500, "An error occurred while deleting the order.");
         }
     };
-    static async getOrdersByUnitOrSubunit(req: Request, res: Response) {
-        try {
-        let { organizationId} = req.query
-          const { unitId, subunitId, page = 1, limit = 10, today } = req.query;
+    // static async getOrdersByUnitOrSubunit(req: Request, res: Response) {
+    //     try {
+    //     let { organizationId} = req.query
+    //       const { unitId, subunitId, page = 1, limit = 10, today } = req.query;
           
-          // Convert page and limit to numbers
-          const pageNum = Number(page);
-          const limitNum = Number(limit);
+    //       // Convert page and limit to numbers
+    //       const pageNum = Number(page);
+    //       const limitNum = Number(limit);
     
-          // Base query for users
-          let userQuery: any = { organization: organizationId };
-          // let userQuery: any = { };
+    //       // Base query for users
+    //       let userQuery: any = { organization: organizationId };
+    //       // let userQuery: any = { };
     
-          if (unitId) {
-            userQuery.piviotUnit = unitId;
-          }
+    //       if (unitId) {
+    //         userQuery.piviotUnit = unitId;
+    //       }
     
-          if (subunitId) {
-            userQuery.subUnit = subunitId;
-          }
+    //       if (subunitId) {
+    //         userQuery.subUnit = subunitId;
+    //       }
     
-          // Find all users in the specified unit or subunit
-          const users = await User.find(userQuery).select('_id');
-          const userIds = users.map(user => user._id);
+    //       // Find all users in the specified unit or subunit
+    //       const users = await User.find(userQuery).select('_id');
+    //       const userIds = users.map(user => user._id);
     
-          // Base query for orders
-          let orderQuery: any = {
-            // organization: organizationId,
-            user: { $in: userIds }
-          };
+    //       // Base query for orders
+    //       let orderQuery: any = {
+    //         // organization: organizationId,
+    //         user: { $in: userIds }
+    //       };
     
-          // If 'today' is true, add date filter
-          if (today === 'true') {
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
+    //       // If 'today' is true, add date filter
+    //       if (today === 'true') {
+    //         const startOfDay = new Date();
+    //         startOfDay.setHours(0, 0, 0, 0);
     
-            const endOfDay = new Date();
-            endOfDay.setHours(23, 59, 59, 999);
+    //         const endOfDay = new Date();
+    //         endOfDay.setHours(23, 59, 59, 999);
     
-            orderQuery.createdAt = {
-              $gte: startOfDay,
-              $lte: endOfDay
-            };
-          }
+    //         orderQuery.createdAt = {
+    //           $gte: startOfDay,
+    //           $lte: endOfDay
+    //         };
+    //       }
     
-          // Execute the query
-          const orders = await Order.find(orderQuery)
-            .populate('user', 'fullName regNum')
-            .populate('items.product')
-            .populate('attendant')
-            .limit(limitNum)
-            .skip((pageNum - 1) * limitNum)
-            .exec();
+    //       // Execute the query
+    //       const orders = await Order.find(orderQuery)
+    //         .populate('user', 'fullName regNum')
+    //         .populate('items.product')
+    //         .populate('attendant')
+    //         .limit(limitNum)
+    //         .skip((pageNum - 1) * limitNum)
+    //         .exec();
     
-          // Count total documents
-          const count = await Order.countDocuments(orderQuery);
+    //       // Count total documents
+    //       const count = await Order.countDocuments(orderQuery);
     
-          return successResponse(res, 200, "Orders retrieved successfully.", {
-            orders,
-            totalPages: Math.ceil(count / limitNum),
-            currentPage: pageNum,
-            totalOrders: count
-          });
-        } catch (error: any) {
-          writeErrosToLogs(error);
-          return failedResponse(res, 500, `An error occurred while retrieving the orders: ${error.message}`);
+    //       return successResponse(res, 200, "Orders retrieved successfully.", {
+    //         orders,
+    //         totalPages: Math.ceil(count / limitNum),
+    //         currentPage: pageNum,
+    //         totalOrders: count
+    //       });
+    //     } catch (error: any) {
+    //       writeErrosToLogs(error);
+    //       return failedResponse(res, 500, `An error occurred while retrieving the orders: ${error.message}`);
+    //     }
+    //   }
+
+    static async getOrdersByUnitOrSubunit(req: Request, res: Response) {
+      try {
+        let { organizationId } = req.query
+        const { 
+          unitId, 
+          subunitId, 
+          page = 1, 
+          limit = 10, 
+          today,
+          startDate,
+          endDate 
+        } = req.query;
+    
+        // Convert page and limit to numbers
+        const pageNum = Number(page);
+        const limitNum = Number(limit);
+    
+        // Base query for users
+        let userQuery: any = { organization: organizationId };
+        // let userQuery: any = { };
+    
+        if (unitId) {
+          userQuery.piviotUnit = unitId;
         }
+    
+        if (subunitId) {
+          userQuery.subUnit = subunitId;
+        }
+    
+        // Find all users in the specified unit or subunit
+        const users = await User.find(userQuery).select('_id');
+        const userIds = users.map(user => user._id);
+    
+        // Base query for orders
+        let orderQuery: any = {
+          // organization: organizationId,
+          user: { $in: userIds }
+        };
+    
+        // Handle date filtering
+        if (today === 'true') {
+          // If today is specified, it takes precedence over date range
+          const startOfDay = new Date();
+          startOfDay.setHours(0, 0, 0, 0);
+    
+          const endOfDay = new Date();
+          endOfDay.setHours(23, 59, 59, 999);
+    
+          orderQuery.createdAt = {
+            $gte: startOfDay,
+            $lte: endOfDay
+          };
+        } else if (startDate || endDate) {
+          // Handle date range filtering
+          orderQuery.createdAt = {};
+          
+          if (startDate) {
+            const start = new Date(startDate as string);
+            start.setHours(0, 0, 0, 0);
+            orderQuery.createdAt.$gte = start;
+          }
+          
+          if (endDate) {
+            const end = new Date(endDate as string);
+            end.setHours(23, 59, 59, 999);
+            orderQuery.createdAt.$lte = end;
+          }
+        }
+    
+        // Execute the query
+        const orders = await Order.find(orderQuery)
+          .populate('user', 'fullName regNum')
+          .populate('items.product')
+          .populate('attendant')
+          .limit(limitNum)
+          .skip((pageNum - 1) * limitNum)
+          .exec();
+    
+        // Count total documents
+        const count = await Order.countDocuments(orderQuery);
+    
+        return successResponse(res, 200, "Orders retrieved successfully.", {
+          orders,
+          totalPages: Math.ceil(count / limitNum),
+          currentPage: pageNum,
+          totalOrders: count
+        });
+      } catch (error: any) {
+        writeErrosToLogs(error);
+        return failedResponse(res, 500, `An error occurred while retrieving the orders: ${error.message}`);
       }
+    }
 };
 
 

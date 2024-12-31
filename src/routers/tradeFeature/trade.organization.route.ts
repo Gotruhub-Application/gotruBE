@@ -73,7 +73,7 @@ tradeOrganizationRouter
 
 .get("/mobile-section/order-pickups", IsAuthenticatedStaff, OrderPickupController.getAllOrderPickups)
 .get("/mobile-section/order-pickups/:assigneeId", IsAuthenticatedStaff, OrderPickupController.getAllOrderPickupsByAsigneeId)
-.get("/mobile-section/order-pickups/:id", IsAuthenticatedStaff, OrderPickupController.getOrderPickupById)
+.get("/mobile-section/order-pickups/single-pick-up/:id", IsAuthenticatedStaff, OrderPickupController.getOrderPickupById)
 
 
 
