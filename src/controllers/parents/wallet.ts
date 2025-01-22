@@ -17,8 +17,6 @@ export class ParentManageWallet {
             console.log(child_id,"2222")
 
             const child = await User.findOne({
-                organization:organization,
-                guardians: _id,
                 _id:child_id
 
             });
