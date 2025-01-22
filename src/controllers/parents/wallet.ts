@@ -16,10 +16,7 @@ export class ParentManageWallet {
             const {child_id} = req.params
             console.log(child_id,"2222")
 
-            const child = await User.findOne({
-                _id:child_id
-
-            });
+            const child = await User.findById(child_id);
             if (!child) {
                 return failedResponse(res, 404, "Child not found");
             };
