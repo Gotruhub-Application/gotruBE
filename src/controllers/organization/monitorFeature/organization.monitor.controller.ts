@@ -366,22 +366,46 @@ export class SubUnitCourseController {
         }
     }
 
+    // static async getAllPaidSubUnitCourses(req: Request, res: Response) {
+    //     const ITEMS_PER_PAGE = 100;
+    //     try {
+    //         const page = parseInt(req.query.page as string) || 1;
+    //         const skip = (page - 1) * ITEMS_PER_PAGE;
+    //         const subUnitCourses = await SubUnitCourseModel.find({ organization: req.params.organizationId, paid:true, subUnit:req.params.subUnitId, course: { $ne: null } })
+    //             .skip(skip)
+    //             .limit(ITEMS_PER_PAGE);
+
+    //         return successResponse(res, 200, "Success", subUnitCourses );
+
+    //     } catch (error: any) {
+    //         writeErrosToLogs(error);
+    //         return failedResponse(res, 500, error.message);
+    //     }
+    // }
+
     static async getAllPaidSubUnitCourses(req: Request, res: Response) {
         const ITEMS_PER_PAGE = 100;
         try {
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
-            const subUnitCourses = await SubUnitCourseModel.find({ organization: req.params.organizationId, paid:true, subUnit:req.params.subUnitId, course: { $ne: null } })
-                .skip(skip)
-                .limit(ITEMS_PER_PAGE);
-
-            return successResponse(res, 200, "Success", subUnitCourses );
-
+    
+            const subUnitCourses = await SubUnitCourseModel.find({
+                organization: req.params.organizationId,
+                paid: true,
+                subUnit: req.params.subUnitId
+            })
+            .populate('course') // Populate course field
+            .then(results => results.filter(course => course.course !== null)) // Exclude those where course is null
+            .slice(skip, skip + ITEMS_PER_PAGE); // Paginate manually after filtering
+    
+            return successResponse(res, 200, "Success", subUnitCourses);
+    
         } catch (error: any) {
             writeErrosToLogs(error);
             return failedResponse(res, 500, error.message);
         }
     }
+    
 
     static async getSingleSubUnitCourse(req: Request, res: Response) {
         try {
