@@ -336,7 +336,7 @@ export class SubUnitCourseController {
     static async SubUnitCoursesCheckout(req: Request, res: Response) {
         try {
 
-            const subUnitCourses = await SubUnitCourseModel.find({ organization: req.params.organizationId, paid:false })
+            const subUnitCourses = await SubUnitCourseModel.find({ organization: req.params.organizationId, paid:false, course: { $ne: null } })
 
             let totalAmount = 0;
             for (const course of subUnitCourses) {
@@ -371,7 +371,7 @@ export class SubUnitCourseController {
         try {
             const page = parseInt(req.query.page as string) || 1;
             const skip = (page - 1) * ITEMS_PER_PAGE;
-            const subUnitCourses = await SubUnitCourseModel.find({ organization: req.params.organizationId, paid:true, subUnit:req.params.subUnitId })
+            const subUnitCourses = await SubUnitCourseModel.find({ organization: req.params.organizationId, paid:true, subUnit:req.params.subUnitId, course: { $ne: null } })
                 .skip(skip)
                 .limit(ITEMS_PER_PAGE);
 
